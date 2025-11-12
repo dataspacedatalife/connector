@@ -23,7 +23,7 @@ This phase configures `cert-manager` to communicate with `Let's Encrypt`, enabli
 This script verifies that NGINX and `cert-manager` are ready, then creates the global `ClusterIssuer`. You must provide a valid email address for `Let's Encrypt` registration.
 ```bash
   # Make the script executable
-  chmod +x setup-issuer.sh
+  chmod +x setup-cert-issuer.sh
 
   # Run the script, passing in the registration email
   ./setup-cert-issuer.sh --email email@example.com
@@ -104,6 +104,14 @@ Wait for the `READY` column to switch from `False` to `True`.
 ```
 
 Once `READY` is `True`, the participant is fully deployed, secured with HTTPS, and accessible at the domain (e.g., `https://conector-xdatashare.gradiant.org`).
+
+#### Veryfing Did Document Creation (Optional)
+To confirm that the participant's Decentralized Identifier (DID) document has been successfully created and registered in the Identity Hub, we can query the Identity Hub's DID endpoint.
+
+```bash
+curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/did"| jq
+```
+
 
 #### Verifying Credential Issuance (Optional)
 
