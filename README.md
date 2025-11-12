@@ -72,7 +72,7 @@ This command will create a new file: participant-chart/values/values-gradiant.ya
 
 Finally, use Helm to install the participant-chart, referencing the new values file you just created.
 
-**Note:** We recommend deploying each participant into its own namespace.
+**Note:** We recommend deploying the participant into a namespace.
 
 ```bash
   # Example for a participant named "gradiant" in namespace "dataspacedatalife"
@@ -101,6 +101,21 @@ Wait for the `READY` column to switch from `False` to `True`.
 ```
 
 Once `READY` is `True`, the participant is fully deployed, secured with HTTPS, and accessible at the domain (e.g., `https://conector-xdatashare.gradiant.org`).
+
+#### Verifying Credential Issuance (Optional)
+
+After deployment, the `job-request-credentials.yaml` job (described below) automatically requests a Verifiable Credential from the central **dataspace-issuer**.
+
+To confirm that the credential was successfully issued, we can query the connector's identity endpoint. We will need the **superuser API key** (often stored in the issuer's configuration).
+
+```bash
+# Set the environment variables for the ISSUER
+export API_KEY="<issuer-api-key>"
+
+# Query the issuer's /credentials endpoint
+curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/identity/api/identity/v1alpha/credentials" \
+-H "X-Api-Key: $API_KEY" | jq
+```
 
 ### 4. Participant Chart (participant-chart)
 
