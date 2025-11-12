@@ -7,23 +7,23 @@ Before starting, ensure you have the following:
 - **A Running Kubernetes Cluster:** A cluster (like kind) with correct port-forwarding for ports 80 and 443.
 - **Installed Tooling:** kubectl and helm must be installed and configured to point to the cluster.
 - **Installed Cluster Services:**
-  - `ingress-nginx` (NGINX Ingress Controller)
-  - `cert-manager`
+    - `ingress-nginx` (NGINX Ingress Controller)
+    - `cert-manager`
 - **Deployment Scripts:**
-  - `setup-issuer.sh` (This script, for Phase 1)
-  - `generate_participant.sh` (This script, for Phase 2)
+    - `setup-issuer.sh` (This script, for Phase 1)
+    - `generate_participant.sh` (This script, for Phase 2)
 - **Helm Chart:** The `participant-chart` directory.
 - **Public DNS:** You must have public DNS "A" records pointing to the hostnames (e.g., `conector-xdatashare.gradiant.org`) to the cluster's public IP address.
 ## Phase 1: Cluster-Level Setup (One-Time Only)
 
 This phase configures `cert-manager` to communicate with `Let's Encrypt`, enabling automatic SSL certificate generation for the entire cluster. **This only needs to be run once per new cluster**.
- 
+
 ### 1. Run the Setup Issuer Script
 
 This script verifies that NGINX and `cert-manager` are ready, then creates the global `ClusterIssuer`. You must provide a valid email address for `Let's Encrypt` registration.
 ```bash
   # Make the script executable
-  chmod +x setup-issuer.sh
+  chmod +x setup-cert-issuer.sh
 
   # Run the script, passing in the registration email
   ./setup-cert-issuer.sh --email email@example.com
@@ -90,7 +90,7 @@ Finally, use Helm to install the participant-chart, referencing the new values f
 
 ### 3. Verify the Deployment
 
-After running helm install, cert-manager will automatically begin obtaining the SSL certificates. 
+After running helm install, cert-manager will automatically begin obtaining the SSL certificates.
 This may take 1-2 minutes.You can monitor the status of the certificates:# Watch the certificates in the participant's namespace
 ```bash
   kubectl get certificate -n dataspacedatalife -w
@@ -104,6 +104,14 @@ Wait for the `READY` column to switch from `False` to `True`.
 ```
 
 Once `READY` is `True`, the participant is fully deployed, secured with HTTPS, and accessible at the domain (e.g., `https://conector-xdatashare.gradiant.org`).
+
+#### Veryfing Did Document Creation (Optional)
+To confirm that the participant's Decentralized Identifier (DID) document has been successfully created and registered in the Identity Hub, we can query the Identity Hub's DID endpoint.
+
+```bash
+curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/did"| jq
+```
+
 
 #### Verifying Credential Issuance (Optional)
 
