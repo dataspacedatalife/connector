@@ -1,5 +1,5 @@
-# External Participant Deployment Guide
-This document outlines the two-phase process for adding a new external participant to an unpopulated Kubernetes cluster (such as kind).This process assumes the cluster is already running NGINX Ingress Controller and Cert-Manager, but has not yet been configured to issue certificates.
+# Datalife Connector Deployment Guide
+This document outlines the two-phase process for adding a new datalife connector to an unpopulated Kubernetes cluster (such as kind).This process assumes the cluster is already running NGINX Ingress Controller and Cert-Manager, but has not yet been configured to issue certificates.
 
 ## Prerequisites
 
