@@ -5,7 +5,7 @@ This document outlines the two-phase process for adding a new external participa
 
 Before starting, ensure you have the following:
 - **A Running Kubernetes Cluster:** A cluster (like kind) with correct port-forwarding for ports 80 and 443.
-- **Installed Tooling:** kubectl and helm must be installed and configured to point to your cluster.
+- **Installed Tooling:** kubectl and helm must be installed and configured to point to the cluster.
 - **Installed Cluster Services:**
   - `ingress-nginx` (NGINX Ingress Controller)
   - `cert-manager`
@@ -13,7 +13,7 @@ Before starting, ensure you have the following:
   - `setup-issuer.sh` (This script, for Phase 1)
   - `generate_participant.sh` (This script, for Phase 2)
 - **Helm Chart:** The `participant-chart` directory.
-- **Public DNS:** You must have public DNS "A" records pointing your hostnames (e.g., `conector-xdatashare.gradiant.org`) to your cluster's public IP address.
+- **Public DNS:** You must have public DNS "A" records pointing to the hostnames (e.g., `conector-xdatashare.gradiant.org`) to the cluster's public IP address.
 ## Phase 1: Cluster-Level Setup (One-Time Only)
 
 This phase configures `cert-manager` to communicate with `Let's Encrypt`, enabling automatic SSL certificate generation for the entire cluster. **This only needs to be run once per new cluster**.
@@ -25,8 +25,8 @@ This script verifies that NGINX and `cert-manager` are ready, then creates the g
   # Make the script executable
   chmod +x setup-issuer.sh
 
-  # Run the script, passing in your registration email
-  ./setup-issuer.sh --email your-email@example.com
+  # Run the script, passing in the registration email
+  ./setup-cert-issuer.sh --email email@example.com
 ```
 
 ### 2. Verify the ClusterIssuer
@@ -47,12 +47,12 @@ Look for the following in the status: section at the end of the output:
     Type:              Ready
 ```
 
-If `Status` is `True`, your cluster is now ready to automatically issue certificates for any participant.
+If `Status` is `True`, the cluster is now ready to automatically issue certificates for any participant.
 
 ## Phase 2: Deploying a New ParticipantRun these steps every time you need to add a new participant to the cluster.
 ### 1.Generate Participant Configuration
 
-First, use the `generate_participant.sh` script to create the customized `values.yaml` file for your new participant. This script requires the participant's "main" hostname and its "Keycloak" hostname.
+First, use the `generate_participant.sh` script to create the customized `values.yaml` file for the new participant. This script requires the participant's "main" hostname and its "Keycloak" hostname.
 
 ```bash
   # Make the script executable
@@ -75,14 +75,14 @@ Finally, use Helm to install the participant-chart, referencing the new values f
 **Note:** We recommend deploying each participant into its own namespace.
 
 ```bash
-  # Example for a participant named "gradiant" in namespace "xdatashare"
+  # Example for a participant named "gradiant" in namespace "dataspacedatalife"
   # 1. Create the namespace (if it doesn't exist)
-  kubectl create namespace xdatashare
+  kubectl create namespace dataspacedatalife
 
   # 2. Install the Helm chart
   helm install gradiant ./participant-chart \
   -f ./participant-chart/values/values-gradiant.yaml \
-  -n xdatashare
+  -n dataspacedatalife
 ```   
 
 ### 3. Verify the Deployment
@@ -90,7 +90,7 @@ Finally, use Helm to install the participant-chart, referencing the new values f
 After running helm install, cert-manager will automatically begin obtaining the SSL certificates. 
 This may take 1-2 minutes.You can monitor the status of the certificates:# Watch the certificates in the participant's namespace
 ```bash
-  kubectl get certificate -n xdatashare -w
+  kubectl get certificate -n dataspacedatalife -w
 ```    
 
 Wait for the `READY` column to switch from `False` to `True`.
@@ -100,7 +100,7 @@ Wait for the `READY` column to switch from `False` to `True`.
    gradiant-main-tls       True    gradiant-main-tls       1m
 ```
 
-Once `READY` is `True`, your participant is fully deployed, secured with HTTPS, and accessible at your domain (e.g., `https://conector-xdatashare.gradiant.org`).
+Once `READY` is `True`, the participant is fully deployed, secured with HTTPS, and accessible at the domain (e.g., `https://conector-xdatashare.gradiant.org`).
 
 ### 4. Participant Chart (participant-chart)
 

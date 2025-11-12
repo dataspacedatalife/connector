@@ -25,7 +25,7 @@ controlplane:
   deployment:
     replicaCount: 1
     image:
-      repository: xdatashare/controlplane
+      repository: dataspacedatalife/controlplane
       tag: "latest"
       pullPolicy: Always
     initContainers:
@@ -116,7 +116,7 @@ dataplane:
   deployment:
     replicaCount: 1
     image:
-      repository: xdatashare/dataplane
+      repository: dataspacedatalife/dataplane
       tag: "latest"
       pullPolicy: Always
     initContainers:
@@ -169,7 +169,7 @@ identityhub:
   deployment:
     replicaCount: 1
     image:
-      repository: xdatashare/identity-hub
+      repository: dataspacedatalife/identity-hub
       tag: "latest"
       pullPolicy: Always
     initContainers:
@@ -256,7 +256,7 @@ participant-portal:
   deployment:
     replicaCount: 1
     image:
-      repository: xdatashare/participant-portal
+      repository: dataspacedatalife/participant-portal
       tag: "latest"
       pullPolicy: Always
 
