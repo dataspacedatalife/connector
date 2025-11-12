@@ -16,11 +16,11 @@ Before starting, ensure you have the following:
 - **Public DNS:** You must have public DNS "A" records pointing your hostnames (e.g., `conector-xdatashare.gradiant.org`) to your cluster's public IP address.
 ## Phase 1: Cluster-Level Setup (One-Time Only)
 
-This phase configures `cert-manager` to communicate with Let's Encrypt, enabling automatic SSL certificate generation for the entire cluster.This only needs to be run once per new cluster.
+This phase configures `cert-manager` to communicate with `Let's Encrypt`, enabling automatic SSL certificate generation for the entire cluster. **This only needs to be run once per new cluster**.
  
 ### 1. Run the Setup Issuer Script
 
-This script verifies that NGINX and `cert-manager` are ready, then creates the global `ClusterIssuer`. You must provide a valid email address for Let's Encrypt registration.
+This script verifies that NGINX and `cert-manager` are ready, then creates the global `ClusterIssuer`. You must provide a valid email address for `Let's Encrypt` registration.
 ```bash
   # Make the script executable
   chmod +x setup-issuer.sh
@@ -101,3 +101,37 @@ Wait for the `READY` column to switch from `False` to `True`.
 ```
 
 Once `READY` is `True`, your participant is fully deployed, secured with HTTPS, and accessible at your domain (e.g., `https://conector-xdatashare.gradiant.org`).
+
+### 4. Participant Chart (participant-chart)
+
+The `participant-chart` is a versatile chart designed to deploy a complete participant node capable of operating within an Eclipse Dataspace (EDC). It packages all the necessary components for creating a fully functional MVD participant.
+
+A key feature of this chart is its design as a reusable blueprint. Using different values files located in the `values/` directory, we can deploy various types of participants from this single, standardized chart.
+
+**Components (Subcharts):**
+
+The participant node is composed of several key services deployed as subcharts:
+- **EDC Components:**
+    - **controlplane:** Deploys the EDC Controlplane. This is the "brain" of the participant, responsible for managing the data catalog, handling contract negotiations, and enforcing data usage policies.
+    - **dataplane:** Deploys the EDC Dataplane. This component is responsible for the actual, secure transfer of data between participants once a contract agreement has been successfully negotiated by the controlplane.
+    - **identityhub:** Deploys the Identity Hub service. This is a critical component for managing the participant's Decentralized Identity (DID) and for storing and using Verifiable Credentials.
+- **Supporting Infrastructure:**
+    - **postgres:** Deploys a PostgreSQL database instance for persisting the participant's data.
+    - **vault:** Deploys a HashiCorp Vault instance for managing sensitive information and secrets.
+- **Participant Interface:**
+    - **participant-portal:** Installs the participant web portal. This is the primary graphical user interface (GUI) where users can manage the data catalog, view policies, initiate contract negotiations, and monitor the status of data transfers.
+    - **keycloak:** Installs an instance of Keycloak. This service acts as the Identity and Access Management (IAM) Provider for the stack, securing the portal and API endpoints. It manages user authentication (login) and defines their permissions (authorization).
+
+**Initial Seeding Jobs**
+
+To streamline the setup process, the chart includes several one-time jobs that run after installation:
+
+- Create Default Policies (`job-seed-policies.yaml`):
+    - Purpose: Establishes the foundational data access and usage policies for the participant.
+    - Functionality: Create the default set of data acess and usage policies, defining the rules under which participant will access the data.
+- Create Participant DID (`job-seed-identityhub.yaml`):
+    - Purpose: Establishes the participant's identity within the dataspace by creating and registering its Decentralized Identifier (DID).
+    - Functionality: This job generates and registers the participant's Decentralized Identifier (DID) in the Identity Hub. The DID is essential for establishing the participant's identity within the dataspace.
+- Request Credential (`job-request-credentials.yaml`):
+    - Purpose: Initiates the process for the participant to obtain its Verifiable Credential from the dataspace-issuer.
+    - Functionality: This job automates a crucial onboarding step by making the participant proactively request its required Verifiable Credential from the dataspace-issuer. This allows the participant to become a trusted and verifiable member of the dataspace shortly after deployment.
