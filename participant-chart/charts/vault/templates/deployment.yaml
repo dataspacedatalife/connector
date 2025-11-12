@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-vault
+  labels:
+    app: {{ .Release.Name }}-vault
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-vault
+  template:
+    metadata:
+      name: {{ .Release.Name }}-vault
+      labels:
+        app: {{ .Release.Name }}-vault
+    spec:
+      containers:
+        - name: {{ .Release.Name }}-vault
+          image: "{{ .Values.image.repository | default "hashicorp/vault" }}:{{ .Values.image.tag | default "1.15.4" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          env:
+            - name: VAULT_DEV_ROOT_TOKEN_ID
+              value: {{ .Values.rootToken | default "root" | quote }}
+            - name: VAULT_DEV_LISTEN_ADDRESS
+              value: {{ .Values.listenAddress | default "0.0.0.0:8200" | quote }}
+          command:
+            - sh
+            - -c
+            - |
+              vault server -dev -dev-root-token-id={{ .Values.rootToken | default "root" }} -dev-listen-address={{ .Values.listenAddress | default "0.0.0.0:8200" }} &
+              wait

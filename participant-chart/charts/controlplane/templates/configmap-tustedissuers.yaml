@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-trusted-issuers
+data:
+  trusted_issuers.json: |
+    [
+      {
+        "id": "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher",
+        "types": ["*"]
+      }
+    ]

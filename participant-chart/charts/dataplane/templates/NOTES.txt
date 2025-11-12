@@ -1,0 +1,28 @@
+Data Plane ({{ .Values.deployment.name }}) has been deployed!
+
+Namespace: {{ .Release.Namespace }}
+App:       {{ .Values.deployment.app }}
+Service:   {{ .Values.service.name }}
+
+Service Ports:
+{{- range .Values.service.ports }}
+  - {{ .name }}: {{ .port }} (targetPort: {{ .targetPort }})
+{{- end }}
+
+Ingress: {{ .Values.ingress.name }}
+{{- range .Values.ingress.paths }}
+  - Path: {{ .pathName }} → Service: {{ .name }}:{{ .port }}
+{{- end }}
+
+---
+
+Verify pods:
+  kubectl get pods -l app={{ .Values.deployment.app }} -n {{ .Release.Namespace }}
+
+Check service:
+  kubectl get svc {{ .Values.service.name }} -n {{ .Release.Namespace }}
+
+Access endpoints:
+- Control API: http://<cluster-ip>:9191
+- Public API:  http://<cluster-ip>:8185
+- Health API:  http://<cluster-ip>:8080/health

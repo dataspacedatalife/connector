@@ -1,0 +1,11 @@
+{{- if .Values.seeding.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-policies
+data:
+  {{- range .Values.seeding.policies }}
+  {{ base .file }}: |
+{{ $.Files.Get .file | indent 4 }}
+  {{- end }}
+  {{- end }}

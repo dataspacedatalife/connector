@@ -1,0 +1,16 @@
+# This template defines the Kubernetes Service for the controlplane.
+# The name and selector are dynamically set based on the participantType.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-controlplane
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  selector:
+    app: {{ .Release.Name }}-controlplane
+  ports:
+    {{- range .Values.service.ports }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort }}
+    {{- end }}

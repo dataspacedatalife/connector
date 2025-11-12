@@ -1,0 +1,441 @@
+controlplane:
+
+  configMap:
+    hostname: "conector-xdatashare.gradiant.org"
+    iamIssuerId: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
+    managementAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    catalogAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    participantAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    iamStsPrivateKeyAlias: "did:web:conector-xdatashare.gradiant.org:identityhub:did#key-1"
+    iamStsPublicKeyId: "did:web:conector-xdatashare.gradiant.org:identityhub:did#key-1"
+    participantId: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
+    iamStsOauthClientSecretAlias: "did:web:conector-xdatashare.gradiant.org:identityhub:did-sts-client-secret"
+    iamStsOauthClientId: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
+    iamAuthorityId: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
+    dspCallbackAddress: "https://conector-xdatashare.gradiant.org/controlplane/dsp/api/dsp"
+    iamStsOauthTokenUrl: "http://gradiant-identityhub:9292/api/sts/token"
+    vaultHashicorpUrl: "http://gradiant-vault:8200"
+    datasourceDefaultUrl: "jdbc:postgresql://gradiant-postgres:5432/gradiant"
+    datasourceDefaultUser: "gradiant"
+    datasourceDefaultPassword: "gradiant"
+    edcParisPublicBaseurl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/participant-public/api/participant-public"
+    edcControlEndpoint: "http://gradiant-controlplane:9191/api/control"
+    edcUseCaseApiUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/use-case/api/use-case"
+
+  deployment:
+    replicaCount: 1
+    image:
+      repository: xdatashare/controlplane
+      tag: "latest"
+      pullPolicy: Always
+    initContainers:
+      dependencies:
+        - name: "Postgres"
+          host: "gradiant-postgres"
+          port: 5432
+        - name: "Vault"
+          host: "gradiant-vault"
+          port: 8200
+        - name: "Identityhub"
+          host: "gradiant-identityhub"
+          port: "8182"
+
+  service:
+    type: ClusterIP
+    ports:
+      - name: management
+        port: 8181
+        targetPort: 8181
+      - name: paris
+        port: 8081
+        targetPort: 8081
+      - name: version
+        port: 7171
+        targetPort: 7171
+      - name: control
+        port: 9191
+        targetPort: 9191
+      - name: dsp
+        port: 8282
+        targetPort: 8282
+      - name: catalog
+        port: 17171
+        targetPort: 17171
+      - name: observability
+        port: 8182
+        targetPort: 8182
+
+  ingress:
+    host: conector-xdatashare.gradiant.org
+    tlsSecretName: gradiant-tls-cert
+    paths:
+      - path: /controlplane/management(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-controlplane
+          servicePort: 8181
+      - path: /controlplane/participant(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-controlplane
+          servicePort: 8081
+      - path: /controlplane/version(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-controlplane
+          servicePort: 7171
+      - path: /controlplane/dsp(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-controlplane
+          servicePort: 8282
+      - path: /controlplane/catalog(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-controlplane
+          servicePort: 17171
+
+dataplane:
+
+  configMap:
+    hostname: "conector-xdatashare.gradiant.org"
+    transferProxyTokenVerifierPublicKeyAlias: "did:web:conector-xdatashare.gradiant.org:identityhub:did#key-1"
+    transferProxyTokenSignerPrivateKeyAlias: "did:web:conector-xdatashare.gradiant.org:identityhub:did#key-1"
+    dpfSelectorUrl: "http://gradiant-controlplane:9191/api/control/v1/dataplanes"
+    participantId: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
+    vaultHashicorpUrl: "http://gradiant-vault:8200"
+    datasourceDefaultUrl: "jdbc:postgresql://gradiant-postgres:5432/gradiant"
+    datasourceDefaultUser: "gradiant"
+    datasourceDefaultPassword: "gradiant"
+    iamStsOauthClientSecretAlias: "did:web:conector-xdatashare.gradiant.org:identityhub:did-sts-client-secret"
+    iamStsOauthClientId: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
+    iamStsOauthTokenUrl: "https://conector-xdatashare.gradiant.org/identityhub/sts/api/sts/token"
+    edcDataplaneApiPublicBaseurl: "https://conector-xdatashare.gradiant.org/dataplane/public/api/public"
+    edcControlEndpoint: "http://gradiant-dataplane:9191/api/control"
+
+  deployment:
+    replicaCount: 1
+    image:
+      repository: xdatashare/dataplane
+      tag: "latest"
+      pullPolicy: Always
+    initContainers:
+      dependencies:
+        - name: "Postgres"
+          host: "gradiant-postgres"
+          port: 5432
+        - name: "Vault"
+          host: "gradiant-vault"
+          port: 8200
+        - name: "Controlplane"
+          host: "gradiant-controlplane"
+          port: 9191
+
+  service:
+    type: ClusterIP
+    ports:
+      - name: control
+        port: 9191
+        targetPort: 9191
+      - name: public
+        port: 8185
+        targetPort: 8185
+      - name: observability
+        port: 8182
+        targetPort: 8182
+
+  ingress:
+    host: conector-xdatashare.gradiant.org
+    tlsSecretName: gradiant-tls-cert
+    paths:
+      - path: /dataplane/public(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-dataplane
+          servicePort: 8185
+
+identityhub:
+  configMap:
+    hostname: "conector-xdatashare.gradiant.org"
+    iamStsPrivateKeyAlias: "did:web:conector-xdatashare.gradiant.org:identityhub:did#key-1"
+    iamStsPublicKeyId: "did:web:conector-xdatashare.gradiant.org:identityhub:did#key-1"
+    ihIamId: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
+    ihApiSuperuserKey: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"
+    vaultHashicorpUrl: "http://gradiant-vault:8200"
+    datasourceDefaultUrl: "jdbc:postgresql://gradiant-postgres:5432/gradiant"
+    datasourceDefaultUser: "gradiant"
+    datasourceDefaultPassword: "gradiant"
+
+  deployment:
+    replicaCount: 1
+    image:
+      repository: xdatashare/identity-hub
+      tag: "latest"
+      pullPolicy: Always
+    initContainers:
+      dependencies:
+        - name: "Postgres"
+          host: "gradiant-postgres"
+          port: 5432
+        - name: "Vault"
+          host: "gradiant-vault"
+          port: 8200
+
+  service:
+    type: ClusterIP
+    ports:
+      - name: version
+        port: 7171
+        targetPort: 7171
+      - name: credentials
+        port: 13131
+        targetPort: 13131
+      - name: identity
+        port: 15151
+        targetPort: 15151
+      - name: did
+        port: 10100
+        targetPort: 10100
+      - name: sts
+        port: 9292
+        targetPort: 9292
+      - name: observability
+        port: 8182
+        targetPort: 8182
+
+  ingress:
+    host: conector-xdatashare.gradiant.org
+    tlsSecretName: gradiant-tls-cert
+    paths:
+      - path: /identityhub/version(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-identityhub
+          servicePort: 7171
+      - path: /identityhub/credentials(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-identityhub
+          servicePort: 13131
+      - path: /identityhub/identity(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-identityhub
+          servicePort: 15151
+
+  ingressDid:
+    host: conector-xdatashare.gradiant.org
+    tlsSecretName: gradiant-tls-cert
+    paths:
+      - path: /identityhub/did(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: gradiant-identityhub
+          servicePort: 10100
+
+participant-portal:
+  configMap:
+    nodeEnv: "production"
+    viteKeycloakUrl: "https://conector-xdatashare.gradiant.org"
+    viteKeycloakRealm: "gradiant"
+    viteKeycloakClientId: "edc-frontend-dev"
+    viteKeycloakClientSecret: "E7UT2fK0svwevIeyU6T9RUvdrqD7eMm9"
+    viteEdcConnectorName: "gradiant"
+    viteEdcConnectorBaseUrl: "https://conector-xdatashare.gradiant.org/"
+    viteEdcConnectorCatalogUrl: "https://conector-xdatashare.gradiant.org/controlplane/catalog/api/catalog"
+    viteEdcConnectorManagementUrl: "https://conector-xdatashare.gradiant.org/controlplane/management/api/management"
+    viteEdcConnectorIdentityUrl: "https://conector-xdatashare.gradiant.org/identityhub/identity/api/identity"
+    viteEdcConnectorPublicUrl: "https://conector-xdatashare.gradiant.org/dataplane/public/api/public"
+    viteEdcConnectorAuthUrl: "https://conector-xdatashare.gradiant.org/"
+    viteEdcConnectorApiKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    viteEdcConnectorId: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
+    viteConnectorCheckInterval: "300000"
+    viteConnectorTimeout: "15000"
+    dev: "true"
+
+  deployment:
+    replicaCount: 1
+    image:
+      repository: xdatashare/participant-portal
+      tag: "latest"
+      pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    ports:
+      - name: http
+        protocol: TCP
+        port: 80
+        targetPort: 80
+
+  ingress:
+    host: conector-xdatashare.gradiant.org
+    tlsSecretName: gradiant-tls-cert
+    paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          serviceName: gradiant-participant-portal-service
+          servicePort: 80
+
+keycloak:
+  configMap:
+    keycloakProxy: "edge"
+    keycloakHostnameStrict: "false"
+    keycloakHostnameBackchannelDynamic: "true"
+    keycloakHostname: "https://conector-xdatashare.gradiant.org"
+    keycloakFrontendUrl: "https://conector-xdatashare.gradiant.org"
+    keycloakHealthEnable: "true"
+    keycloakLogLevel: "info"
+    keycloakHostnameDebug: "true"
+    realm:
+      name: "gradiant"
+      frameAncestors: "https://conector-xdatashare.gradiant.org"
+      frontendAuth:
+        rootUrl: "https://conector-xdatashare.gradiant.org"
+        adminUrl: "https://conector-xdatashare.gradiant.org"
+        baseUrl: "https://conector-xdatashare.gradiant.org"
+        logOutRedirectUri: "https://conector-xdatashare.gradiant.org/*"
+        redirectUris:
+          - "https://conector-xdatashare.gradiant.org/*"
+        webOrigins:
+          - "https://conector-xdatashare.gradiant.org"
+      frontendDev:
+        rootUrl: "https://conector-xdatashare.gradiant.org"
+        adminUrl: "https://conector-xdatashare.gradiant.org"
+        baseUrl: "https://conector-xdatashare.gradiant.org"
+        logOutRedirectUri: "https://conector-xdatashare.gradiant.org/##https://conector-xdatashare.gradiant.org/*"
+        redirectUris:
+          - "https://conector-xdatashare.gradiant.org/*"
+          - "https://conector-xdatashare.gradiant.org"
+        webOrigins:
+          - "https://conector-xdatashare.gradiant.org/*"
+          - "https://conector-xdatashare.gradiant.org"
+
+  deployment:
+    replicaCount: 1
+    image:
+      name: keycloak
+      repository: quay.io/keycloak/keycloak
+      tag: "26.0"
+      pullPolicy: IfNotPresent
+    volumes:
+      name: realms-import-volume
+      mountPath: /opt/keycloak/data/import
+
+  service:
+    type: ClusterIP
+    ports:
+      - name: http
+        protocol: TCP
+        port: 8080
+        targetPort: 8080
+      - name: https
+        protocol: TCP
+        port: 8443
+        targetPort: 8443
+  ingress:
+    host: conector-xdatashare.gradiant.org
+    tlsSecretName: gradiant-kc-tls-cert
+    paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          serviceName: gradiant-keycloak-service
+          servicePort: 8080
+
+  secret:
+    name: gradiant-keycloak-admin-credentials
+    type: Opaque
+    keycloakAdminUser: "admin"
+    keycloakAdminPassword: "admin"
+
+postgres:
+  replicaCount: 1
+  image:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+  db:
+    name: gradiant
+    user: gradiant
+    password: gradiant
+    pgdata: /var/lib/postgresql/data/pgdata
+  service:
+    name: postgres
+    port: 5432
+    targetPort: 5432
+  volume:
+    accessMode: ReadWriteOnce
+    storageClass: standard
+    mountPath: /var/lib/postgresql/data
+    size: 1Gi
+
+vault:
+  replicasCount: 1
+  rootToken: root
+  listenAddress: 0.0.0.0:8200
+  image:
+    repository: hashicorp/vault
+    tag: "1.15.4"
+    pullPolicy: IfNotPresent
+  service:
+    port: 8200
+    targetPort: 8200
+    portName: http
+
+seeding:
+  enabled: true
+  participant:
+    name: gradiant
+    did: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
+    didB64: "ZGlkOndlYjpjb25lY3Rvci14ZGF0YXNoYXJlLmdyYWRpYW50Lm9yZzppZGVudGl0eWh1YjpkaWQ="
+    keyId: "did:web:conector-xdatashare.gradiant.org:identityhub:did#key-1"
+    privateKeyAlias: "did:web:conector-xdatashare.gradiant.org:identityhub:did#key-1"
+
+  credentialIssuer:
+    did: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
+    pid: "credential-request-gradiant-1"
+
+  controlplane:
+    service:
+      observability:
+        name: gradiant-controlplane
+        port: 8182
+      management:
+        name: gradiant-controlplane
+        port: 8181
+
+  identityhub:
+    service:
+      observability:
+        name: gradiant-identityhub
+        port: 8182
+      identity:
+        name: gradiant-identityhub
+        port: 15151
+
+  serviceEndpoints:
+    credentials:
+      id: gradiant-credentialservice-1
+      host: "conector-xdatashare.gradiant.org/identityhub/credentials"
+      name: gradiant-identityhub
+      port: 13131
+      didB64: "ZGlkOndlYjpjb25lY3Rvci14ZGF0YXNoYXJlLmdyYWRpYW50Lm9yZzppZGVudGl0eWh1YjpkaWQ="
+    controlplane:
+      id: gradiant-dsp
+      host: "conector-xdatashare.gradiant.org/controlplane/dsp"
+      name: gradiant-controlplane
+      port: 8282
+
+  policies:
+    - file: files/policies/general-role.json
+    - file: files/policies/pharmacy-role.json
+    - file: files/policies/healthauthority-role.json
+    - file: files/policies/investigationcentre-role.json
+    - file: files/policies/techcentre-role.json
+    - file: files/policies/membership.json
+
+  apiKeys:
+    management: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    identityhub: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"

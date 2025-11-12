@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-identityhub-ingress-did
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{ .Values.ingressDid.host }}
+      http:
+        paths:
+          {{- range .Values.ingressDid.paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ .backend.serviceName | default (printf "%s-identityhub" $.Release.Name) }}
+                port:
+                  number: {{ .backend.servicePort }}
+          {{- end }}
+  tls:
+    - hosts:
+        - {{ .Values.ingressDid.host | quote}}
+      secretName: {{ .Values.ingressDid.tlsSecretName }}
