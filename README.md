@@ -49,7 +49,10 @@ Look for the following in the status: section at the end of the output:
 
 If `Status` is `True`, the cluster is now ready to automatically issue certificates for any participant.
 
-## Phase 2: Deploying a New ParticipantRun these steps every time you need to add a new participant to the cluster.
+## Phase 2: Deploying a New Participant
+
+Run these steps every time you need to add a new participant to the cluster.
+
 ### 1.Generate Participant Configuration
 
 First, use the `generate_participant.sh` script to create the customized `values.yaml` file for the new participant. This script requires the participant's "main" hostname and its "Keycloak" hostname.
