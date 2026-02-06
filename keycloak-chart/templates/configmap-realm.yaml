@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm-import
+data:
+  realm.json:  |
+{{ .Files.Get "realms/realm.json" | indent 4 }}

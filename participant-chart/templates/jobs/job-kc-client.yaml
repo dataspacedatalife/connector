@@ -1,0 +1,154 @@
+{{- if .Values.seeding.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-keycloak-seeding
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "4"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+
+        - name: seeder-keycloak-client
+          image: badouralix/curl-jq:latest
+          env:
+            - name: KC_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.seeding.auth.secretName }}
+                  key: {{ .Values.seeding.auth.secretPasswordKey }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # ====================================================
+              # 1. CONFIG
+              # ====================================================
+              KC_URL="{{ .Values.seeding.keycloakUrl }}"
+              REALM="{{ .Values.seeding.targetRealm }}"
+              ADMIN_USER="admin"
+              ADMIN_PASS="$KC_ADMIN_PASSWORD"
+
+              RELEASE_NAME="{{ .Release.Name }}"
+              CREATE_USER="{{ .Values.seeding.defaultUser.create }}"
+              USER_PASS="{{ .Values.seeding.defaultUser.password }}"
+
+              # ====================================================
+              # 2. GET THE ADMIN TOKEN
+              # ====================================================
+              echo "Getting Admin Token..."
+              TOKEN=$(curl -s -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
+                -H "Content-Type: application/x-www-form-urlencoded" \
+                -d "username=$ADMIN_USER" \
+                -d "password=$ADMIN_PASS" \
+                -d "grant_type=password" \
+                -d "client_id=admin-cli" | jq -r '.access_token')
+
+              if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
+                echo "Error getting token. Check credentials."
+                exit 1
+              fi
+
+              # ====================================================
+              # 3. CREATE CLIENTS
+              # ====================================================
+
+              create_client() {
+                local FILE=$1
+                echo "Creating Client from $FILE..."
+                local HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$REALM/clients" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d @$FILE)
+
+                if [ "$HTTP_CODE" -eq 201 ]; then
+                   echo " -> Created successfully."
+                elif [ "$HTTP_CODE" -eq 409 ]; then
+                   echo " -> Already exists (409). Skipping."
+                else
+                   echo " -> Failed. HTTP Code: $HTTP_CODE"
+                   exit 1
+                fi
+              }
+
+              # Create Proxy Client
+              create_client "/payload/proxy-client.json"
+
+              # ====================================================
+              # 4. CREATE GRUP
+              # ====================================================
+              echo "Creating Group: ${RELEASE_NAME}-group..."
+
+              GROUP_JSON=$(jq -n --arg name "${RELEASE_NAME}-group" '{"name": $name}')
+
+              HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$REALM/groups" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "$GROUP_JSON")
+
+              if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 409 ]; then
+                 echo "Group processing finished (Created or Exists)."
+              else
+                 echo "Failed to create group. HTTP: $HTTP_CODE"
+                 exit 1
+              fi
+
+              # GET THE GROUP ID
+              GROUP_ID=$(curl -s -H "Authorization: Bearer $TOKEN" \
+                "$KC_URL/admin/realms/$REALM/groups?search=${RELEASE_NAME}-group" | \
+                jq -r --arg name "${RELEASE_NAME}-group" '.[] | select(.name == $name) | .id')
+
+              echo "Group ID is: $GROUP_ID"
+
+              # ====================================================
+              # 5. CREATE DEFAULT USER AND ASSIGN TO GROUP (OPTIONAL)
+              # ====================================================
+              if [ "$CREATE_USER" == "true" ]; then
+                echo "Flag active. Creating User: $RELEASE_NAME..."
+                FAKE_EMAIL="${RELEASE_NAME}@example.com"
+
+                USER_JSON=$(jq -n \
+                  --arg username "$RELEASE_NAME" \
+                  --arg pass "$USER_PASS" \
+                  --arg email "$FAKE_EMAIL" \
+                  '{
+                    "username": $username,
+                    "enabled": true,
+                    "email": $email,
+                    "emailVerified": true,
+                    "firstName": $username,
+                    "lastName": $username,
+                    "credentials": [{"type": "password", "value": $pass, "temporary": false}]
+                  }')
+
+                HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$REALM/users" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "$USER_JSON")
+
+                # Get the user ID
+                USER_ID=$(curl -s -H "Authorization: Bearer $TOKEN" \
+                  "$KC_URL/admin/realms/$REALM/users?username=$RELEASE_NAME" | \
+                  jq -r --arg name "$RELEASE_NAME" '.[] | select(.username == $name) | .id')
+
+                if [ ! -z "$USER_ID" ] && [ ! -z "$GROUP_ID" ]; then
+                  echo "Adding User ($USER_ID) to Group ($GROUP_ID)..."
+                  curl -s -X PUT "$KC_URL/admin/realms/$REALM/users/$USER_ID/groups/$GROUP_ID" \
+                    -H "Authorization: Bearer $TOKEN" \
+                    -H "Content-Type: application/json"
+                fi
+              else
+                echo "User creation flag is disabled. Skipping."
+              fi
+
+          volumeMounts:
+            - name: payload-volume
+              mountPath: /payload
+      volumes:
+        - name: payload-volume
+          configMap:
+            name: {{ .Release.Name }}-seeding-payload
+{{- end }}

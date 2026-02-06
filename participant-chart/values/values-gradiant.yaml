@@ -23,11 +23,6 @@ controlplane:
     edcUseCaseApiUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/use-case/api/use-case"
 
   deployment:
-    replicaCount: 1
-    image:
-      repository: dataspacedatalife/controlplane
-      tag: "latest"
-      pullPolicy: Always
     initContainers:
       dependencies:
         - name: "Postgres"
@@ -40,30 +35,6 @@ controlplane:
           host: "gradiant-identityhub"
           port: "8182"
 
-  service:
-    type: ClusterIP
-    ports:
-      - name: management
-        port: 8181
-        targetPort: 8181
-      - name: paris
-        port: 8081
-        targetPort: 8081
-      - name: version
-        port: 7171
-        targetPort: 7171
-      - name: control
-        port: 9191
-        targetPort: 9191
-      - name: dsp
-        port: 8282
-        targetPort: 8282
-      - name: catalog
-        port: 17171
-        targetPort: 17171
-      - name: observability
-        port: 8182
-        targetPort: 8182
 
   ingress:
     host: conector-xdatashare.gradiant.org
@@ -114,11 +85,6 @@ dataplane:
     edcControlEndpoint: "http://gradiant-dataplane:9191/api/control"
 
   deployment:
-    replicaCount: 1
-    image:
-      repository: dataspacedatalife/dataplane
-      tag: "latest"
-      pullPolicy: Always
     initContainers:
       dependencies:
         - name: "Postgres"
@@ -130,19 +96,6 @@ dataplane:
         - name: "Controlplane"
           host: "gradiant-controlplane"
           port: 9191
-
-  service:
-    type: ClusterIP
-    ports:
-      - name: control
-        port: 9191
-        targetPort: 9191
-      - name: public
-        port: 8185
-        targetPort: 8185
-      - name: observability
-        port: 8182
-        targetPort: 8182
 
   ingress:
     host: conector-xdatashare.gradiant.org
@@ -167,11 +120,6 @@ identityhub:
     datasourceDefaultPassword: "gradiant"
 
   deployment:
-    replicaCount: 1
-    image:
-      repository: dataspacedatalife/identity-hub
-      tag: "latest"
-      pullPolicy: Always
     initContainers:
       dependencies:
         - name: "Postgres"
@@ -180,28 +128,6 @@ identityhub:
         - name: "Vault"
           host: "gradiant-vault"
           port: 8200
-
-  service:
-    type: ClusterIP
-    ports:
-      - name: version
-        port: 7171
-        targetPort: 7171
-      - name: credentials
-        port: 13131
-        targetPort: 13131
-      - name: identity
-        port: 15151
-        targetPort: 15151
-      - name: did
-        port: 10100
-        targetPort: 10100
-      - name: sts
-        port: 9292
-        targetPort: 9292
-      - name: observability
-        port: 8182
-        targetPort: 8182
 
   ingress:
     host: conector-xdatashare.gradiant.org
@@ -253,103 +179,6 @@ participant-portal:
     viteConnectorTimeout: "15000"
     dev: "true"
 
-  deployment:
-    replicaCount: 1
-    image:
-      repository: dataspacedatalife/participant-portal
-      tag: "latest"
-      pullPolicy: Always
-
-  service:
-    type: ClusterIP
-    ports:
-      - name: http
-        protocol: TCP
-        port: 80
-        targetPort: 80
-
-  ingress:
-    host: conector-xdatashare.gradiant.org
-    tlsSecretName: gradiant-tls-cert
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          serviceName: gradiant-participant-portal-service
-          servicePort: 80
-
-keycloak:
-  configMap:
-    keycloakProxy: "edge"
-    keycloakHostnameStrict: "false"
-    keycloakHostnameBackchannelDynamic: "true"
-    keycloakHostname: "https://conector-xdatashare.gradiant.org"
-    keycloakFrontendUrl: "https://conector-xdatashare.gradiant.org"
-    keycloakHealthEnable: "true"
-    keycloakLogLevel: "info"
-    keycloakHostnameDebug: "true"
-    realm:
-      name: "gradiant"
-      frameAncestors: "https://conector-xdatashare.gradiant.org"
-      frontendAuth:
-        rootUrl: "https://conector-xdatashare.gradiant.org"
-        adminUrl: "https://conector-xdatashare.gradiant.org"
-        baseUrl: "https://conector-xdatashare.gradiant.org"
-        logOutRedirectUri: "https://conector-xdatashare.gradiant.org/*"
-        redirectUris:
-          - "https://conector-xdatashare.gradiant.org/*"
-        webOrigins:
-          - "https://conector-xdatashare.gradiant.org"
-      frontendDev:
-        rootUrl: "https://conector-xdatashare.gradiant.org"
-        adminUrl: "https://conector-xdatashare.gradiant.org"
-        baseUrl: "https://conector-xdatashare.gradiant.org"
-        logOutRedirectUri: "https://conector-xdatashare.gradiant.org/##https://conector-xdatashare.gradiant.org/*"
-        redirectUris:
-          - "https://conector-xdatashare.gradiant.org/*"
-          - "https://conector-xdatashare.gradiant.org"
-        webOrigins:
-          - "https://conector-xdatashare.gradiant.org/*"
-          - "https://conector-xdatashare.gradiant.org"
-
-  deployment:
-    replicaCount: 1
-    image:
-      name: keycloak
-      repository: quay.io/keycloak/keycloak
-      tag: "26.0"
-      pullPolicy: IfNotPresent
-    volumes:
-      name: realms-import-volume
-      mountPath: /opt/keycloak/data/import
-
-  service:
-    type: ClusterIP
-    ports:
-      - name: http
-        protocol: TCP
-        port: 8080
-        targetPort: 8080
-      - name: https
-        protocol: TCP
-        port: 8443
-        targetPort: 8443
-  ingress:
-    host: conector-xdatashare.gradiant.org
-    tlsSecretName: gradiant-kc-tls-cert
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          serviceName: gradiant-keycloak-service
-          servicePort: 8080
-
-  secret:
-    name: gradiant-keycloak-admin-credentials
-    type: Opaque
-    keycloakAdminUser: "admin"
-    keycloakAdminPassword: "admin"
-
 postgres:
   replicaCount: 1
   image:
@@ -383,6 +212,76 @@ vault:
     port: 8200
     targetPort: 8200
     portName: http
+
+oauth2-proxy:
+  enable: true
+  config:
+    clientID: "gradiant-proxy"
+    clientSecret: "w4NQJ0KjffCejMYVM9ZWRNxm1yLY6beR"
+    configFile: |
+      http_address = "0.0.0.0:4180"
+      pass_authorization_header = true
+      custom_templates_dir = "/templates"
+      
+      whitelist_domains = [ 
+        "conector-xdatashare.gradiant.org", 
+        "conector-xdatashare-kc.gradiant.org"
+      ]
+      
+      email_domains = [ "*" ]
+      cookie_refresh = "5m"
+      cookie_expire  = "8h"
+      
+      provider = "keycloak-oidc"
+      oidc_issuer_url = "https://conector-xdatashare-kc.gradiant.org/realms/realm-dev"
+      
+      login_url = "https://conector-xdatashare-kc.gradiant.org/realms/realm-dev/protocol/openid-connect/auth"
+      redeem_url = "http://keycloak:8080/realms/realm-dev/protocol/openid-connect/token"
+      oidc_jwks_url = "http://keycloak:8080/realms/realm-dev/protocol/openid-connect/certs"
+      validate_url = "http://keycloak:8080/realms/realm-dev/protocol/openid-connect/userinfo"
+      skip_oidc_discovery = true
+      
+      backend_logout_url = "https://conector-xdatashare-kc.gradiant.org/realms/realm-dev/protocol/openid-connect/logout?id_token_hint={id_token}"
+      redirect_url = "https://conector-xdatashare.gradiant.org/oauth2/callback"
+      
+      allowed_groups = [ "/gradiant-group" ]
+      skip_provider_button = true
+      
+      upstreams = [
+        "http://gradiant-participant-portal-service:80/",
+        "http://gradiant-controlplane:8181/api/management/",
+        "http://gradiant-controlplane:17171/api/catalog/"
+      ]
+
+  extraVolumes:
+    - name: templates
+      configMap:
+        name: gradiant-oauth2-proxy-templates
+  extraVolumeMounts:
+    - name: templates
+      mountPath: "/templates"
+      readOnly: true
+
+  service:
+    portNumber: 4180
+
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/pass-authorization-header: "true"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+      nginx.ingress.kubernetes.io/large-client-header-buffers: "4 16k"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    className: "nginx"
+    path: /
+    pathType: Prefix
+    hosts:
+      - "conector-xdatashare.gradiant.org"
+    tls:
+      - secretName: gradiant-tls-cert
+        hosts:
+          - "conector-xdatashare.gradiant.org"
 
 seeding:
   enabled: true
@@ -439,3 +338,18 @@ seeding:
   apiKeys:
     management: "Z3JhZGlhbnQtcGFzc3dvcmQ="
     identityhub: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"
+
+  keycloakUrl: "http://keycloak:8080"
+  targetRealm: "realm-dev"
+  postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2Fkeycloak-test.srv.cesga.es%3A30475%2Frealms%2Frealm-dev%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2Ftest-alta.srv.cesga.es%3A30475%2F%26client_id%3Dtest-alta-proxy"
+  auth:
+    secretName: "keycloak-secrets"
+    secretPasswordKey: "admin-password"
+  client:
+    clientId: "test-alta-proxy"
+    publicUrl: "https://test-alta.srv.cesga.es:30475"
+    secret: "w4NQJ0KjffCejMYVM9ZWRNxm1yLY6beR"
+    did: "did:web:test-alta-identityhub%3A10100"
+  defaultUser:
+    create: true
+    password: "1234"
