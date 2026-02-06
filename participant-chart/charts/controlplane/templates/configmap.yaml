@@ -6,13 +6,15 @@ data:
   EDC_HOSTNAME: {{ .Values.configMap.hostname | quote }}
   EDC_IAM_ISSUER_ID: {{ .Values.configMap.iamIssuerId | quote }}
   WEB_HTTP_MANAGEMENT_PATH: "/api/management"
-  WEB_HTTP_MANAGEMENT_AUTH_TYPE: "tokenbased"
-  WEB_HTTP_MANAGEMENT_AUTH_KEY: {{ .Values.configMap.managementAuthKey | quote }}
+  WEB_HTTP_MANAGEMENT_AUTH_TYPE: "delegated"
+  WEB_HTTP_MANAGEMENT_AUTH_DAC_KEY_URL: {{ .Values.configMap.managementAuthDacKeyUrl | quote }}
+  #WEB_HTTP_MANAGEMENT_AUTH_KEY: {{ .Values.configMap.managementAuthKey | quote }}
   WEB_HTTP_PROTOCOL_PATH: "/api/dsp"
   WEB_HTTP_CONTROL_PATH: "/api/control"
   WEB_HTTP_CATALOG_PATH: "/api/catalog"
-  WEB_HTTP_CATALOG_AUTH_TYPE: "tokenbased"
-  WEB_HTTP_CATALOG_AUTH_KEY: {{ .Values.configMap.catalogAuthKey | quote }}
+  WEB_HTTP_CATALOG_AUTH_TYPE: "delegated"
+  WEB_HTTP_CATALOG_AUTH_DAC_KEY_URL: {{ .Values.configMap.catalogAuthDacKeyUrl | quote }}
+  #WEB_HTTP_CATALOG_AUTH_KEY: {{ .Values.configMap.catalogAuthKey | quote }}
   WEB_HTTP_PARTICIPANT_AUTH_TYPE: "tokenbased"
   WEB_HTTP_PARTICIPANT_AUTH_KEY: {{ .Values.configMap.participantAuthKey | quote }}
   WEB_HTTP_VERSION_PATH: "/api/version"
