@@ -273,6 +273,7 @@ oauth2-proxy:
       nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
       nginx.ingress.kubernetes.io/large-client-header-buffers: "4 16k"
       nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
     className: "nginx"
     path: /
     pathType: Prefix

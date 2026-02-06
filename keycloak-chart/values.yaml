@@ -23,7 +23,7 @@ keycloak:
     - name: KC_PROXY_HEADERS
       value: "xforwarded"
     - name: KC_HOSTNAME
-      value: "https://keycloak-test.srv.cesga.es:30475"
+      value: "https://conector-xdatashare-kc.gradiant.org"
     - name: KC_HOSTNAME_STRICT
       value: "false"
     - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
@@ -75,13 +75,15 @@ keycloak:
 
   ingress:
     enabled: true
-    hostname: keycloak-test.srv.cesga.es
+    hostname: conector-xdatashare-kc.gradiant.org
     ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
     tls: true
     extraTls:
       - hosts:
-          - keycloak-test.srv.cesga.es
-        secretName: wildcard-tls-secret
+          - conector-xdatashare-kc.gradiant.org
+        secretName: keycloak-tls-secret
 
   postgresql:
     enabled: true
