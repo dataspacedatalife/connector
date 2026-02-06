@@ -106,6 +106,9 @@ keycloak:
         requests:
           memory: "512Mi"
           cpu: "250m"
+        limits:
+          memory: "1024Mi"
+          cpu: "500m"
 seeding:
   enabled: true
   keycloakUrl: "http://keycloak:8080"
