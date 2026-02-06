@@ -6,9 +6,7 @@ data:
   NODE_ENV: {{ .Values.configMap.nodeEnv | quote }}
   VITE_KEYCLOAK_URL: {{ .Values.configMap.viteKeycloakUrl | quote }}
   VITE_KEYCLOAK_REALM: {{ .Values.configMap.viteKeycloakRealm | quote }}
-  VITE_KEYCLOAK_CLIENT_ID: {{ .Values.configMap.viteKeycloakClientId | quote }}
-  VITE_KEYCLOAK_CLIENT_SECRET: {{ .Values.configMap.viteKeycloakClientSecret | quote }}
-
+  VITE_KEYCLOAK_AUTH_CLIENT_ID: {{ .Values.configMap.viteKeycloakAuthClientId | quote }}
   VITE_EDC_CONNECTOR_NAME: {{ .Values.configMap.viteEdcConnectorName | quote }}
   VITE_EDC_CONNECTOR_BASE_URL: {{ .Values.configMap.viteEdcConnectorBaseUrl | quote }}
   VITE_EDC_CONNECTOR_CATALOG_URL: {{ .Values.configMap.viteEdcConnectorCatalogUrl | quote }}

@@ -16,9 +16,7 @@ data:
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "https://test-alta.srv.cesga.es:30475/*"
-      ],
+      "redirectUris": [],
       "webOrigins": [
         "+"
       ],

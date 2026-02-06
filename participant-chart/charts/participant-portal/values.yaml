@@ -1,8 +1,9 @@
 deployment:
   replicaCount: 1
   image:
-    repository: dataspacedatalife/participant-portal
-    tag: "latest"
+    pullSecrets: harbor-regcred
+    repository: harbor.gradiant.org/si-syp-xdatashare-pr-01616/participant-portal
+    tag: "proxy"
     pullPolicy: Always
 
 service:
