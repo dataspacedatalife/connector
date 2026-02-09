@@ -1,0 +1,15 @@
+deployment:
+  replicaCount: 1
+  image:
+    pullSecrets: harbor-regcred
+    repository: harbor.gradiant.org/si-syp-xdatashare-pr-01616/participant-portal
+    tag: "proxy"
+    pullPolicy: Always
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80

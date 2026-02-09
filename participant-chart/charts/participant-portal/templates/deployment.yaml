@@ -12,6 +12,8 @@ spec:
       labels:
         app: {{ .Release.Name }}-participant-portal
     spec:
+      imagePullSecrets:
+        - name: {{ .Values.deployment.image.pullSecrets }}
       containers:
         - name: {{ .Release.Name }}-participant-portal
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"

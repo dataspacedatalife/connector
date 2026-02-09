@@ -1,0 +1,19 @@
+deployment:
+  replicaCount: 1
+  image:
+    repository: dataspacedatalife/dataplane
+    tag: "latest"
+    pullPolicy: Always
+
+service:
+  type: ClusterIP
+  ports:
+    - name: control
+      port: 9191
+      targetPort: 9191
+    - name: public
+      port: 8185
+      targetPort: 8185
+    - name: observability
+      port: 8182
+      targetPort: 8182

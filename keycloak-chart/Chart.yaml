@@ -1,0 +1,11 @@
+apiVersion: v2
+name: Central Keycloak Prod Wrapper
+description: Keycloak Prod Wrapper Chart
+type: application
+version: 0.1.0
+appVersion: "26.0.0"
+
+dependencies:
+  - name: keycloak
+    version: 25.0.0
+    repository: https://charts.bitnami.com/bitnami

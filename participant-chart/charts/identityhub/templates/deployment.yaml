@@ -44,6 +44,9 @@ spec:
             requests:
               memory: "512Mi"
               cpu: "500m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
           startupProbe:
             httpGet:
               path: /api/observability/check/health

@@ -1,0 +1,118 @@
+keycloak:
+  global:
+    security:
+      allowInsecureImages: true
+  replicaCount: 1
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/keycloak
+
+  extraVolumes:
+    - name: realm-import
+      configMap:
+        name: keycloak-realm-import
+
+  extraVolumeMounts:
+    - name: realm-import
+      mountPath: "/opt/bitnami/keycloak/data/import/realm.json"
+      subPath: "realm.json"
+
+  extraStartupArgs: "--import-realm"
+
+  extraEnvVars:
+    - name: KC_PROXY_HEADERS
+      value: "xforwarded"
+    - name: KC_HOSTNAME
+      value: "https://conector-xdatashare-kc.gradiant.org"
+    - name: KC_HOSTNAME_STRICT
+      value: "false"
+    - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+      value: "true"
+    - name: KC_HEALTH_ENABLED
+      value: "true"
+    - name: KC_HTTP_MANAGEMENT_HEALTH_ENABLED
+      value: "false"
+    - name: KC_LEGACY_OBSERVABILITY_INTERFACE
+      value: "true"
+    - name: KC_LOG_LEVEL
+      value: "info"
+    - name: KC_DB_PASSWORD
+      value: "keycloak"
+    - name: KC_DB_USERNAME
+      value: "keycloak"
+
+  auth:
+    adminUser: "admin"
+    existingSecret: "keycloak-secrets"
+    passwordSecretKey: "admin-password"
+
+  service:
+    type: ClusterIP
+    ports:
+      http: 8080
+      https: 8443
+
+  livenessProbe:
+    initialDelaySeconds: 300
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  resources:
+    requests:
+      memory: "1024Mi"
+      cpu: "1000m"
+    limits:
+      memory: "1536Mi"
+      cpu: "2000m"
+
+  ingress:
+    enabled: true
+    hostname: conector-xdatashare-kc.gradiant.org
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    tls: true
+    extraTls:
+      - hosts:
+          - conector-xdatashare-kc.gradiant.org
+        secretName: keycloak-tls-secret
+
+  postgresql:
+    enabled: true
+    image:
+      registry: public.ecr.aws
+      repository: bitnami/postgresql
+      tag: "15"
+    auth:
+      database: "keycloak"
+      username: "keycloak"
+      existingSecret: "keycloak-secrets"
+      secretKeys:
+        userPasswordKey: "postgres-password"
+    primary:
+      persistence:
+        enabled: true
+        size: 2Gi
+        storageClass: openebs-hostpath
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+        limits:
+          memory: "1024Mi"
+          cpu: "500m"
+seeding:
+  enabled: true
+  keycloakUrl: "http://keycloak:8080"
+  keycloakHealth: "http://keycloak:8080"
+  targetRealm: "realm-dev"
+  auth:
+    secretName: "keycloak-secrets"
+    secretPasswordKey: "admin-password"
