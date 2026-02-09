@@ -1,0 +1,11 @@
+replicasCount: 1
+rootToken: root
+listenAddress: 0.0.0.0:8200
+image:
+  repository: hashicorp/vault
+  tag: "1.15.4"
+  pullPolicy: IfNotPresent
+service:
+  port: 8200
+  targetPort: 8200
+  portName: http

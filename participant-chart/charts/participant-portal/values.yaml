@@ -1,7 +1,7 @@
 deployment:
   replicaCount: 1
+  imagePullSecret: harbor-regcred
   image:
-    pullSecrets: harbor-regcred
     repository: harbor.gradiant.org/si-syp-xdatashare-pr-01616/participant-portal
     tag: "proxy"
     pullPolicy: Always

@@ -11,6 +11,7 @@ data:
   VITE_EDC_CONNECTOR_BASE_URL: {{ .Values.configMap.viteEdcConnectorBaseUrl | quote }}
   VITE_EDC_CONNECTOR_CATALOG_URL: {{ .Values.configMap.viteEdcConnectorCatalogUrl | quote }}
   VITE_EDC_CONNECTOR_MANAGEMENT_URL: {{ .Values.configMap.viteEdcConnectorManagementUrl | quote }}
+  VITE_EDC_CONNECTOR_PARTICIPANT_URL: {{ .Values.configMap.viteEdcConnectorParticipantUrl | quote }}
   VITE_EDC_CONNECTOR_IDENTITY_URL: {{ .Values.configMap.viteEdcConnectorIdentityUrl | quote }}
   VITE_EDC_CONNECTOR_PUBLIC_URL: {{ .Values.configMap.viteEdcConnectorPublicUrl | quote }}
   VITE_EDC_CONNECTOR_AUTH_URL: {{ .Values.configMap.viteEdcConnectorAuthUrl | quote }}

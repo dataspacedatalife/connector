@@ -26,7 +26,7 @@ done
 # --- 2. Validation ---
 if [ -z "$EMAIL" ]; then
   echo "Error: --email flag is mandatory for Let's Encrypt."
-  echo "Usage: $0 --email <your-email@example.com>"
+  echo "Usage: $0 --email <email@example.com>"
   exit 1
 fi
 
@@ -54,14 +54,14 @@ cat <<EOF | kubectl apply -f -
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: letsencrypt-prod
+  name: letsencrypt
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
     # The email is now a variable
     email: $EMAIL
     privateKeySecretRef:
-      name: letsencrypt-prod-key
+      name: letsencrypt-key
     solvers:
     - http01:
         ingress:
@@ -74,6 +74,6 @@ echo "--- 3. Verifying the ClusterIssuer ---"
 # Give it 15 seconds for the Issuer to register
 echo "Waiting 15 seconds for the Issuer to register..."
 sleep 15
-kubectl describe clusterissuer letsencrypt-prod
+kubectl describe clusterissuer letsencrypt
 
 echo "✅ Cluster Configuration Complete!"

@@ -19,11 +19,11 @@ spec:
             - containerPort: {{ .Values.service.port | default 5432 }}
           env:
             - name: POSTGRES_DB
-              value: {{ .Values.db.name | default "postgres" }}
+              value: {{ .Values.global.postgres.db.name | default "postgres" }}
             - name: POSTGRES_USER
-              value: {{ .Values.db.user | default "postgres" }}
+              value: {{ .Values.global.postgres.db.user | default "postgres" }}
             - name: POSTGRES_PASSWORD
-              value: {{ .Values.db.password | default "postgres" }}
+              value: {{ .Values.global.postgres.db.password | default "postgres" }}
             - name: PGDATA
               value: {{ .Values.volume.pgdata | default "/var/lib/postgresql/data/pgdata" }}
           volumeMounts:

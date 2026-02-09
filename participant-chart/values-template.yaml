@@ -1,10 +1,24 @@
+global:
+  postgres:
+    db:
+      url: jdbc:postgresql://{{PARTICIPANT}}-postgres:5432/{{PARTICIPANT}}
+      name: {{PARTICIPANT}}
+      user: {{PARTICIPANT}}
+      password: {{PARTICIPANT}}
+  vault:
+    url: http://{{PARTICIPANT}}-vault:8200
+    token: root
+
 controlplane:
 
   configMap:
     hostname: "{{HOST}}"
     iamIssuerId: "did:web:{{HOST}}:identityhub:did"
+    managementAuthDacKeyUrl: "http://keycloak:8080/realms/dataspace/protocol/openid-connect/certs"
     managementAuthKey: "{{AUTH_KEY_B64}}"
+    catalogAuthDacKeyUrl: "http://keycloak:8080/realms/dataspace/protocol/openid-connect/certs"
     catalogAuthKey: "{{AUTH_KEY_B64}}"
+    participantAuthDacKeyUrl: "http://keycloak:8080/realms/dataspace/protocol/openid-connect/certs"
     participantAuthKey: "{{AUTH_KEY_B64}}"
     iamStsPrivateKeyAlias: "did:web:{{HOST}}:identityhub:did#key-1"
     iamStsPublicKeyId: "did:web:{{HOST}}:identityhub:did#key-1"
@@ -14,20 +28,11 @@ controlplane:
     iamAuthorityId: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
     dspCallbackAddress: "https://{{HOST}}/controlplane/dsp/api/dsp"
     iamStsOauthTokenUrl: "http://{{PARTICIPANT}}-identityhub:9292/api/sts/token"
-    vaultHashicorpUrl: "http://{{PARTICIPANT}}-vault:8200"
-    datasourceDefaultUrl: "jdbc:postgresql://{{PARTICIPANT}}-postgres:5432/{{PARTICIPANT}}"
-    datasourceDefaultUser: "{{PARTICIPANT}}"
-    datasourceDefaultPassword: "{{PARTICIPANT}}"
     edcParisPublicBaseurl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/participant-public/api/participant-public"
     edcControlEndpoint: "http://{{PARTICIPANT}}-controlplane:9191/api/control"
     edcUseCaseApiUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/use-case/api/use-case"
 
   deployment:
-    replicaCount: 1
-    image:
-      repository: dataspacedatalife/controlplane
-      tag: "latest"
-      pullPolicy: Always
     initContainers:
       dependencies:
         - name: "Postgres"
@@ -40,34 +45,14 @@ controlplane:
           host: "{{PARTICIPANT}}-identityhub"
           port: "8182"
 
-  service:
-    type: ClusterIP
-    ports:
-      - name: management
-        port: 8181
-        targetPort: 8181
-      - name: paris
-        port: 8081
-        targetPort: 8081
-      - name: version
-        port: 7171
-        targetPort: 7171
-      - name: control
-        port: 9191
-        targetPort: 9191
-      - name: dsp
-        port: 8282
-        targetPort: 8282
-      - name: catalog
-        port: 17171
-        targetPort: 17171
-      - name: observability
-        port: 8182
-        targetPort: 8182
-
   ingress:
     host: {{HOST}}
-    tlsSecretName: {{PARTICIPANT}}-tls-cert
+    tlsSecretName: {{TLS_SECRET_NAME}}
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: "{{CLUSTER_ISSUER}}"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
     paths:
       - path: /controlplane/management(/|$)(.*)
         pathType: ImplementationSpecific
@@ -103,10 +88,6 @@ dataplane:
     transferProxyTokenSignerPrivateKeyAlias: "did:web:{{HOST}}:identityhub:did#key-1"
     dpfSelectorUrl: "http://{{PARTICIPANT}}-controlplane:9191/api/control/v1/dataplanes"
     participantId: "did:web:{{HOST}}:identityhub:did"
-    vaultHashicorpUrl: "http://{{PARTICIPANT}}-vault:8200"
-    datasourceDefaultUrl: "jdbc:postgresql://{{PARTICIPANT}}-postgres:5432/{{PARTICIPANT}}"
-    datasourceDefaultUser: "{{PARTICIPANT}}"
-    datasourceDefaultPassword: "{{PARTICIPANT}}"
     iamStsOauthClientSecretAlias: "did:web:{{HOST}}:identityhub:did-sts-client-secret"
     iamStsOauthClientId: "did:web:{{HOST}}:identityhub:did"
     iamStsOauthTokenUrl: "https://{{HOST}}/identityhub/sts/api/sts/token"
@@ -114,11 +95,6 @@ dataplane:
     edcControlEndpoint: "http://{{PARTICIPANT}}-dataplane:9191/api/control"
 
   deployment:
-    replicaCount: 1
-    image:
-      repository: dataspacedatalife/dataplane
-      tag: "latest"
-      pullPolicy: Always
     initContainers:
       dependencies:
         - name: "Postgres"
@@ -131,22 +107,14 @@ dataplane:
           host: "{{PARTICIPANT}}-controlplane"
           port: 9191
 
-  service:
-    type: ClusterIP
-    ports:
-      - name: control
-        port: 9191
-        targetPort: 9191
-      - name: public
-        port: 8185
-        targetPort: 8185
-      - name: observability
-        port: 8182
-        targetPort: 8182
-
   ingress:
     host: {{HOST}}
-    tlsSecretName: {{PARTICIPANT}}-tls-cert
+    tlsSecretName: {{TLS_SECRET_NAME}}
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: "{{CLUSTER_ISSUER}}"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
     paths:
       - path: /dataplane/public(/|$)(.*)
         pathType: ImplementationSpecific
@@ -161,17 +129,8 @@ identityhub:
     iamStsPublicKeyId: "did:web:{{HOST}}:identityhub:did#key-1"
     ihIamId: "did:web:{{HOST}}:identityhub:did"
     ihApiSuperuserKey: "{{SUPER_USER_KEY_B64}}"
-    vaultHashicorpUrl: "http://{{PARTICIPANT}}-vault:8200"
-    datasourceDefaultUrl: "jdbc:postgresql://{{PARTICIPANT}}-postgres:5432/{{PARTICIPANT}}"
-    datasourceDefaultUser: "{{PARTICIPANT}}"
-    datasourceDefaultPassword: "{{PARTICIPANT}}"
 
   deployment:
-    replicaCount: 1
-    image:
-      repository: dataspacedatalife/identity-hub
-      tag: "latest"
-      pullPolicy: Always
     initContainers:
       dependencies:
         - name: "Postgres"
@@ -181,31 +140,14 @@ identityhub:
           host: "{{PARTICIPANT}}-vault"
           port: 8200
 
-  service:
-    type: ClusterIP
-    ports:
-      - name: version
-        port: 7171
-        targetPort: 7171
-      - name: credentials
-        port: 13131
-        targetPort: 13131
-      - name: identity
-        port: 15151
-        targetPort: 15151
-      - name: did
-        port: 10100
-        targetPort: 10100
-      - name: sts
-        port: 9292
-        targetPort: 9292
-      - name: observability
-        port: 8182
-        targetPort: 8182
-
   ingress:
     host: {{HOST}}
-    tlsSecretName: {{PARTICIPANT}}-tls-cert
+    tlsSecretName: {{TLS_SECRET_NAME}}
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: "{{CLUSTER_ISSUER}}"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
     paths:
       - path: /identityhub/version(/|$)(.*)
         pathType: ImplementationSpecific
@@ -233,156 +175,96 @@ identityhub:
           serviceName: {{PARTICIPANT}}-identityhub
           servicePort: 10100
 
+oauth2-proxy:
+  enable: true
+  config:
+    clientID: "{{PARTICIPANT}}-proxy"
+    clientSecret: "{{CLIENT_SECRET}}"
+    configFile: |
+      http_address = "0.0.0.0:4180"
+      pass_authorization_header = true
+      custom_templates_dir = "/templates"
+      
+      whitelist_domains = [ 
+        "{{HOST}}", 
+        "{{HOST_KC}}"
+      ]
+      
+      email_domains = [ "*" ]
+      cookie_refresh = "5m"
+      cookie_expire  = "8h"
+      
+      provider = "keycloak-oidc"
+      oidc_issuer_url = "https://{{HOST-KC}}/realms/dataspace"
+      
+      login_url = "https://{{HOST-KC}}/realms/dataspace/protocol/openid-connect/auth"
+      redeem_url = "http://keycloak:8080/realms/dataspace/protocol/openid-connect/token"
+      oidc_jwks_url = "http://keycloak:8080/realms/dataspace/protocol/openid-connect/certs"
+      validate_url = "http://keycloak:8080/realms/dataspace/protocol/openid-connect/userinfo"
+      skip_oidc_discovery = true
+      
+      backend_logout_url = "https://{{HOST-KC}}/realms/dataspace/protocol/openid-connect/logout?id_token_hint={id_token}"
+      redirect_url = "https://{{HOST}}/oauth2/callback"
+      
+      allowed_groups = [ "/{{PARTICIPANT}}-group" ]
+      skip_provider_button = true
+      
+      upstreams = [
+        "http://{{PARTICIPANT}}-participant-portal-service:80/",
+        "http://{{PARTICIPANT}}-controlplane:8181/api/management/",
+        "http://{{PARTICIPANT}}-controlplane:17171/api/catalog/",
+        "http://{{PARTICIPANT}}-controlplane:8081/api/participant/"
+      ]
+
+  extraVolumes:
+    - name: templates
+      configMap:
+        name: {{PARTICIPANT}}-oauth2-proxy-templates
+  extraVolumeMounts:
+    - name: templates
+      mountPath: "/templates"
+      readOnly: true
+
+  service:
+    portNumber: 4180
+
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/pass-authorization-header: "true"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+      nginx.ingress.kubernetes.io/large-client-header-buffers: "4 16k"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      cert-manager.io/cluster-issuer: "{{CLUSTER_ISSUER}}"
+    className: "nginx"
+    path: /
+    pathType: Prefix
+    hosts:
+      - "{{HOST}}"
+    tls:
+      - secretName: {{TLS_SECRET_NAME}}
+        hosts:
+          - "{{HOST}}"
+
 participant-portal:
   configMap:
     nodeEnv: "production"
     viteKeycloakUrl: "https://{{HOST_KC}}"
-    viteKeycloakRealm: "{{PARTICIPANT}}"
-    viteKeycloakClientId: "edc-frontend-dev"
-    viteKeycloakClientSecret: "E7UT2fK0svwevIeyU6T9RUvdrqD7eMm9"
+    viteKeycloakRealm: "dataspace"
+    viteKeycloakAuthClientId: "edc-frontend"
     viteEdcConnectorName: "{{PARTICIPANT}}"
     viteEdcConnectorBaseUrl: "https://{{HOST}}/"
-    viteEdcConnectorCatalogUrl: "https://{{HOST}}/controlplane/catalog/api/catalog"
-    viteEdcConnectorManagementUrl: "https://{{HOST}}/controlplane/management/api/management"
+    viteEdcConnectorCatalogUrl: "/api/catalog"
+    viteEdcConnectorManagementUrl: "/api/management"
+    viteEdcConnectorParticipantUrl: "/api/participant"
     viteEdcConnectorIdentityUrl: "https://{{HOST}}/identityhub/identity/api/identity"
     viteEdcConnectorPublicUrl: "https://{{HOST}}/dataplane/public/api/public"
     viteEdcConnectorAuthUrl: "https://{{HOST}}/"
-    viteEdcConnectorApiKey: "{{AUTH_KEY_B64}}"
     viteEdcConnectorId: "did:web:{{HOST}}:identityhub:did"
     viteConnectorCheckInterval: "300000"
     viteConnectorTimeout: "15000"
     dev: "true"
-
-  deployment:
-    replicaCount: 1
-    image:
-      repository: dataspacedatalife/participant-portal
-      tag: "latest"
-      pullPolicy: Always
-
-  service:
-    type: ClusterIP
-    ports:
-      - name: http
-        protocol: TCP
-        port: 80
-        targetPort: 80
-
-  ingress:
-    host: {{HOST}}
-    tlsSecretName: {{PARTICIPANT}}-tls-cert
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          serviceName: {{PARTICIPANT}}-participant-portal-service
-          servicePort: 80
-
-keycloak:
-  configMap:
-    keycloakProxy: "edge"
-    keycloakHostnameStrict: "false"
-    keycloakHostnameBackchannelDynamic: "true"
-    keycloakHostname: "https://{{HOST_KC}}"
-    keycloakFrontendUrl: "https://{{HOST_KC}}"
-    keycloakHealthEnable: "true"
-    keycloakLogLevel: "info"
-    keycloakHostnameDebug: "true"
-    realm:
-      name: "{{PARTICIPANT}}"
-      frameAncestors: "https://{{HOST}}"
-      frontendAuth:
-        rootUrl: "https://{{HOST}}"
-        adminUrl: "https://{{HOST}}"
-        baseUrl: "https://{{HOST}}"
-        logOutRedirectUri: "https://{{HOST}}/*"
-        redirectUris:
-          - "https://{{HOST}}/*"
-        webOrigins:
-          - "https://{{HOST}}"
-      frontendDev:
-        rootUrl: "https://{{HOST}}"
-        adminUrl: "https://{{HOST}}"
-        baseUrl: "https://{{HOST}}"
-        logOutRedirectUri: "https://{{HOST}}/##https://{{HOST}}/*"
-        redirectUris:
-          - "https://{{HOST}}/*"
-          - "https://{{HOST}}"
-        webOrigins:
-          - "https://{{HOST}}/*"
-          - "https://{{HOST}}"
-
-  deployment:
-    replicaCount: 1
-    image:
-      name: keycloak
-      repository: quay.io/keycloak/keycloak
-      tag: "26.0"
-      pullPolicy: IfNotPresent
-    volumes:
-      name: realms-import-volume
-      mountPath: /opt/keycloak/data/import
-
-  service:
-    type: ClusterIP
-    ports:
-      - name: http
-        protocol: TCP
-        port: 8080
-        targetPort: 8080
-      - name: https
-        protocol: TCP
-        port: 8443
-        targetPort: 8443
-  ingress:
-    host: {{HOST_KC}}
-    tlsSecretName: {{PARTICIPANT}}-kc-tls-cert
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          serviceName: {{PARTICIPANT}}-keycloak-service
-          servicePort: 8080
-
-  secret:
-    name: {{PARTICIPANT}}-keycloak-admin-credentials
-    type: Opaque
-    keycloakAdminUser: "admin"
-    keycloakAdminPassword: "admin"
-
-postgres:
-  replicaCount: 1
-  image:
-    repository: postgres
-    tag: "15"
-    pullPolicy: IfNotPresent
-  db:
-    name: {{PARTICIPANT}}
-    user: {{PARTICIPANT}}
-    password: {{PARTICIPANT}}
-    pgdata: /var/lib/postgresql/data/pgdata
-  service:
-    name: postgres
-    port: 5432
-    targetPort: 5432
-  volume:
-    accessMode: ReadWriteOnce
-    storageClass: standard
-    mountPath: /var/lib/postgresql/data
-    size: 1Gi
-
-vault:
-  replicasCount: 1
-  rootToken: root
-  listenAddress: 0.0.0.0:8200
-  image:
-    repository: hashicorp/vault
-    tag: "1.15.4"
-    pullPolicy: IfNotPresent
-  service:
-    port: 8200
-    targetPort: 8200
-    portName: http
 
 seeding:
   enabled: true
@@ -439,3 +321,18 @@ seeding:
   apiKeys:
     management: "{{AUTH_KEY_B64}}"
     identityhub: "{{SUPER_USER_KEY_B64}}"
+
+  keycloakUrl: "http://keycloak:8080"
+  targetRealm: "dataspace"
+  postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2F{{HOST_KC}}%3A30475%2Frealms%2Fdataspace%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2F{{HOST}}%2F%26client_id%3D{{PARTICIPANT}}-proxy"
+  auth:
+    secretName: "keycloak-secrets"
+    secretPasswordKey: "admin-password"
+  client:
+    clientId: "{{PARTICIPANT}}-proxy"
+    publicUrl: "https://{{HOST}}"
+    secret: "{{CLIENT_SECRET}}"
+    did: "did:web:{{HOST}}:identityhub:did"
+  defaultUser:
+    create: true
+    password: "1234"

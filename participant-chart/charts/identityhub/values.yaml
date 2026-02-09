@@ -1,7 +1,8 @@
 deployment:
   replicaCount: 1
+  imagePullSecret: harbor-regcred
   image:
-    repository: dataspacedatalife/identity-hub
+    repository: harbor.gradiant.org/si-syp-xdatashare-pr-01616/identity-hub
     tag: "latest"
     pullPolicy: Always
 

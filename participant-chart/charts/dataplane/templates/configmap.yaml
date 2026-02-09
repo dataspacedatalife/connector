@@ -11,11 +11,11 @@ data:
   EDC_DPF_SELECTOR_URL: {{ .Values.configMap.dpfSelectorUrl | quote }}
   WEB_HTTP_PUBLIC_PATH: "/api/public"
   EDC_PARTICIPANT_ID: {{ .Values.configMap.participantId | quote}}
-  EDC_VAULT_HASHICORP_URL: {{ .Values.configMap.vaultHashicorpUrl | quote }}
-  EDC_VAULT_HASHICORP_TOKEN: "root"
-  EDC_DATASOURCE_DEFAULT_URL: {{ .Values.configMap.datasourceDefaultUrl | quote }}
-  EDC_DATASOURCE_DEFAULT_USER: {{ .Values.configMap.datasourceDefaultUser | quote }}
-  EDC_DATASOURCE_DEFAULT_PASSWORD: {{ .Values.configMap.datasourceDefaultPassword | quote }}
+  EDC_VAULT_HASHICORP_URL: {{ .Values.global.vault.url | quote }}
+  EDC_VAULT_HASHICORP_TOKEN: {{ .Values.global.vault.token | quote }}
+  EDC_DATASOURCE_DEFAULT_URL: {{ .Values.global.postgres.db.url | quote}}
+  EDC_DATASOURCE_DEFAULT_USER: {{ .Values.global.postgres.db.user | quote}}
+  EDC_DATASOURCE_DEFAULT_PASSWORD: {{ .Values.global.postgres.db.password | quote}}
   EDC_SQL_SCHEMA_AUTOCREATE: "true"
   EDC_IAM_DID_WEB_USE_HTTPS: "true"
   EDC_IAM_STS_OAUTH_TOKEN_URL: {{ .Values.configMap.iamStsOauthTokenUrl | quote }}

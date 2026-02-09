@@ -21,7 +21,7 @@ keycloak:
 
   extraEnvVars:
     - name: KC_HOSTNAME
-      value: "https://conector-kc.dataspace.gradiant.org"
+      value: "https://{{HOST_KC}}"
     - name: KC_PROXY_HEADERS
       value: "xforwarded"
     - name: KC_HOSTNAME_STRICT
@@ -74,15 +74,15 @@ keycloak:
 
   ingress:
     enabled: true
-    hostname: conector-kc.dataspace.gradiant.org
+    hostname: {{HOST_KC}}
     ingressClassName: nginx
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt
+      cert-manager.io/cluster-issuer: {{CLUSTER_ISSUER}}
     tls: true
     extraTls:
       - hosts:
-          - conector-kc.dataspace.gradiant.org
-        secretName: keycloak-tls-cert
+          - {{HOST_KC}}
+        secretName: {{TLS_SECRET_NAME}}
 
   postgresql:
     enabled: true

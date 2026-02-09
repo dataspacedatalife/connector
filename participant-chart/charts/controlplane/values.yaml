@@ -1,7 +1,8 @@
 deployment:
   replicaCount: 1
+  imagePullSecret: harbor-regcred
   image:
-    repository: dataspacedatalife/controlplane
+    repository: harbor.gradiant.org/si-syp-xdatashare-pr-01616/controlplane
     tag: "latest"
     pullPolicy: Always
 
