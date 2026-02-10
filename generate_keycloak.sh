@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-TEMPLATE_FILE="values-template.yaml"
-OUTPUT_FILE="values.yaml"
+KEYCLOAK_CHART_DIR="keycloak-chart"
+TEMPLATE_FILE="$KEYCLOAK_CHART_DIR/values-template.yaml"
+OUTPUT_FILE="$KEYCLOAK_CHART_DIR/values.yaml"
 
 # Function to display usage instructions
 usage() {

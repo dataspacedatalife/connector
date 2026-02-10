@@ -3,6 +3,9 @@ keycloak:
     security:
       allowInsecureImages: true
   replicaCount: 1
+  realm:
+    name: "dataspace"
+    frameAncestors: "https://*.gradiant.org"
   image:
     registry: public.ecr.aws
     repository: bitnami/keycloak
@@ -111,7 +114,6 @@ keycloak:
 seeding:
   enabled: true
   keycloakUrl: "http://keycloak:8080"
-  keycloakHealth: "http://keycloak:8080"
   targetRealm: "dataspace"
   auth:
     secretName: "keycloak-secrets"

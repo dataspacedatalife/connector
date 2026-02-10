@@ -15,30 +15,26 @@ spec:
         - name: seeder-keycloak-client
           image: badouralix/curl-jq:latest
           env:
+            - name: KC_ADMIN_USER
+              value: "admin"
             - name: KC_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.seeding.auth.secretName }}
                   key: {{ .Values.seeding.auth.secretPasswordKey }}
+            - name: KC_URL
+              value: "{{ .Values.seeding.keycloakUrl }}"
+            - name: KC_REALM
+              value: "{{ .Values.seeding.targetRealm }}"
 
           command: ["/bin/sh", "-c"]
           args:
             - |
               # ====================================================
-              # 0. CONFIGURATION
-              # ====================================================
-              KC_URL="{{ .Values.seeding.keycloakUrl }}"
-              KC_HEALTH="{{ .Values.seeding.keycloakHealth }}"
-              REALM="{{ .Values.seeding.targetRealm }}"
-              ADMIN="admin"
-              PASS="$KC_ADMIN_PASSWORD"
-              RELEASE_NAME="{{ .Release.Name }}"
-
-              # ====================================================
               # 1. WAIT FOR KEYCLOAK (Wait for Readiness)
               # ====================================================
-              echo "Waiting for Keycloak to be ready at $KC_HEALTH..."
-              until curl -s -f "$KC_HEALTH/health/ready" > /dev/null; do
+              echo "Waiting for Keycloak to be ready at $KC_URL..."
+              until curl -s -f "$KC_URL/health/ready" > /dev/null; do
                 echo "Keycloak is unavailable - sleeping"
                 sleep 5
               done
@@ -50,8 +46,8 @@ spec:
               echo "Getting Admin Token..."
               TOKEN=$(curl -s -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
                 -H "Content-Type: application/x-www-form-urlencoded" \
-                -d "username=$ADMIN" \
-                -d "password=$PASS" \
+                -d "username=$KC_ADMIN_USER" \
+                -d "password=$KC_ADMIN_PASWORD" \
                 -d "grant_type=password" \
                 -d "client_id=admin-cli" | jq -r '.access_token')
 
@@ -68,7 +64,7 @@ spec:
               create_client() {
                 local FILE=$1
                 echo "Creating Client from $FILE..."
-                local HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$REALM/clients" \
+                local HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
                   -H "Authorization: Bearer $TOKEN" \
                   -H "Content-Type: application/json" \
                   -d @$FILE)

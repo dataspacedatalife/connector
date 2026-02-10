@@ -269,6 +269,7 @@ participant-portal:
 seeding:
   enabled: true
   participant:
+    url: "https://{{HOST}}"
     name: {{PARTICIPANT}}
     did: "did:web:{{HOST}}:identityhub:did"
     didB64: "{{DID_B64}}"

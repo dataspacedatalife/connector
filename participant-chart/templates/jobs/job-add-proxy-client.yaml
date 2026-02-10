@@ -13,37 +13,38 @@ spec:
       restartPolicy: OnFailure
       containers:
 
-        - name: seeder-keycloak-client
+        - name: seed-keycloak-client
           image: badouralix/curl-jq:latest
           env:
+            - name: KC_ADMIN_USER
+              value: "admin"
             - name: KC_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.seeding.auth.secretName }}
                   key: {{ .Values.seeding.auth.secretPasswordKey }}
+            - name: KC_URL
+              value: {{ .Values.seeding.keycloakUrl | quote }}
+            - name: KC_REALM
+              value: {{ .Values.seeding.targetRealm | quote }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name | quote }}
+            - name: CREATE_DEFAULT_USER
+              value: {{ .Values.seeding.defaultUser.create | quote }}
+            - name: DEFAULT_USER_PASSWORD
+              value: {{ .Values.seeding.defaultUser.password | quote }}
+
           command: ["/bin/sh", "-c"]
           args:
             - |
               # ====================================================
-              # 1. CONFIG
-              # ====================================================
-              KC_URL="{{ .Values.seeding.keycloakUrl }}"
-              REALM="{{ .Values.seeding.targetRealm }}"
-              ADMIN_USER="admin"
-              ADMIN_PASS="$KC_ADMIN_PASSWORD"
-
-              RELEASE_NAME="{{ .Release.Name }}"
-              CREATE_USER="{{ .Values.seeding.defaultUser.create }}"
-              USER_PASS="{{ .Values.seeding.defaultUser.password }}"
-
-              # ====================================================
-              # 2. GET THE ADMIN TOKEN
+              # 1. GET THE ADMIN TOKEN
               # ====================================================
               echo "Getting Admin Token..."
               TOKEN=$(curl -s -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
                 -H "Content-Type: application/x-www-form-urlencoded" \
-                -d "username=$ADMIN_USER" \
-                -d "password=$ADMIN_PASS" \
+                -d "username=$KC_ADMIN_USER" \
+                -d "password=$KC_ADMIN_PASSWORD" \
                 -d "grant_type=password" \
                 -d "client_id=admin-cli" | jq -r '.access_token')
 

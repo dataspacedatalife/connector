@@ -3,6 +3,9 @@ keycloak:
     security:
       allowInsecureImages: true
   replicaCount: 1
+  realm:
+    name: "dataspace"
+    frameAncestors: "https://*.gradiant.org"
   image:
     registry: public.ecr.aws
     repository: bitnami/keycloak
@@ -21,7 +24,7 @@ keycloak:
 
   extraEnvVars:
     - name: KC_HOSTNAME
-      value: "https://conector-kc.dataspace.gradiant.org"
+      value: "https://conector-xdatashare-kc.gradiant.org"
     - name: KC_PROXY_HEADERS
       value: "xforwarded"
     - name: KC_HOSTNAME_STRICT
@@ -111,7 +114,6 @@ keycloak:
 seeding:
   enabled: true
   keycloakUrl: "http://keycloak:8080"
-  keycloakHealth: "http://keycloak:8080"
   targetRealm: "dataspace"
   auth:
     secretName: "keycloak-secrets"

@@ -254,6 +254,7 @@ oauth2-proxy:
 seeding:
   enabled: true
   participant:
+    url: "https://conector-xdatashare.gradiant.org"
     name: gradiant
     did: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
     didB64: "ZGlkOndlYjpjb25lY3Rvci14ZGF0YXNoYXJlLmdyYWRpYW50Lm9yZzppZGVudGl0eWh1YjpkaWQ="
