@@ -122,7 +122,6 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
   ./generate_keycloak.sh --host-kc conector-xdatashare-kc.gradiant.org
 
 ```
-
 This command will create a new file: `keycloak-chart/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
 The generation script supports several flags:
 - `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.gradiant.org`).
@@ -154,9 +153,7 @@ If the participant does not have an existing IAM solution, deploy the `keycloak-
 
 ```bash
 # Install the standalone Keycloak chart
-helm install keycloak ./keycloak-chart \
-  --namespace xdatashare
-```
+helm install keycloak ./keycloak-chart --namespace <NAMESPACE>```
 
 ### 2. Participant
 #### 2.1. Generate Participant Configuration
@@ -289,4 +286,7 @@ To streamline the setup process, the chart includes several one-time jobs that r
 - Create Keycloak User (`job-add-proxy-client.yaml`):
     - Purpose: Ensures that the necessary Keycloak users and clients are created if the participant is using the chart-deployed Keycloak.
     - Functionality: This job interacts with the Keycloak Admin API to create the required client for securing the participant portal and to set up an initial user with appropriate permissions. This step is essential for enabling access to the participant portal immediately after deployment.
+- Participant Redirect Registration (job-register-participant-redirect)
+    - Purpose: To allow Keycloak to securely redirect the user back to the web portal after a successful login.
+    - Functionality: This job updates the configuration of the global client (typically named edc-frontend) in Keycloak. It adds the new participant’s portal URL to the Valid Redirect URIs list. Without this automated step, Keycloak would block access to the participant's portal for security reasons.
 
