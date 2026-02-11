@@ -2,7 +2,7 @@
 
 # Default values
 KC_ADMIN_USER="admin"
-KC_ADMIN_PASSWORD=""
+KC_ADMIN_PASSWORD="admin"
 KC_URL=""
 CLIENT_ADMIN="admin-cli"
 REALM_ADMIN="master"
@@ -15,7 +15,7 @@ usage() {
   echo "Usage: $0 [options]"
   echo "Options:"
   echo "  --user <user>                     Keycloak Admin User (default: admin)"
-  echo "  --pass <password>                 Keycloak Admin Password (required)"
+  echo "  --pass <password>                 Keycloak Admin Password (default: admin)"
   echo "  --host-kc <host-kc>               Keycloak Hostname (required)"
   echo "  --client-admin <client-admin>     Admin Client ID (default: admin-cli)"
   echo "  --realm-admin <realm-admin>       Admin Realm (default: master)"

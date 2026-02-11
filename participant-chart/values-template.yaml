@@ -48,7 +48,7 @@ controlplane:
   ingress:
     host: {{HOST}}
     tlsSecretName: {{TLS_SECRET_NAME}}
-    annotations:
+    annotations:x
       kubernetes.io/ingress.class: nginx
       cert-manager.io/cluster-issuer: "{{CLUSTER_ISSUER}}"
       nginx.ingress.kubernetes.io/use-regex: "true"
@@ -167,7 +167,7 @@ identityhub:
 
   ingressDid:
     host: {{HOST}}
-    tlsSecretName: {{PARTICIPANT}}-tls-cert
+    tlsSecretName: {{TLS_SECRET_NAME}}
     paths:
       - path: /identityhub/did(/|$)(.*)
         pathType: ImplementationSpecific
