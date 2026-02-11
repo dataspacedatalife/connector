@@ -69,9 +69,13 @@ To do these step of configuring the keycloak, two configuration jobs are used:
 - **Realm import job (job-import-realm.json):** Imports a preconfigured realm with the client scopes necessary for the user's initial login verifications. 
 - **Client registration job (job-add-default-client.json):** Registers a new client in this realm that will serve as the default client for the participant interface. 
 
+To automatically generate both of the previously mentioned jobs (the realm import and the frontend client registration), we use the generate_seeding_job.sh script.
+
+The following image illustrates how to grant execution permissions to the script and provides an example of how to run it by specifying the Keycloak host and the administrator password:
+
 ```bash
   # Make the script executable
-  chmod +x generate_seeding_jobs.sh
+  chmod +x generate_seeding_job.sh
 
   # Usage:
   # ./generate_seeding_job.sh --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --pass <KEYCLOAK_ADMIN_PASSWORD>
