@@ -59,19 +59,49 @@ If `Status` is `True`, the cluster is now ready to automatically issue certifica
 
 ### 1. Keycloak (Optional) 
 
+Deploying `keycloak-chart` is an optional step. This chart deploys a Keycloak image (based on Bitnami) that eliminates the need to integrate a subchart within the participant. In this way, Keycloak is established as a standalone, centralized element, designed to serve all participants deployed in the customer's environment. In any case, the implementation includes the necessary configuration (a Realm and a default Client) so that the participant's portal can communicate correctly.
+
+
 #### 1.1. Seeding Jobs
+
+To do these step of configuring the keycloak, two configuration jobs are used:
+
+- **Realm import job (job-import-realm.json):** Imports a preconfigured realm with the client scopes necessary for the user's initial login verifications. 
+- **Client registration job (job-add-default-client.json):** Registers a new client in this realm that will serve as the default client for the participant interface. 
 
 ```bash
   # Make the script executable
   chmod +x generate_seeding_jobs.sh
 
   # Usage:
-  # ./generate_seeding_job.sh <PARTICIPANT_NAME> --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --pass <KEYCLOAK_ADMIN_PASSWORD>
+  # ./generate_seeding_job.sh --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --pass <KEYCLOAK_ADMIN_PASSWORD>
 
   # Example:
-  ./generate_seeding_job.sh gradiant --host-kc conector-xdatashare-kc.gradiant.org --pass admin
+  ./generate_seeding_job.sh --host-kc conector-xdatashare-kc.gradiant.org --pass admin
 
 ```
+
+The `generate_seeding_job.sh` script automates the creation of the Kubernetes jobs responsible for initializing the Keycloak environment (realm import and frontend client registration).
+
+This script is configured by passing command-line arguments.
+
+**Required Parameters:**
+- --host-kc <host-kc>: The hostname or URL where Keycloak is deployed (e.g., conector-xdatashare-kc.gradiant.org).
+- --pass <password>: The Keycloak administrator password.
+
+**Optional Parameters (with default values):**
+- --user <user>: The Keycloak administrator username. (Default: admin).
+- --realm-file <path>: Path to the JSON file containing the realm configuration to be imported. (Default: keycloak/realms/realm.json).
+- --client-file <path>: Path to the JSON file containing the client configuration to be registered. (Default: keycloak/clients/frontend-client.json).
+- --client-admin <client-admin>: The admin client ID used for the connection. (Default: admin-cli).
+- --realm-admin <realm-admin>: The administration realm name. (Default: master).
+- --help: Displays the help and usage message.
+
+The `generate_seeding_job.sh` script relies on two pre-configured JSON files by default to construct the Kubernetes job manifests. These files contain the actual payloads that will be applied to Keycloak:
+- **Realm File (keycloak/realms/realm.json):** This file contains the complete definition of the target realm (e.g., the "dataspace" realm). It includes the necessary client scopes and settings required for the initial user login verification. It is used as the blueprint to build the job responsible for importing the realm.
+- **Frontend Client File (keycloak/clients/frontend-client.json):** This file defines the default OIDC client (typically named `edc-frontend`), which is strictly required to secure and enable the authentication flow for the participant portal. It is used to construct the job responsible for registering this client within the previously imported realm.
+
+**Note:** If the operator wishes to use custom configurations, they can replace these files or point to a different path using the `--realm-file` and `--client-file` flags explained above.
 
 #### 1.2. Generate Keycloak Configuration
 
