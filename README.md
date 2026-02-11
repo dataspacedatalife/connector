@@ -9,9 +9,11 @@ Before starting, ensure you have the following:
 - **Installed Cluster Services:**
     - `ingress-nginx` (NGINX Ingress Controller)
     - `cert-manager`
-- **Deployment Scripts:**
+- **Deployment Scripts/Jobs:**
     - `setup-issuer.sh` (This script, for Phase 1)
     - `generate_participant.sh` (This script, for Phase 2)
+    - `generate_keycloak.sh` (This script, for Phase 2 if deploying Keycloak)
+    - `job-import-realm.yaml` (Keycloak realm import job, for client's keycloak)
 - **Helm Chart:** 
     - The `keycloak-chart` directory.
     - The `participant-chart` directory.
@@ -21,7 +23,8 @@ Before starting, ensure you have the following:
 
 This phase configures `cert-manager` to communicate with `Let's Encrypt`, enabling automatic SSL certificate generation for the entire cluster. **This only needs to be run once per new cluster**.
 
-### 1. Run the Setup Issuer Script
+**Note:** Skip this phase if you intend to use manual TLS secrets (e.g., wildcard certificates) or if your cluster already has a configured ClusterIssuer.
+### 1. Run the Setup Issuer Script (Optional)
 
 This script verifies that NGINX and `cert-manager` are ready, then creates the global `ClusterIssuer`. You must provide a valid email address for `Let's Encrypt` registration.
 ```bash
@@ -52,21 +55,61 @@ Look for the following in the status: section at the end of the output:
 
 If `Status` is `True`, the cluster is now ready to automatically issue certificates for any participant.
 
-
 ## Phase 2: Deploying a New Participant
 
-### 1. (Optional) Deploy Keycloak
+### 1. Keycloak (Optional) 
+#### 1.1. Generate Keycloak Configuration
 
-If the participant does not have an existing IAM solution, deploy the keycloak-chart. This chart acts as a complementary service, removing the need for a Keycloak subchart inside the participant deployment.
+Use the `generate_keycloak.sh` script to create a customized values.yaml for the Keycloak chart. This step is only necessary if you plan to deploy the Keycloak chart as part of your participant deployment. If you are using an external Keycloak, you can skip this step and manually configure your Keycloak instance.
+
+```bash
+  # Make the script executable
+  chmod +x generate_keycloak.sh
+
+  # Usage:
+  # ./generate_keycloak.sh <PARTICIPANT_NAME> --host <KEYCLOAK_HOSTNAME>
+
+  # Example:
+  ./generate_keycloak.sh gradiant --host-kc conector-xdatashare-kc.gradiant.org
+```
+
+This command will create a new file: `keycloak-chart/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
+The generation script supports several flags:
+- `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.gradiant.org`).
+- `--manual`: If you want to deploy the external Keycloak without the connection to the lets encrypt, you can use this flag to generate a `values.yaml` without the TLS configuration. This is useful if you want to manage the TLS certificates for Keycloak separately (e.g., using wildcard certificates or another certificate management solution).
+- `--secret <TLS_SECRET_NAME>`: If you have an existing TLS secret for Keycloak, you can use this flag to specify the name of that secret. The generated `values.yaml` will then reference this secret instead of creating a new one. If this name is not passed the script will assume the default secret name `keycloak-tls-cert` for the Keycloak deployment. This is useful if you have already set up TLS for Keycloak and want to reuse that configuration without modification.
+
+**Creating a Manual TLS Secret**
+If you are not using Let's Encrypt (Phase 1) and do not have an existing TLS secret configured, you must create one manually before deploying the chart. This secret stores your certificate chain and private key in a format the Ingress controller can consume.
+You will need your certificate file (e.g., tls.crt) and your private key file (e.g., tls.key)
+
+**Create the secret**
+Run the following command in the namespace where you intend to deploy Keycloak:
+```bash
+kubectl create secret tls <TLS_SECRET_NAME> \
+  --cert=path/to/tls.crt \
+  --key=path/to/tls.key \
+  -n <KEYCLOAK_NAMESPACE>
+```
+**Warning:** The Secret must be created in the same namespace as the Keycloak deployment for the Ingress controller to successfully terminate the SSL connection.
+
+**Verify the secret**
+```bash
+kubectl get secret keycloak-tls-cert -n xdatashare -o yaml
+```
+
+#### 1.2. Deploy Keycloak Chart
+
+If the participant does not have an existing IAM solution, deploy the `keycloak-chart`. This chart acts as a complementary service, removing the need for a Keycloak subchart inside the participant deployment. It is now deployed as a centralized, standalone service.
 
 ```bash
 # Install the standalone Keycloak chart
-helm install keycloak-service ./keycloak-chart \
-  --namespace xdatashare \
-  --set hostname=conector-xdatashare-kc.gradiant.org
+helm install keycloak ./keycloak-chart \
+  --namespace xdatashare
 ```
 
-### 2. Generate Participant Configuration
+### 2. Participant
+#### 2.1. Generate Participant Configuration
 
 Use the generate_participant.sh script. This creates a customized values.yaml that points to either the Keycloak deployed in the previous step or an external one.
 ```bash
@@ -82,22 +125,30 @@ Use the generate_participant.sh script. This creates a customized values.yaml th
   --host-kc conector-xdatashare-kc.gradiant.org
 ```
 This command will create a new file: participant-chart/values/values-gradiant.yaml.
+The script supports the following arguments to customize the deployment:
+  - `<PARTICIPANT_NAME>`: (Required) The name of the participant (e.g., gradiant). This is used to prefix resources and name the output file.
+  - `--host <MAIN_HOSTNAME>`: The primary domain for the participant (e.g., conector-xdatashare.gradiant.org). This covers the Portal and EDC endpoints.
+  - `--host-kc <KEYCLOAK_HOSTNAME>`: The domain where the Keycloak service is reachable.
+  - `--manual`: Disables automatic Let's Encrypt (cert-manager) annotations for the participant's Ingress resources.
+  - `--secret <TLS_SECRET_NAME>`: Specifies an existing TLS secret for the participant's domains. 
+    - If `--manual` is used without this flag, the script defaults to a secret named participant-tls-cert.
 
-### 3. Deploy Participant Chart
+
+#### 2.2. Deploy Participant Chart
 
 The participant-chart no longer contains an internal Keycloak subchart by default. It is now "IAM-agnostic," allowing the participant to opt for our chart-deployed Keycloak or their own.
 
 **Note:** We recommend deploying the participant into a namespace.
 
 ```bash
-  # Example for a participant named "gradiant" in namespace "dataspacexdatashare"
+  # Example for a participant named "gradiant" in namespace "xdatashare"
   # 1. Create the namespace (if it doesn't exist)
-  kubectl create namespace dataspacexdatashare
+  kubectl create namespace xdatashare
 
   # 2. Install the Helm chart
   helm install gradiant ./participant-chart \
   -f ./participant-chart/values/values-gradiant.yaml \
-  -n dataspacexdatashare
+  -n xdatashare
 ```   
 
 ### 3. Verify the Deployment
@@ -105,7 +156,7 @@ The participant-chart no longer contains an internal Keycloak subchart by defaul
 After running helm install, cert-manager will automatically begin obtaining the SSL certificates.
 This may take 1-2 minutes.You can monitor the status of the certificates:# Watch the certificates in the participant's namespace
 ```bash
-  kubectl get certificate -n dataspacexdatashare -w
+  kubectl get certificate -n xdatashare -w
 ```    
 
 Wait for the `READY` column to switch from `False` to `True`.
@@ -185,6 +236,7 @@ To streamline the setup process, the chart includes several one-time jobs that r
 - Request Credential (`job-request-credentials.yaml`):
     - Purpose: Initiates the process for the participant to obtain its Verifiable Credential from the dataspace-issuer.
     - Functionality: This job automates a crucial onboarding step by making the participant proactively request its required Verifiable Credential from the dataspace-issuer. This allows the participant to become a trusted and verifiable member of the dataspace shortly after deployment.
-- Create Keycloak User (`job-kc-client.yaml`):
+- Create Keycloak User (`job-add-proxy-client.yaml`):
     - Purpose: Ensures that the necessary Keycloak users and clients are created if the participant is using the chart-deployed Keycloak.
     - Functionality: This job interacts with the Keycloak Admin API to create the required client for securing the participant portal and to set up an initial user with appropriate permissions. This step is essential for enabling access to the participant portal immediately after deployment.
+

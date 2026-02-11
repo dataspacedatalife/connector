@@ -1,8 +1,8 @@
 deployment:
   replicaCount: 1
-  imagePullSecret: harbor-regcred
+  imagePullSecret: harbor-regcred-usuarios
   image:
-    repository: harbor.gradiant.org/si-syp-xdatashare-pr-01616/dataplane
+    repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/dataplane
     tag: "latest"
     pullPolicy: Always
 

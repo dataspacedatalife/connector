@@ -3,24 +3,9 @@ keycloak:
     security:
       allowInsecureImages: true
   replicaCount: 1
-  realm:
-    name: "dataspace"
-    frameAncestors: "https://*.gradiant.org"
   image:
     registry: public.ecr.aws
     repository: bitnami/keycloak
-
-  extraVolumes:
-    - name: realm-import
-      configMap:
-        name: keycloak-realm-import
-
-  extraVolumeMounts:
-    - name: realm-import
-      mountPath: "/opt/bitnami/keycloak/data/import/realm.json"
-      subPath: "realm.json"
-
-  extraStartupArgs: "--import-realm"
 
   extraEnvVars:
     - name: KC_HOSTNAME
@@ -111,10 +96,3 @@ keycloak:
         limits:
           memory: "1024Mi"
           cpu: "500m"
-seeding:
-  enabled: true
-  keycloakUrl: "http://keycloak:8080"
-  targetRealm: "dataspace"
-  auth:
-    secretName: "keycloak-secrets"
-    secretPasswordKey: "admin-password"

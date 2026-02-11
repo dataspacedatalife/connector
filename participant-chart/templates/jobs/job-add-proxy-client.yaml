@@ -12,7 +12,6 @@ spec:
     spec:
       restartPolicy: OnFailure
       containers:
-
         - name: seed-keycloak-client
           image: badouralix/curl-jq:latest
           env:
@@ -60,7 +59,7 @@ spec:
               create_client() {
                 local FILE=$1
                 echo "Creating Client from $FILE..."
-                local HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$REALM/clients" \
+                local HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
                   -H "Authorization: Bearer $TOKEN" \
                   -H "Content-Type: application/json" \
                   -d @$FILE)
@@ -85,7 +84,7 @@ spec:
 
               GROUP_JSON=$(jq -n --arg name "${RELEASE_NAME}-group" '{"name": $name}')
 
-              HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$REALM/groups" \
+              HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/groups" \
                 -H "Authorization: Bearer $TOKEN" \
                 -H "Content-Type: application/json" \
                 -d "$GROUP_JSON")
@@ -97,23 +96,30 @@ spec:
                  exit 1
               fi
 
-              # GET THE GROUP ID
-              GROUP_ID=$(curl -s -H "Authorization: Bearer $TOKEN" \
-                "$KC_URL/admin/realms/$REALM/groups?search=${RELEASE_NAME}-group" | \
-                jq -r --arg name "${RELEASE_NAME}-group" '.[] | select(.name == $name) | .id')
+              echo "Searching for Group ID..."
+              # Capture response instead of piping to jq
+              RESPONSE=$(curl -s -H "Authorization: Bearer $TOKEN" \
+                "$KC_URL/admin/realms/$KC_REALM/groups?search=${RELEASE_NAME}-group")
+
+              # Print it to the logs
+              echo "DEBUG: Keycloak Response: $RESPONSE"
+
+              # Then process it
+              GROUP_ID=$(echo "$RESPONSE" | jq -r --arg name "${RELEASE_NAME}-group" \
+                'if type=="array" then .[] | select(.name == $name) | .id else empty end')
 
               echo "Group ID is: $GROUP_ID"
 
               # ====================================================
               # 5. CREATE DEFAULT USER AND ASSIGN TO GROUP (OPTIONAL)
               # ====================================================
-              if [ "$CREATE_USER" == "true" ]; then
+              if [ "$CREATE_DEFAULT_USER" == "true" ]; then
                 echo "Flag active. Creating User: $RELEASE_NAME..."
                 FAKE_EMAIL="${RELEASE_NAME}@example.com"
 
                 USER_JSON=$(jq -n \
                   --arg username "$RELEASE_NAME" \
-                  --arg pass "$USER_PASS" \
+                  --arg pass "$DEFAULT_USER_PASSWORD" \
                   --arg email "$FAKE_EMAIL" \
                   '{
                     "username": $username,
@@ -125,19 +131,19 @@ spec:
                     "credentials": [{"type": "password", "value": $pass, "temporary": false}]
                   }')
 
-                HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$REALM/users" \
+                HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/users" \
                   -H "Authorization: Bearer $TOKEN" \
                   -H "Content-Type: application/json" \
                   -d "$USER_JSON")
 
                 # Get the user ID
                 USER_ID=$(curl -s -H "Authorization: Bearer $TOKEN" \
-                  "$KC_URL/admin/realms/$REALM/users?username=$RELEASE_NAME" | \
+                  "$KC_URL/admin/realms/$KC_REALM/users?username=$RELEASE_NAME" | \
                   jq -r --arg name "$RELEASE_NAME" '.[] | select(.username == $name) | .id')
 
                 if [ ! -z "$USER_ID" ] && [ ! -z "$GROUP_ID" ]; then
                   echo "Adding User ($USER_ID) to Group ($GROUP_ID)..."
-                  curl -s -X PUT "$KC_URL/admin/realms/$REALM/users/$USER_ID/groups/$GROUP_ID" \
+                  curl -s -X PUT "$KC_URL/admin/realms/$KC_REALM/users/$USER_ID/groups/$GROUP_ID" \
                     -H "Authorization: Bearer $TOKEN" \
                     -H "Content-Type: application/json"
                 fi

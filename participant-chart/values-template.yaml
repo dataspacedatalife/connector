@@ -1,7 +1,7 @@
 global:
   postgres:
     db:
-      url: jdbc:postgresql://{{PARTICIPANT}}-postgres:5432/{{PARTICIPANT}}
+      url: jdbc:postgresql://{{PARTICIPANT}}-postgresql:5432/{{PARTICIPANT}}
       name: {{PARTICIPANT}}
       user: {{PARTICIPANT}}
       password: {{PARTICIPANT}}
@@ -14,11 +14,11 @@ controlplane:
   configMap:
     hostname: "{{HOST}}"
     iamIssuerId: "did:web:{{HOST}}:identityhub:did"
-    managementAuthDacKeyUrl: "http://keycloak:8080/realms/dataspace/protocol/openid-connect/certs"
+    managementAuthDacKeyUrl: "https://{{HOST_KC}}/realms/dataspace/protocol/openid-connect/certs"
     managementAuthKey: "{{AUTH_KEY_B64}}"
-    catalogAuthDacKeyUrl: "http://keycloak:8080/realms/dataspace/protocol/openid-connect/certs"
+    catalogAuthDacKeyUrl: "https://{{HOST_KC}}/realms/dataspace/protocol/openid-connect/certs"
     catalogAuthKey: "{{AUTH_KEY_B64}}"
-    participantAuthDacKeyUrl: "http://keycloak:8080/realms/dataspace/protocol/openid-connect/certs"
+    participantAuthDacKeyUrl: "https://{{HOST_KC}}/realms/dataspace/protocol/openid-connect/certs"
     participantAuthKey: "{{AUTH_KEY_B64}}"
     iamStsPrivateKeyAlias: "did:web:{{HOST}}:identityhub:did#key-1"
     iamStsPublicKeyId: "did:web:{{HOST}}:identityhub:did#key-1"
@@ -36,7 +36,7 @@ controlplane:
     initContainers:
       dependencies:
         - name: "Postgres"
-          host: "{{PARTICIPANT}}-postgres"
+          host: "{{PARTICIPANT}}-postgresql"
           port: 5432
         - name: "Vault"
           host: "{{PARTICIPANT}}-vault"
@@ -98,7 +98,7 @@ dataplane:
     initContainers:
       dependencies:
         - name: "Postgres"
-          host: "{{PARTICIPANT}}-postgres"
+          host: "{{PARTICIPANT}}-postgresql"
           port: 5432
         - name: "Vault"
           host: "{{PARTICIPANT}}-vault"
@@ -134,7 +134,7 @@ identityhub:
     initContainers:
       dependencies:
         - name: "Postgres"
-          host: "{{PARTICIPANT}}-postgres"
+          host: "{{PARTICIPANT}}-postgresql"
           port: 5432
         - name: "Vault"
           host: "{{PARTICIPANT}}-vault"
@@ -195,15 +195,15 @@ oauth2-proxy:
       cookie_expire  = "8h"
       
       provider = "keycloak-oidc"
-      oidc_issuer_url = "https://{{HOST-KC}}/realms/dataspace"
+      oidc_issuer_url = "https://{{HOST_KC}}/realms/dataspace"
       
-      login_url = "https://{{HOST-KC}}/realms/dataspace/protocol/openid-connect/auth"
-      redeem_url = "http://keycloak:8080/realms/dataspace/protocol/openid-connect/token"
-      oidc_jwks_url = "http://keycloak:8080/realms/dataspace/protocol/openid-connect/certs"
-      validate_url = "http://keycloak:8080/realms/dataspace/protocol/openid-connect/userinfo"
+      login_url = "https://{{HOST_KC}}/realms/dataspace/protocol/openid-connect/auth"
+      redeem_url = "https://{{HOST_KC}}/realms/dataspace/protocol/openid-connect/token"
+      oidc_jwks_url = "https://{{HOST_KC}}/realms/dataspace/protocol/openid-connect/certs"
+      validate_url = "https://{{HOST_KC}}/realms/dataspace/protocol/openid-connect/userinfo"
       skip_oidc_discovery = true
       
-      backend_logout_url = "https://{{HOST-KC}}/realms/dataspace/protocol/openid-connect/logout?id_token_hint={id_token}"
+      backend_logout_url = "https://{{HOST_KC}}/realms/dataspace/protocol/openid-connect/logout?id_token_hint={id_token}"
       redirect_url = "https://{{HOST}}/oauth2/callback"
       
       allowed_groups = [ "/{{PARTICIPANT}}-group" ]
@@ -250,6 +250,7 @@ oauth2-proxy:
 participant-portal:
   configMap:
     nodeEnv: "production"
+    viteIconUrl: "/icons/gradiant.svg"
     viteKeycloakUrl: "https://{{HOST_KC}}"
     viteKeycloakRealm: "dataspace"
     viteKeycloakAuthClientId: "edc-frontend"
@@ -323,9 +324,9 @@ seeding:
     management: "{{AUTH_KEY_B64}}"
     identityhub: "{{SUPER_USER_KEY_B64}}"
 
-  keycloakUrl: "http://keycloak:8080"
+  keycloakUrl: "https://{{HOST_KC}}"
   targetRealm: "dataspace"
-  postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2F{{HOST_KC}}%3A30475%2Frealms%2Fdataspace%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2F{{HOST}}%2F%26client_id%3D{{PARTICIPANT}}-proxy"
+  postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2F{{HOST_KC}}%2Frealms%2Fdataspace%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2F{{HOST}}%2F%26client_id%3D{{PARTICIPANT}}-proxy"
   auth:
     secretName: "keycloak-secrets"
     secretPasswordKey: "admin-password"
