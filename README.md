@@ -58,7 +58,56 @@ If `Status` is `True`, the cluster is now ready to automatically issue certifica
 ## Phase 2: Deploying a New Participant
 
 ### 1. Keycloak (Optional) 
-#### 1.1. Generate Keycloak Configuration
+
+Deploying `keycloak-chart` is an optional step. This chart deploys a Keycloak image (based on Bitnami) that eliminates the need to integrate a subchart within the participant. In this way, Keycloak is established as a standalone, centralized element, designed to serve all participants deployed in the customer's environment. In any case, the implementation includes the necessary configuration (a Realm and a default Client) so that the participant's portal can communicate correctly.
+
+
+#### 1.1. Seeding Jobs
+
+To do these step of configuring the keycloak, two configuration jobs are used:
+
+- **Realm import job (job-import-realm.json):** Imports a preconfigured realm with the client scopes necessary for the user's initial login verifications. 
+- **Client registration job (job-add-default-client.json):** Registers a new client in this realm that will serve as the default client for the participant interface. 
+
+To automatically generate both of the previously mentioned jobs (the realm import and the frontend client registration), we use the generate_seeding_job.sh script.
+
+The following image illustrates how to grant execution permissions to the script and provides an example of how to run it by specifying the Keycloak host and the administrator password:
+
+```bash
+  # Make the script executable
+  chmod +x generate_seeding_job.sh
+
+  # Usage:
+  # ./generate_seeding_job.sh --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --pass <KEYCLOAK_ADMIN_PASSWORD>
+
+  # Example:
+  ./generate_seeding_job.sh --host-kc conector-xdatashare-kc.gradiant.org --pass admin
+
+```
+
+The `generate_seeding_job.sh` script automates the creation of the Kubernetes jobs responsible for initializing the Keycloak environment (realm import and frontend client registration).
+
+This script is configured by passing command-line arguments.
+
+**Required Parameters:**
+- --host-kc <host-kc>: The hostname or URL where Keycloak is deployed (e.g., conector-xdatashare-kc.gradiant.org).
+- --pass <password>: The Keycloak administrator password.
+
+**Optional Parameters (with default values):**
+- --user <user>: The Keycloak administrator username. (Default: admin).
+- --realm-file <path>: Path to the JSON file containing the realm configuration to be imported. (Default: keycloak/realms/realm.json).
+- --client-file <path>: Path to the JSON file containing the client configuration to be registered. (Default: keycloak/clients/frontend-client.json).
+- --client-admin <client-admin>: The admin client ID used for the connection. (Default: admin-cli).
+- --realm-admin <realm-admin>: The administration realm name. (Default: master).
+- --help: Displays the help and usage message.
+
+The `generate_seeding_job.sh` script relies on two pre-configured JSON files by default to construct the Kubernetes job manifests. These files contain the actual payloads that will be applied to Keycloak:
+- **Realm File (keycloak/realms/realm.json):** This file contains the complete definition of the target realm (e.g., the "dataspace" realm). It includes the necessary client scopes and settings required for the initial user login verification. It is used as the blueprint to build the job responsible for importing the realm.
+- **Frontend Client File (keycloak/clients/frontend-client.json):** This file defines the default OIDC client (typically named `edc-frontend`), which is strictly required to secure and enable the authentication flow for the participant portal. It is used to construct the job responsible for registering this client within the previously imported realm.
+
+**Note:** If the operator wishes to use custom configurations, they can replace these files or point to a different path using the `--realm-file` and `--client-file` flags explained above.
+
+#### 1.2. Generate Keycloak Configuration
 
 Use the `generate_keycloak.sh` script to create a customized values.yaml for the Keycloak chart. This step is only necessary if you plan to deploy the Keycloak chart as part of your participant deployment. If you are using an external Keycloak, you can skip this step and manually configure your Keycloak instance.
 
@@ -67,12 +116,12 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
   chmod +x generate_keycloak.sh
 
   # Usage:
-  # ./generate_keycloak.sh <PARTICIPANT_NAME> --host <KEYCLOAK_HOSTNAME>
+  # ./generate_keycloak.sh --host-kc <KEYCLOAK_HOSTNAME> --manual --secret <TLS_SECRET_NAME>
 
   # Example:
-  ./generate_keycloak.sh gradiant --host-kc conector-xdatashare-kc.gradiant.org
-```
+  ./generate_keycloak.sh --host-kc conector-xdatashare-kc.gradiant.org
 
+```
 This command will create a new file: `keycloak-chart/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
 The generation script supports several flags:
 - `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.gradiant.org`).
@@ -83,7 +132,7 @@ The generation script supports several flags:
 If you are not using Let's Encrypt (Phase 1) and do not have an existing TLS secret configured, you must create one manually before deploying the chart. This secret stores your certificate chain and private key in a format the Ingress controller can consume.
 You will need your certificate file (e.g., tls.crt) and your private key file (e.g., tls.key)
 
-**Create the secret**
+**1. Create the secret**
 Run the following command in the namespace where you intend to deploy Keycloak:
 ```bash
 kubectl create secret tls <TLS_SECRET_NAME> \
@@ -93,7 +142,7 @@ kubectl create secret tls <TLS_SECRET_NAME> \
 ```
 **Warning:** The Secret must be created in the same namespace as the Keycloak deployment for the Ingress controller to successfully terminate the SSL connection.
 
-**Verify the secret**
+**2. Verify the secret**
 ```bash
 kubectl get secret keycloak-tls-cert -n xdatashare -o yaml
 ```
@@ -103,9 +152,8 @@ kubectl get secret keycloak-tls-cert -n xdatashare -o yaml
 If the participant does not have an existing IAM solution, deploy the `keycloak-chart`. This chart acts as a complementary service, removing the need for a Keycloak subchart inside the participant deployment. It is now deployed as a centralized, standalone service.
 
 ```bash
-# Install the standalone Keycloak chart
-helm install keycloak ./keycloak-chart \
-  --namespace xdatashare
+# Example for a participant named "keycloak" in namespace "xdatashare"
+helm install keycloak ./keycloak-chart --namespace xdatashare
 ```
 
 ### 2. Participant
@@ -142,10 +190,6 @@ The participant-chart no longer contains an internal Keycloak subchart by defaul
 
 ```bash
   # Example for a participant named "gradiant" in namespace "xdatashare"
-  # 1. Create the namespace (if it doesn't exist)
-  kubectl create namespace xdatashare
-
-  # 2. Install the Helm chart
   helm install gradiant ./participant-chart \
   -f ./participant-chart/values/values-gradiant.yaml \
   -n xdatashare
@@ -239,4 +283,7 @@ To streamline the setup process, the chart includes several one-time jobs that r
 - Create Keycloak User (`job-add-proxy-client.yaml`):
     - Purpose: Ensures that the necessary Keycloak users and clients are created if the participant is using the chart-deployed Keycloak.
     - Functionality: This job interacts with the Keycloak Admin API to create the required client for securing the participant portal and to set up an initial user with appropriate permissions. This step is essential for enabling access to the participant portal immediately after deployment.
+- Participant Redirect Registration (job-register-participant-redirect)
+    - Purpose: To allow Keycloak to securely redirect the user back to the web portal after a successful login.
+    - Functionality: This job updates the configuration of the global client (typically named edc-frontend) in Keycloak. It adds the new participant’s portal URL to the Valid Redirect URIs list. Without this automated step, Keycloak would block access to the participant's portal for security reasons.
 
