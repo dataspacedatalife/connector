@@ -116,10 +116,10 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
   chmod +x generate_keycloak.sh
 
   # Usage:
-  # ./generate_keycloak.sh <PARTICIPANT_NAME> --host-kc <KEYCLOAK_HOSTNAME> --manual --secret <TLS_SECRET_NAME>
+  # ./generate_keycloak.sh --host-kc <KEYCLOAK_HOSTNAME> --manual --secret <TLS_SECRET_NAME>
 
   # Example:
-  ./generate_keycloak.sh gradiant --host-kc conector-xdatashare-kc.gradiant.org
+  ./generate_keycloak.sh --host-kc conector-xdatashare-kc.gradiant.org
 
 ```
 
@@ -133,7 +133,7 @@ The generation script supports several flags:
 If you are not using Let's Encrypt (Phase 1) and do not have an existing TLS secret configured, you must create one manually before deploying the chart. This secret stores your certificate chain and private key in a format the Ingress controller can consume.
 You will need your certificate file (e.g., tls.crt) and your private key file (e.g., tls.key)
 
-**Create the secret**
+**1. Create the secret**
 Run the following command in the namespace where you intend to deploy Keycloak:
 ```bash
 kubectl create secret tls <TLS_SECRET_NAME> \
@@ -143,7 +143,7 @@ kubectl create secret tls <TLS_SECRET_NAME> \
 ```
 **Warning:** The Secret must be created in the same namespace as the Keycloak deployment for the Ingress controller to successfully terminate the SSL connection.
 
-**Verify the secret**
+**2. Verify the secret**
 ```bash
 kubectl get secret keycloak-tls-cert -n xdatashare -o yaml
 ```
