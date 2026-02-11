@@ -152,8 +152,9 @@ kubectl get secret keycloak-tls-cert -n xdatashare -o yaml
 If the participant does not have an existing IAM solution, deploy the `keycloak-chart`. This chart acts as a complementary service, removing the need for a Keycloak subchart inside the participant deployment. It is now deployed as a centralized, standalone service.
 
 ```bash
-# Install the standalone Keycloak chart
-helm install keycloak ./keycloak-chart --namespace <NAMESPACE>```
+# Example for a participant named "keycloak" in namespace "xdatashare"
+helm install keycloak ./keycloak-chart --namespace xdatashare
+```
 
 ### 2. Participant
 #### 2.1. Generate Participant Configuration
@@ -189,10 +190,6 @@ The participant-chart no longer contains an internal Keycloak subchart by defaul
 
 ```bash
   # Example for a participant named "gradiant" in namespace "xdatashare"
-  # 1. Create the namespace (if it doesn't exist)
-  kubectl create namespace xdatashare
-
-  # 2. Install the Helm chart
   helm install gradiant ./participant-chart \
   -f ./participant-chart/values/values-gradiant.yaml \
   -n xdatashare
