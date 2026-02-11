@@ -58,7 +58,22 @@ If `Status` is `True`, the cluster is now ready to automatically issue certifica
 ## Phase 2: Deploying a New Participant
 
 ### 1. Keycloak (Optional) 
-#### 1.1. Generate Keycloak Configuration
+
+#### 1.1. Seeding Jobs
+
+```bash
+  # Make the script executable
+  chmod +x generate_seeding_jobs.sh
+
+  # Usage:
+  # ./generate_seeding_job.sh <PARTICIPANT_NAME> --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --pass <KEYCLOAK_ADMIN_PASSWORD>
+
+  # Example:
+  ./generate_seeding_job.sh gradiant --host-kc conector-xdatashare-kc.gradiant.org --pass admin
+
+```
+
+#### 1.2. Generate Keycloak Configuration
 
 Use the `generate_keycloak.sh` script to create a customized values.yaml for the Keycloak chart. This step is only necessary if you plan to deploy the Keycloak chart as part of your participant deployment. If you are using an external Keycloak, you can skip this step and manually configure your Keycloak instance.
 
@@ -67,10 +82,11 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
   chmod +x generate_keycloak.sh
 
   # Usage:
-  # ./generate_keycloak.sh <PARTICIPANT_NAME> --host <KEYCLOAK_HOSTNAME>
+  # ./generate_keycloak.sh <PARTICIPANT_NAME> --host-kc <KEYCLOAK_HOSTNAME> --manual --secret <TLS_SECRET_NAME>
 
   # Example:
   ./generate_keycloak.sh gradiant --host-kc conector-xdatashare-kc.gradiant.org
+
 ```
 
 This command will create a new file: `keycloak-chart/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
