@@ -5,6 +5,7 @@ metadata:
 data:
   NODE_ENV: {{ .Values.configMap.nodeEnv | quote }}
   VITE_ICON_URL: {{ .Values.configMap.viteIconUrl | quote }}
+  VITE_ENABLE_AUDIT: {{ .Values.configMap.viteEnableAudit | quote }}
   VITE_KEYCLOAK_URL: {{ .Values.configMap.viteKeycloakUrl | quote }}
   VITE_KEYCLOAK_REALM: {{ .Values.configMap.viteKeycloakRealm | quote }}
   VITE_KEYCLOAK_AUTH_CLIENT_ID: {{ .Values.configMap.viteKeycloakAuthClientId | quote }}

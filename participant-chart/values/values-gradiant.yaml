@@ -48,7 +48,7 @@ controlplane:
   ingress:
     host: conector-xdatashare.gradiant.org
     tlsSecretName: gradiant-tls-cert
-    annotations:x
+    annotations:
       kubernetes.io/ingress.class: nginx
       cert-manager.io/cluster-issuer: "letsencrypt"
       nginx.ingress.kubernetes.io/use-regex: "true"
@@ -179,7 +179,7 @@ oauth2-proxy:
   enable: true
   config:
     clientID: "gradiant-proxy"
-    clientSecret: "9yoQ7h0y4yaEkYLic7NwrYG15rIlhtU5"
+    clientSecret: "jUvSf1gV6SRuHMAP2XucFtjw99Yb7Xae"
     configFile: |
       http_address = "0.0.0.0:4180"
       pass_authorization_header = true
@@ -251,6 +251,7 @@ participant-portal:
   configMap:
     nodeEnv: "production"
     viteIconUrl: "/icons/gradiant.svg"
+    viteEnableAudit: "true"
     viteKeycloakUrl: "https://conector-xdatashare-kc.gradiant.org"
     viteKeycloakRealm: "dataspace"
     viteKeycloakAuthClientId: "edc-frontend"
@@ -333,7 +334,7 @@ seeding:
   client:
     clientId: "gradiant-proxy"
     publicUrl: "https://conector-xdatashare.gradiant.org"
-    secret: "9yoQ7h0y4yaEkYLic7NwrYG15rIlhtU5"
+    secret: "jUvSf1gV6SRuHMAP2XucFtjw99Yb7Xae"
     did: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
   defaultUser:
     create: true

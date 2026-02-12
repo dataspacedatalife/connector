@@ -65,7 +65,7 @@ keycloak:
     hostname: conector-xdatashare-kc.gradiant.org
     ingressClassName: nginx
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
     tls: true
     extraTls:
       - hosts:

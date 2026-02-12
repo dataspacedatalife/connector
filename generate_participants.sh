@@ -25,15 +25,12 @@ while [[ $# -gt 0 ]]; do
       HOST_KC="$2"
       shift 2
       ;;
-    --manual) # Flag to DISABLE Let's Encrypt
-      USE_LETS="false"
-      shift
-      ;;
     --secret) # Optional: Define a custom secret name for manual mode
       if [[ -z "$2" || "$2" == --* ]]; then
         echo "Error: --secret flag requires a value." >&2; exit 1
       fi
       CUSTOM_SECRET="$2"
+      USE_LETS="false"
       shift 2
       ;;
     *)
@@ -52,11 +49,10 @@ if [ -z "$PARTICIPANT" ]; then
   echo
   echo "Examples:"
   echo "  1. Automatic SSL (Default - Let's Encrypt):"
-  echo "     $0 ext-partner-dns --host my-app.com --host-kc kc.my-app.com"
+  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com"
   echo
   echo "  2. Manual SSL (Uses wildcard-tls-cert or custom secret):"
-  echo "     $0 ext-partner-dns --host my-app.com --host-kc kc.my-app.com --manual"
-  echo "     $0 ext-partner-dns --host my-app.com --host-kc kc.my-app.com --manual --secret my-cert"
+  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --secret wildcard-tls-cert"
   exit 1
 fi
 
@@ -77,12 +73,7 @@ if [ "$USE_LETS" == "true" ]; then
     echo "--> SSL Mode: Automatic (Let's Encrypt)"
 else
     ISSUER_CMD="/{{CLUSTER_ISSUER}}/d"
-
-    if [ -z "$CUSTOM_SECRET" ]; then
-        TLS_SECRET_NAME="wildcard-tls-cert"
-    else
-        TLS_SECRET_NAME="$CUSTOM_SECRET"
-    fi
+    TLS_SECRET_NAME="$CUSTOM_SECRET"
     echo "--> SSL Mode: Manual (Secret: $TLS_SECRET_NAME)"
 fi
 

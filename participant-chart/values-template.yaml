@@ -48,7 +48,7 @@ controlplane:
   ingress:
     host: {{HOST}}
     tlsSecretName: {{TLS_SECRET_NAME}}
-    annotations:x
+    annotations:
       kubernetes.io/ingress.class: nginx
       cert-manager.io/cluster-issuer: "{{CLUSTER_ISSUER}}"
       nginx.ingress.kubernetes.io/use-regex: "true"
@@ -251,6 +251,7 @@ participant-portal:
   configMap:
     nodeEnv: "production"
     viteIconUrl: "/icons/gradiant.svg"
+    viteEnableAudit: "true"
     viteKeycloakUrl: "https://{{HOST_KC}}"
     viteKeycloakRealm: "dataspace"
     viteKeycloakAuthClientId: "edc-frontend"
