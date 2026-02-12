@@ -41,7 +41,7 @@ done
 
 # Validate required arguments
 if [ -z "$KC_URL" ]; then
-    echo "Error: --url is required."
+    echo "Error: --host-kc is required."
     usage
 fi
 

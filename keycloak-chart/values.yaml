@@ -3,22 +3,9 @@ keycloak:
     security:
       allowInsecureImages: true
   replicaCount: 1
-
   image:
     registry: public.ecr.aws
     repository: bitnami/keycloak
-
-  #extraVolumes:
-  #  - name: realm-import
-  #    configMap:
-  #      name: keycloak-realm-import
-
-  #extraVolumeMounts:
-  #  - name: realm-import
-  #    mountPath: "/opt/bitnami/keycloak/data/import/realm.json"
-  #    subPath: "realm.json"
-
-  #extraStartupArgs: "--import-realm"
 
   extraEnvVars:
     - name: KC_HOSTNAME
@@ -75,14 +62,14 @@ keycloak:
 
   ingress:
     enabled: true
-    hostname: conector-kc.dataspace.gradiant.org
+    hostname: conector-xdatashare-kc.gradiant.org
     ingressClassName: nginx
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
     tls: true
     extraTls:
       - hosts:
-          - conector-kc.dataspace.gradiant.org
+          - conector-xdatashare-kc.gradiant.org
         secretName: keycloak-tls-cert
 
   postgresql:

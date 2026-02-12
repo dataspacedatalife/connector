@@ -5,7 +5,7 @@ metadata:
 data:
   KC_ADMIN_USER: "admin"
   KC_ADMIN_PASSWORD: "admin"
-  KC_URL: "https://conector3-kc.dataspace.gradiant.org"
+  KC_URL: "https://conector-xdatashare-kc.gradiant.org"
   KC_REALM_ADMIN: "master"
   KC_CLIENT_ADMIN: "admin-cli"
   realm.json: |
