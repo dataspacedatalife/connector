@@ -179,7 +179,7 @@ oauth2-proxy:
   enable: true
   config:
     clientID: "gradiant-proxy"
-    clientSecret: "jUvSf1gV6SRuHMAP2XucFtjw99Yb7Xae"
+    clientSecret: "C2HzJEvV1BU0qitKZNUK3rUaBiMOk4se"
     configFile: |
       http_address = "0.0.0.0:4180"
       pass_authorization_header = true
@@ -252,7 +252,7 @@ participant-portal:
     nodeEnv: "production"
     viteIconUrl: "/icons/gradiant.svg"
     viteEnableAudit: "true"
-    viteKeycloakUrl: "https://conector-xdatashare-kc.gradiant.org"
+    viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
     viteKeycloakRealm: "dataspace"
     viteKeycloakAuthClientId: "edc-frontend"
     viteEdcConnectorName: "gradiant"
@@ -334,7 +334,7 @@ seeding:
   client:
     clientId: "gradiant-proxy"
     publicUrl: "https://conector-xdatashare.gradiant.org"
-    secret: "jUvSf1gV6SRuHMAP2XucFtjw99Yb7Xae"
+    secret: "C2HzJEvV1BU0qitKZNUK3rUaBiMOk4se"
     did: "did:web:conector-xdatashare.gradiant.org:identityhub:did"
   defaultUser:
     create: true
