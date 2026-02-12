@@ -12,19 +12,28 @@ Before starting, ensure you have the following:
 - **Deployment Scripts/Jobs:**
     - `setup-issuer.sh` (This script, for Phase 1)
     - `generate_participant.sh` (This script, for Phase 2)
-    - `generate_keycloak.sh` (This script, for Phase 2 if deploying Keycloak)
+    - `generate_keycloak.sh` (This script, for Phase 1 if deploying Keycloak is needed)
+    - `generate_seeding_job.sh` (This script, for Phase 1 always needed)
     - `job-import-realm.yaml` (Keycloak realm import job, for client's keycloak)
+    - `job-add-default-client.yaml` (Keycloak client registration job, for client's keycloak)
 - **Helm Chart:** 
     - The `keycloak-chart` directory.
     - The `participant-chart` directory.
 - **Public DNS:** You must have public DNS "A" records pointing to the hostnames (e.g., `conector-xdatashare.gradiant.org`, `conector-xdatashare-kc.gradiant.org`) to the cluster's public IP address.
 
-## Phase 1: Cluster-Level Setup (One-Time Only)
+## Phase 1: Cluster-Level Setup
 
-This phase configures `cert-manager` to communicate with `Let's Encrypt`, enabling automatic SSL certificate generation for the entire cluster. **This only needs to be run once per new cluster**.
+This phase configures two optional infrastructure components that enable secure communication and identity management for all participants in the dataspace:
+- Configures a ClusterIssuer for cert-manager to interface with Let's Encrypt. This enables automatic SSL certificate generation and renewal for the entire cluster. **This is a one-time configuration per cluster.**
+- Deploy a Keycloak instance using the `keycloak-chart`. This is an optional step, but it provides a ready-to-use IAM solution that can be shared across all participants. If you have an existing Keycloak deployment or prefer to use another IAM solution, you can skip this step and configure your participant to connect to that instead.
+
+**Note:** If you already have a valid TLS certificate (or a custom secret) and an existing Keycloak/IAM configuration, you may skip these steps and advance directly to the **Seeding Jobs** section to ensure your IAM is compatible with the connector.
+### ClusterIssuer Setup
+
+The objective of this phase is to set up a global `ClusterIssuer` resource in cert-manager that uses Let's Encrypt to automatically issue TLS certificates for any participant deployed in the cluster.
 
 **Note:** Skip this phase if you intend to use manual TLS secrets (e.g., wildcard certificates) or if your cluster already has a configured ClusterIssuer.
-### 1. Run the Setup Issuer Script (Optional)
+#### 1. Run the Setup Issuer Script (Optional)
 
 This script verifies that NGINX and `cert-manager` are ready, then creates the global `ClusterIssuer`. You must provide a valid email address for `Let's Encrypt` registration.
 ```bash
@@ -35,11 +44,11 @@ This script verifies that NGINX and `cert-manager` are ready, then creates the g
   ./setup-cert-issuer.sh --email email@example.com
 ```
 
-### 2. Verify the ClusterIssuer
+#### 2. Verify the ClusterIssuer
 
 After the script finishes, you can manually verify that the `ClusterIssuer` is Ready.
 ```bash
-  kubectl describe clusterissuer letsencrypt-prod
+  kubectl describe clusterissuer letsencrypt
 ```
 
 Look for the following in the status: section at the end of the output:
@@ -55,59 +64,13 @@ Look for the following in the status: section at the end of the output:
 
 If `Status` is `True`, the cluster is now ready to automatically issue certificates for any participant.
 
-## Phase 2: Deploying a New Participant
-
-### 1. Keycloak (Optional) 
+### Keycloak
 
 Deploying `keycloak-chart` is an optional step. This chart deploys a Keycloak image (based on Bitnami) that eliminates the need to integrate a subchart within the participant. In this way, Keycloak is established as a standalone, centralized element, designed to serve all participants deployed in the customer's environment. In any case, the implementation includes the necessary configuration (a Realm and a default Client) so that the participant's portal can communicate correctly.
 
+#### 1.1. Generate Keycloak Configuration
 
-#### 1.1. Seeding Jobs
-
-To do these step of configuring the keycloak, two configuration jobs are used:
-
-- **Realm import job (job-import-realm.json):** Imports a preconfigured realm with the client scopes necessary for the user's initial login verifications. 
-- **Client registration job (job-add-default-client.json):** Registers a new client in this realm that will serve as the default client for the participant interface. 
-
-To automatically generate both of the previously mentioned jobs (the realm import and the frontend client registration), we use the generate_seeding_job.sh script.
-
-The following image illustrates how to grant execution permissions to the script and provides an example of how to run it by specifying the Keycloak host and the administrator password:
-
-```bash
-  # Make the script executable
-  chmod +x generate_seeding_job.sh
-
-  # Usage:
-  # ./generate_seeding_job.sh --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --pass <KEYCLOAK_ADMIN_PASSWORD>
-
-  # Example:
-  ./generate_seeding_job.sh --host-kc conector-xdatashare-kc.gradiant.org --pass admin
-
-```
-
-The `generate_seeding_job.sh` script automates the creation of the Kubernetes jobs responsible for initializing the Keycloak environment (realm import and frontend client registration).
-
-This script is configured by passing command-line arguments.
-
-**Required Parameters:**
-- --host-kc <host-kc>: The hostname or URL where Keycloak is deployed (e.g., conector-xdatashare-kc.gradiant.org).
-- --pass <password>: The Keycloak administrator password.
-
-**Optional Parameters (with default values):**
-- --user <user>: The Keycloak administrator username. (Default: admin).
-- --realm-file <path>: Path to the JSON file containing the realm configuration to be imported. (Default: keycloak/realms/realm.json).
-- --client-file <path>: Path to the JSON file containing the client configuration to be registered. (Default: keycloak/clients/frontend-client.json).
-- --client-admin <client-admin>: The admin client ID used for the connection. (Default: admin-cli).
-- --realm-admin <realm-admin>: The administration realm name. (Default: master).
-- --help: Displays the help and usage message.
-
-The `generate_seeding_job.sh` script relies on two pre-configured JSON files by default to construct the Kubernetes job manifests. These files contain the actual payloads that will be applied to Keycloak:
-- **Realm File (keycloak/realms/realm.json):** This file contains the complete definition of the target realm (e.g., the "dataspace" realm). It includes the necessary client scopes and settings required for the initial user login verification. It is used as the blueprint to build the job responsible for importing the realm.
-- **Frontend Client File (keycloak/clients/frontend-client.json):** This file defines the default OIDC client (typically named `edc-frontend`), which is strictly required to secure and enable the authentication flow for the participant portal. It is used to construct the job responsible for registering this client within the previously imported realm.
-
-**Note:** If the operator wishes to use custom configurations, they can replace these files or point to a different path using the `--realm-file` and `--client-file` flags explained above.
-
-#### 1.2. Generate Keycloak Configuration
+If you already have an enterprise Keycloak or a pre-configured IAM solution, you can skip this deployment. However, you must manually ensure your IAM is configured with the necessary clients. You can jump directly to the **Seeding Jobs** section to understand the required configuration that your existing instance must provide.
 
 Use the `generate_keycloak.sh` script to create a customized values.yaml for the Keycloak chart. This step is only necessary if you plan to deploy the Keycloak chart as part of your participant deployment. If you are using an external Keycloak, you can skip this step and manually configure your Keycloak instance.
 
@@ -156,10 +119,57 @@ If the participant does not have an existing IAM solution, deploy the `keycloak-
 helm install keycloak ./keycloak-chart --namespace xdatashare
 ```
 
-### 2. Participant
-#### 2.1. Generate Participant Configuration
+### Seeding Jobs
 
-Use the generate_participant.sh script. This creates a customized values.yaml that points to either the Keycloak deployed in the previous step or an external one.
+If you choose to use an external Keycloak not managed by this chart, you must manually create this default client, in order to allow the correct redirect from the oauth2-proxy to the participant-portal.
+
+To do these step of configuring the keycloak, two configuration jobs are used:
+
+- **Realm import job (job-import-realm.json):** Imports a preconfigured realm with the client scopes necessary for the user's initial login verifications.
+- **Client registration job (job-add-default-client.json):** Registers a new client in this realm that will serve as the default client for the participant interface.
+
+To automatically generate both of the previously mentioned jobs (the realm import and the frontend client registration), we use the `generate_seeding_job.sh` script.
+
+The following image illustrates how to grant execution permissions to the script and provides an example of how to run it by specifying the Keycloak host and the administrator password:
+
+```bash
+  # Make the script executable
+  chmod +x generate_seeding_job.sh
+
+  # Usage:
+  # ./generate_seeding_job.sh --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --pass <KEYCLOAK_ADMIN_PASSWORD>
+
+  # Example:
+  ./generate_seeding_job.sh --host-kc conector-xdatashare-kc.gradiant.org --pass admin
+
+```
+The `generate_seeding_job.sh` script automates the creation of the Kubernetes jobs responsible for initializing the Keycloak environment (realm import and frontend client registration).
+
+This script is configured by passing command-line arguments.
+
+**Required Parameters:**
+- --host-kc <host-kc>: The hostname or URL where Keycloak is deployed (e.g., conector-xdatashare-kc.gradiant.org).
+
+**Optional Parameters (with default values):**
+- --user <user>: The Keycloak administrator username. (Default: admin).
+- --pass <password>: The Keycloak administrator password. (Default: admin).
+- --realm-file <path>: Path to the JSON file containing the realm configuration to be imported. (Default: keycloak/realms/realm.json).
+- --client-file <path>: Path to the JSON file containing the client configuration to be registered. (Default: keycloak/clients/frontend-client.json).
+- --client-admin <client-admin>: The admin client ID used for the connection. (Default: admin-cli).
+- --realm-admin <realm-admin>: The administration realm name. (Default: master).
+- --help: Displays the help and usage message.
+
+The `generate_seeding_job.sh` script relies on two pre-configured JSON files by default to construct the Kubernetes job manifests. These files contain the actual payloads that will be applied to Keycloak:
+- **Realm File (keycloak/realms/realm.json):** This file contains the complete definition of the target realm (e.g., the "dataspace" realm). It includes the necessary client scopes and settings required for the initial user login verification. It is used as the blueprint to build the job responsible for importing the realm.
+- **Frontend Client File (keycloak/clients/frontend-client.json):** This file defines the default OIDC client (typically named `edc-frontend`), which is strictly required to secure and enable the authentication flow for the participant portal. It is used to construct the job responsible for registering this client within the previously imported realm.
+
+**Note:** If the operator wishes to use custom configurations, they can replace these files or point to a different path using the `--realm-file` and `--client-file` flags explained above.
+
+## Phase 2: Deploying a New Participant
+
+### 1.1. Generate Participant Configuration
+
+Use the `generate_participant.sh` script. This creates a customized values.yaml that points to either the Keycloak deployed in the previous step or an external one.
 ```bash
   # Make the script executable
   chmod +x generate_participant.sh
@@ -182,7 +192,7 @@ The script supports the following arguments to customize the deployment:
     - If `--manual` is used without this flag, the script defaults to a secret named participant-tls-cert.
 
 
-#### 2.2. Deploy Participant Chart
+### 1.2. Deploy Participant Chart
 
 The participant-chart no longer contains an internal Keycloak subchart by default. It is now "IAM-agnostic," allowing the participant to opt for our chart-deployed Keycloak or their own.
 
@@ -195,7 +205,8 @@ The participant-chart no longer contains an internal Keycloak subchart by defaul
   -n xdatashare
 ```   
 
-### 3. Verify the Deployment
+## 3. Verification Steps (Optional)
+### Verify the Deployment
 
 After running helm install, cert-manager will automatically begin obtaining the SSL certificates.
 This may take 1-2 minutes.You can monitor the status of the certificates:# Watch the certificates in the participant's namespace
@@ -212,7 +223,7 @@ Wait for the `READY` column to switch from `False` to `True`.
 
 Once `READY` is `True`, the participant is fully deployed, secured with HTTPS, and accessible at the domain (e.g., `https://conector-xdatashare.gradiant.org`).
 
-#### Veryfing Did Document Creation (Optional)
+### Veryfing Did Document Creation (Optional)
 To confirm that the participant's Decentralized Identifier (DID) document has been successfully created and registered in the Identity Hub, we can query the Identity Hub's DID endpoint.
 
 ```bash
@@ -220,7 +231,7 @@ curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/did"| jq
 ```
 
 
-#### Verifying Credential Issuance (Optional)
+### Verifying Credential Issuance (Optional)
 
 After deployment, the `job-request-credentials.yaml` job (described below) automatically requests a Verifiable Credential from the central **dataspace-issuer**.
 
@@ -235,23 +246,11 @@ curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/identity/ap
 -H "X-Api-Key: $API_KEY" | jq
 ```
 
-### 4. Component Architecture
+## 4. Component Architecture
 
 **Keycloak Chart Components:**
 
 The Keycloak Chart is a complementary chart that provides an externalized IAM service. It decouples identity management from the participant logic, allowing participants to choose between this managed deployment or a pre-existing enterprise Keycloak.
-
-**Initial Seeding Jobs for the Keycloak Chart**
-
-
-When the keycloak-chart is deployed, by default, a Post-Install/Post-Upgrade Hook runs to bootstrap the environment. This ensures that the IAM layer is immediately compatible with the Participant's security requirements.
-
-The seeding job performs the Frontend Client Creation step: It automatically creates a client within the target realm using a predefined JSON payload (frontend-client.json).
-  - Purpose: This client is used after the authentication step the participant node to give us access to the web portal. 
-  - Naming Convention: By default, this client is identified as edc-frontend.
-
-**Note:** If you choose to use an external Keycloak not managed by this chart, you must manually create this default client, in order to allow the correct redirect from the oauth2-proxy to the participant-portal.
-
 
 **Participant Chart Components (Subcharts):**
 
