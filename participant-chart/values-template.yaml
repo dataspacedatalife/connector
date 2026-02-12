@@ -253,6 +253,7 @@ participant-portal:
     viteIconUrl: "/icons/gradiant.svg"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
+    viteKeycloakUrl: "https://{{HOST_KC}}"
     viteKeycloakRealm: "dataspace"
     viteKeycloakAuthClientId: "edc-frontend"
     viteEdcConnectorName: "{{PARTICIPANT}}"
