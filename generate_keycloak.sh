@@ -4,22 +4,25 @@ set -e
 KEYCLOAK_CHART_DIR="keycloak-chart"
 TEMPLATE_FILE="$KEYCLOAK_CHART_DIR/values-template.yaml"
 OUTPUT_FILE="$KEYCLOAK_CHART_DIR/values.yaml"
+SECRET_TEMPLATE_FILE="$KEYCLOAK_CHART_DIR/secret-template.yaml"
+SECRET_OUTPUT_FILE="$KEYCLOAK_CHART_DIR/templates/secret.yaml"
 
 # Function to display usage instructions
 usage() {
-    echo "Usage: $0 --host-kc <hostname> [--secret <secret-name>]"
+    echo "Usage: $0 --host-kc <hostname> --password <admin-password> [--secret <secret-name>]"
     echo ""
     echo "Examples:"
     echo "  1. Automatic SSL (Default - Let's Encrypt):"
-    echo "     $0 --host-kc keycloak.example.com"
+    echo "     $0 --host-kc keycloak.example.com --password MyStrongPassword123"
     echo ""
     echo "  2. Manual SSL (Disable Let's Encrypt, use defined secret):"
-    echo "     $0 --host-kc keycloak.example.com --secret my-wildcard-cert"
+    echo "     $0 --host-kc keycloak.example.com --password MyStrongPassword123 --secret my-wildcard-cert"
     exit 1
 }
 
 # Initialize variables
 HOST_KC=""
+KC_ADMIN_PASSWORD=""
 USE_LETS="true"
 CUSTOM_SECRET=""
 
@@ -31,6 +34,13 @@ while [[ "$#" -gt 0 ]]; do
                 echo "Error: --host-kc flag requires a hostname argument." >&2; exit 1
             fi
             HOST_KC="$2"
+            shift 2
+            ;;
+        --password)
+            if [[ -z "$2" || "$2" == --* ]]; then
+                echo "Error: --password flag requires a value." >&2; exit 1
+            fi
+            KC_ADMIN_PASSWORD="$2"
             shift 2
             ;;
         --secret) # Optional: Define a custom secret name for manual mode
@@ -49,6 +59,12 @@ done
 if [ -z "$HOST_KC" ]; then
     echo "Error: The argument --host-kc is mandatory."
     usage
+fi
+
+# Validation: Password is mandatory
+if [ -z "$KC_ADMIN_PASSWORD" ]; then
+    echo "Warning: The argument --password should be used to set a custom admin password. Using 'admin' by default"
+    KC_ADMIN_PASSWORD="admin"
 fi
 
 # Logic: Determine Issuer and Secret Name
@@ -83,3 +99,9 @@ sed -e "s|{{HOST_KC}}|$HOST_KC|g" \
 echo "---"
 
 echo "✅ Success! Values file '$OUTPUT_FILE' generated."
+
+# Perform replacements using sed
+sed -e "s#{{KC_ADMIN_PASSWORD}}#$KC_ADMIN_PASSWORD#g" \
+    "$SECRET_TEMPLATE_FILE" > "$SECRET_OUTPUT_FILE"
+
+echo "✅ Success! Secret file '$SECRET_OUTPUT_FILE' generated."
