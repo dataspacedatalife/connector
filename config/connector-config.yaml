@@ -1,0 +1,8 @@
+namespace: datalife
+email: dmd@cesga.es
+connector:
+  name: connector
+  address: <institution>-ds-connector-1.domain.es
+keycloak:
+  address: <institution>-ds-connector-1-ks.domain.es
+  adminPassword: set_your_very_secret_password
