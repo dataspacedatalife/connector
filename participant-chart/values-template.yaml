@@ -339,4 +339,4 @@ seeding:
     did: "did:web:{{HOST}}:identityhub:did"
   defaultUser:
     create: true
-    password: "1234"
+    password: "{{PASSWORD}}"

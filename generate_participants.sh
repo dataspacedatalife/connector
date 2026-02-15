@@ -25,6 +25,13 @@ while [[ $# -gt 0 ]]; do
       HOST_KC="$2"
       shift 2
       ;;
+    --password)
+      if [[ -z "$2" || "$2" == --* ]]; then
+        echo "Error: --password flag requires a value." >&2; exit 1
+      fi
+      PASSWORD="$2"
+      shift 2
+      ;;
     --secret) # Optional: Define a custom secret name for manual mode
       if [[ -z "$2" || "$2" == --* ]]; then
         echo "Error: --secret flag requires a value." >&2; exit 1
@@ -45,14 +52,14 @@ done
 
 # --- 2. Validation ---
 if [ -z "$PARTICIPANT" ]; then
-  echo "Usage: $0 PARTICIPANT --host <HN> --host-kc <HN_KC> [--manual] [--secret <name>]"
+  echo "Usage: $0 PARTICIPANT --host <HN> --host-kc <HN_KC> --password <PASSWORD> [--manual] [--secret <name>]"
   echo
   echo "Examples:"
   echo "  1. Automatic SSL (Default - Let's Encrypt):"
-  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com"
+  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret"
   echo
   echo "  2. Manual SSL (Uses wildcard-tls-cert or custom secret):"
-  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --secret wildcard-tls-cert"
+  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret --secret wildcard-tls-cert"
   exit 1
 fi
 
@@ -63,6 +70,11 @@ fi
 
 if [ -z "$HOST" ]; then
   echo "Error: --host and --host-kc flags are mandatory." >&2
+  exit 1
+fi
+
+if [ -z "$PASSWORD" ]; then
+  echo "Error: --password flag is mandatory." >&2
   exit 1
 fi
 
@@ -122,6 +134,7 @@ sed \
   -e "s/{{DID_B64}}/$DID_B64/g" \
   -e "s/{{CLIENT_SECRET}}/$CLIENT_SECRET/g" \
   -e "s/{{TLS_SECRET_NAME}}/$TLS_SECRET_NAME/g" \
+  -e "s/{{PASSWORD}}/$PASSWORD/g" \
   -e "$ISSUER_CMD" \
   "$VALUES_TEMPLATE" > "$VALUES_OUT"
 
