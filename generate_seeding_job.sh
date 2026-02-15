@@ -16,7 +16,7 @@ usage() {
   echo "Options:"
   echo "  --host-kc <host-kc>               Keycloak Hostname (required)"
   echo "  --user <user>                     Keycloak Admin User (default: admin)"
-  echo "  --pass <password>                 Keycloak Admin Password (default: admin)"
+  echo "  --password <password>                 Keycloak Admin Password (default: admin)"
   echo "  --client-admin <client-admin>     Admin Client ID (default: admin-cli)"
   echo "  --realm-admin <realm-admin>       Admin Realm (default: master)"
   echo "  --realm-file <path>               Path to Realm JSON file (default: keycloak/realms/realm.json)"
@@ -29,7 +29,7 @@ usage() {
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --user) KC_ADMIN_USER="$2"; shift ;;
-        --pass) KC_ADMIN_PASSWORD="$2"; shift ;;
+        --password) KC_ADMIN_PASSWORD="$2"; shift ;;
         --host-kc) KC_URL="$2"; shift ;;
         --client-file) CLIENT_FILE="$2"; shift ;; # Renamed from --file for clarity
         --realm-file) REALM_FILE="$2"; shift ;;   # New argument
@@ -51,7 +51,7 @@ if [ -z "$KC_ADMIN_USER" ]; then
 fi
 
 if [ -z "$KC_ADMIN_PASSWORD" ]; then
-    echo "Error: --pass is required (Keycloak Admin Password)."
+    echo "Error: --password is required (Keycloak Admin Password)."
     usage
 fi
 
