@@ -1,6 +1,21 @@
 # Xdatashare Connector Deployment Guide
 This document outlines the two-phase process for adding a new xdatashare connector to an unpopulated Kubernetes cluster (such as kind).This process assumes the cluster is already running NGINX Ingress Controller and Cert-Manager, but has not yet been configured to issue certificates.
 
+## Quickstart Guide
+For a generic deploment follow these steps:
+- Clone the repo
+- Edit `config/connector-config.yaml`
+- Run the automated deployment
+```
+./deploy --config config/connector-config.yaml
+```
+
+To destroy a previous deployment:
+```
+./destroy
+```
+If you want a customized deployment please read the following sections.
+
 ## Prerequisites
 
 Before starting, ensure you have the following:
