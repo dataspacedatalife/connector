@@ -3,6 +3,7 @@ email: dmd@cesga.es
 connector:
   name: connector
   address: <institution>-ds-connector-1.domain.es
+  password: set_your_very_secret_password
 keycloak:
   address: <institution>-ds-connector-1-ks.domain.es
   adminPassword: set_your_very_secret_password

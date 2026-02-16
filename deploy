@@ -65,6 +65,7 @@ if [[ -n "$CONFIG_FILE" ]]; then
   EMAIL=$(yq -r '.email // ""' $CONFIG_FILE)
   CONNECTOR_NAME=$(yq -r '.connector.name // "connector"' $CONFIG_FILE)
   CONNECTOR_ADDRESS=$(yq -r '.connector.address // ""' $CONFIG_FILE)
+  CONNECTOR_PASSWORD=$(yq -r '.connector.password // ""' $CONFIG_FILE)
   KEYCLOAK_ADDRESS=$(yq -r '.keycloak.address // ""' $CONFIG_FILE)
   KEYCLOAK_ADMIN_PASSWORD=$(yq -r '.keycloak.adminPassword // ""' $CONFIG_FILE)
 fi
@@ -74,6 +75,7 @@ prompt_value NAMESPACE "Kubernetes namespace"
 prompt_value EMAIL "Email for cert-manager issuer"
 prompt_value CONNECTOR_NAME "Connector name (Helm release / participant)"
 prompt_value CONNECTOR_ADDRESS "Connector public host"
+prompt_value CONNECTOR_PASSWORD "Connector password"
 prompt_value KEYCLOAK_ADDRESS "Keycloak public host"
 prompt_value KEYCLOAK_ADMIN_PASSWORD "Keycloak admin password" true
 
@@ -85,6 +87,7 @@ This is the configuration of the connector we are about to deploy:
 - email: $EMAIL
 - connector.name: $CONNECTOR_NAME
 - connector.address: $CONNECTOR_ADDRESS
+- connector.password: ********
 - keycloak.address: $KEYCLOAK_ADDRESS
 - keycloak.adminPassword: ********
 - dockerRegistry.server: $REGISTRY_SERVER
@@ -131,7 +134,7 @@ echo "Generating participant config"
 sudo kubectl apply -f keycloak/jobs/job-import-realm.yaml -n "$NAMESPACE"
 sudo kubectl apply -f keycloak/jobs/job-add-default-client.yaml -n "$NAMESPACE"
 sudo kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s
-./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS"
+./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD"
 sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-server='$REGISTRY_SERVER' --docker-username='$REGISTRY_USERNAME' --docker-password='$REGISTRY_PASSWORD' -n '$NAMESPACE' --dry-run=client -o yaml | sudo kubectl apply -f -
 
 echo "Deploying the participant portal"
