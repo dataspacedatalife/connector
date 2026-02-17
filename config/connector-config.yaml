@@ -12,8 +12,8 @@ tls:
 user:
   password: <user-password>
 connector:
-  name: cesga-ds-connector-2
-  address: cesga-ds-connector-2.dataspace.cesga.es
+  name: connector
+  address: <institution>-ds-connector-1.domain.es
 keycloak:
   address: cesga-ds-connector-2-kc.dataspace.cesga.es
   adminPassword: <kc-admin-password>
