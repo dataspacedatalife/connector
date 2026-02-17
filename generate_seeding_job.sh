@@ -16,7 +16,7 @@ usage() {
   echo "Options:"
   echo "  --host-kc <host-kc>               Keycloak Hostname (required)"
   echo "  --user <user>                     Keycloak Admin User (default: admin)"
-  echo "  --password <password>                 Keycloak Admin Password (default: admin)"
+  echo "  --password <password>             Keycloak Admin Password (default: admin)"
   echo "  --client-admin <client-admin>     Admin Client ID (default: admin-cli)"
   echo "  --realm-admin <realm-admin>       Admin Realm (default: master)"
   echo "  --realm-file <path>               Path to Realm JSON file (default: keycloak/realms/realm.json)"

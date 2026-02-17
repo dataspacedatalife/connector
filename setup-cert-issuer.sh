@@ -30,7 +30,7 @@ if [ -z "$EMAIL" ]; then
   exit 1
 fi
 
-echo "--- 1. Verifying that Services are Ready ---"
+echo "Verifying that Services are Ready"
 # Wait for the NGINX pod to be "Ready"
 echo "Waiting for NGINX Ingress Controller..."
 kubectl wait --namespace ingress-nginx \
@@ -47,7 +47,7 @@ kubectl wait --namespace cert-manager \
   --timeout=120s
 echo "Cert-Manager is Ready."
 
-echo "--- 2. Creating the ClusterIssuer for Let's Encrypt ---"
+echo "Creating the ClusterIssuer for Let's Encrypt"
 # Create the ClusterIssuer using the "class" configuration
 # and the email provided by the flag.
 cat <<EOF | kubectl apply -f -

@@ -5,6 +5,9 @@ set -e
 PARTICIPANT=""
 HOST=""
 HOST_KC=""
+PASSWORD="1234"
+KEYCLOAK_ADMIN_PASSWORD="admin"
+KEYCLOAK_ADMIN_USERNAME="admin"
 USE_LETS="true"
 CUSTOM_SECRET=""
 
@@ -25,6 +28,20 @@ while [[ $# -gt 0 ]]; do
       HOST_KC="$2"
       shift 2
       ;;
+    --username-kc)
+      if [[ -z "$2" || "$2" == --* ]]; then
+        echo "Error: --username-kc flag requires a value." >&2; exit 1
+      fi
+      KEYCLOAK_ADMIN_USERNAME="$2"
+      shift 2
+      ;;
+    --password-kc)
+      if [[ -z "$2" || "$2" == --* ]]; then
+        echo "Error: --password-kc flag requires a value." >&2; exit 1
+      fi
+      KEYCLOAK_ADMIN_PASSWORD="$2"
+      shift 2
+      ;;
     --password)
       if [[ -z "$2" || "$2" == --* ]]; then
         echo "Error: --password flag requires a value." >&2; exit 1
@@ -32,9 +49,9 @@ while [[ $# -gt 0 ]]; do
       PASSWORD="$2"
       shift 2
       ;;
-    --secret) # Optional: Define a custom secret name for manual mode
+    --tls-secret) # Optional: Define a custom secret name for manual mode
       if [[ -z "$2" || "$2" == --* ]]; then
-        echo "Error: --secret flag requires a value." >&2; exit 1
+        echo "Error: --tls-secret flag requires a value." >&2; exit 1
       fi
       CUSTOM_SECRET="$2"
       USE_LETS="false"
@@ -52,14 +69,14 @@ done
 
 # --- 2. Validation ---
 if [ -z "$PARTICIPANT" ]; then
-  echo "Usage: $0 PARTICIPANT --host <HN> --host-kc <HN_KC> --password <PASSWORD> [--manual] [--secret <name>]"
+  echo "Usage: $0 PARTICIPANT --host <HN> --host-kc <HN_KC> --password <PASSWORD> [ --username-kc <kc-admin-username> --password-kc <kc-admin-password> --tls-secret <tls-secret-name>]"
   echo
   echo "Examples:"
   echo "  1. Automatic SSL (Default - Let's Encrypt):"
   echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret"
   echo
   echo "  2. Manual SSL (Uses wildcard-tls-cert or custom secret):"
-  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret --secret wildcard-tls-cert"
+  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret --tls-secret wildcard-tls-cert"
   exit 1
 fi
 
@@ -135,6 +152,8 @@ sed \
   -e "s/{{CLIENT_SECRET}}/$CLIENT_SECRET/g" \
   -e "s/{{TLS_SECRET_NAME}}/$TLS_SECRET_NAME/g" \
   -e "s/{{PASSWORD}}/$PASSWORD/g" \
+  -e "s/{{KEYCLOAK_ADMIN_USERNAME}}/$KEYCLOAK_ADMIN_USERNAME/g" \
+  -e "s/{{KEYCLOAK_ADMIN_PASSWORD}}/$KEYCLOAK_ADMIN_PASSWORD/g" \
   -e "$ISSUER_CMD" \
   "$VALUES_TEMPLATE" > "$VALUES_OUT"
 

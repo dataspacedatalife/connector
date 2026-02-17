@@ -16,12 +16,9 @@ spec:
           image: badouralix/curl-jq:latest
           env:
             - name: KC_ADMIN_USER
-              value: "admin"
+              value: {{ .Values.seeding.auth.adminUsername | quote }}
             - name: KC_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.seeding.auth.secretName }}
-                  key: {{ .Values.seeding.auth.secretPasswordKey }}
+              value: {{ .Values.seeding.auth.adminPassword | quote }}
             - name: KC_URL
               value: {{ .Values.seeding.keycloakUrl | quote }}
             - name: KC_REALM

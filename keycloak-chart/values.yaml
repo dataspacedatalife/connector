@@ -9,7 +9,7 @@ keycloak:
 
   extraEnvVars:
     - name: KC_HOSTNAME
-      value: "https://conector3-kc.dataspace.gradiant.org"
+      value: "https://connector3-kc.dataspace.gradiant.org"
     - name: KC_PROXY_HEADERS
       value: "xforwarded"
     - name: KC_HOSTNAME_STRICT
@@ -62,7 +62,7 @@ keycloak:
 
   ingress:
     enabled: true
-    hostname: conector3-kc.dataspace.gradiant.org
+    hostname: connector3-kc.dataspace.gradiant.org
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
@@ -70,7 +70,7 @@ keycloak:
     tls: true
     extraTls:
       - hosts:
-          - conector3-kc.dataspace.gradiant.org
+          - connector3-kc.dataspace.gradiant.org
         secretName: keycloak-tls-cert
 
   postgresql:

@@ -79,7 +79,7 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
   chmod +x generate_keycloak.sh
 
   # Usage:
-  # ./generate_keycloak.sh --host-kc <KEYCLOAK_HOSTNAME> --manual --secret <TLS_SECRET_NAME>
+  # ./generate_keycloak.sh --host-kc <KEYCLOAK_HOSTNAME> --manual --tls-secret <TLS_SECRET_NAME>
 
   # Example:
   ./generate_keycloak.sh --host-kc conector-xdatashare-kc.gradiant.org
@@ -88,8 +88,7 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
 This command will create a new file: `keycloak-chart/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
 The generation script supports several flags:
 - `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.gradiant.org`).
-- `--manual`: If you want to deploy the external Keycloak without the connection to the lets encrypt, you can use this flag to generate a `values.yaml` without the TLS configuration. This is useful if you want to manage the TLS certificates for Keycloak separately (e.g., using wildcard certificates or another certificate management solution).
-- `--secret <TLS_SECRET_NAME>`: If you have an existing TLS secret for Keycloak, you can use this flag to specify the name of that secret. The generated `values.yaml` will then reference this secret instead of creating a new one. If this name is not passed the script will assume the default secret name `keycloak-tls-cert` for the Keycloak deployment. This is useful if you have already set up TLS for Keycloak and want to reuse that configuration without modification.
+- `--tls-secret <TLS_SECRET_NAME>`: If you have an existing TLS secret for Keycloak, you can use this flag to specify the name of that secret. The generated `values.yaml` will then reference this secret instead of creating a new one. If this name is not passed the script will assume the default secret name `keycloak-tls-cert` for the Keycloak deployment. This is useful if you have already set up TLS for Keycloak and want to reuse that configuration without modification.
 
 **Creating a Manual TLS Secret**
 If you are not using Let's Encrypt (Phase 1) and do not have an existing TLS secret configured, you must create one manually before deploying the chart. This secret stores your certificate chain and private key in a format the Ingress controller can consume.
@@ -187,10 +186,7 @@ The script supports the following arguments to customize the deployment:
   - `<PARTICIPANT_NAME>`: (Required) The name of the participant (e.g., gradiant). This is used to prefix resources and name the output file.
   - `--host <MAIN_HOSTNAME>`: The primary domain for the participant (e.g., conector-xdatashare.gradiant.org). This covers the Portal and EDC endpoints.
   - `--host-kc <KEYCLOAK_HOSTNAME>`: The domain where the Keycloak service is reachable.
-  - `--manual`: Disables automatic Let's Encrypt (cert-manager) annotations for the participant's Ingress resources.
-  - `--secret <TLS_SECRET_NAME>`: Specifies an existing TLS secret for the participant's domains. 
-    - If `--manual` is used without this flag, the script defaults to a secret named participant-tls-cert.
-
+  - `--tls-secret <TLS_SECRET_NAME>`: Specifies an existing TLS secret for the participant's domains.
 
 ### 1.2. Deploy Participant Chart
 
