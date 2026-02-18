@@ -80,12 +80,12 @@ fi
 
 # --- 3. SSL Logic (Default is Let's Encrypt) ---
 if [ "$USE_LETS" == "true" ]; then
-    ISSUER_CMD="s|{{CLUSTER_ISSUER}}|letsencrypt|g"
     TLS_SECRET_NAME="${PARTICIPANT}-tls-cert"
+    CLUSTER_ISSUER="letsencrypt"
     echo "--> SSL Mode: Automatic (Let's Encrypt)"
 else
-    ISSUER_CMD="/{{CLUSTER_ISSUER}}/d"
     TLS_SECRET_NAME="$CUSTOM_SECRET"
+    CLUSTER_ISSUER=""
     echo "--> SSL Mode: Manual (Secret: $TLS_SECRET_NAME)"
 fi
 
@@ -125,18 +125,19 @@ if [ ! -f "$VALUES_TEMPLATE" ]; then
     exit 1
 fi
 
-sed \
-  -e "s/{{PARTICIPANT}}/$PARTICIPANT/g" \
-  -e "s/{{HOST}}/$PARTICIPANT_HOST/g" \
-  -e "s/{{HOST_KC}}/$PARTICIPANT_HOST_KC/g" \
-  -e "s/{{AUTH_KEY_B64}}/$AUTH_KEY_B64/g" \
-  -e "s/{{SUPER_USER_KEY_B64}}/$SUPER_USER_KEY_B64/g" \
-  -e "s/{{DID_B64}}/$DID_B64/g" \
-  -e "s/{{CLIENT_SECRET}}/$CLIENT_SECRET/g" \
-  -e "s/{{TLS_SECRET_NAME}}/$TLS_SECRET_NAME/g" \
-  -e "s/{{PASSWORD}}/$PASSWORD/g" \
-  -e "$ISSUER_CMD" \
-  "$VALUES_TEMPLATE" > "$VALUES_OUT"
+export PARTICIPANT
+export HOST="$PARTICIPANT_HOST"
+export HOST_KC="$PARTICIPANT_HOST_KC"
+export AUTH_KEY_B64
+export SUPER_USER_KEY_B64
+export DID_B64
+export CLIENT_SECRET
+export TLS_SECRET_NAME
+export PASSWORD
+export CLUSTER_ISSUER
+
+envsubst '${PARTICIPANT} ${HOST} ${HOST_KC} ${AUTH_KEY_B64} ${SUPER_USER_KEY_B64} ${DID_B64} ${CLIENT_SECRET} ${TLS_SECRET_NAME} ${PASSWORD} ${CLUSTER_ISSUER}' \
+  < "$VALUES_TEMPLATE" > "$VALUES_OUT"
 
 echo "Generated $VALUES_OUT"
 echo "---"
