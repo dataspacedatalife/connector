@@ -5,6 +5,7 @@ cd "$SCRIPT_DIR"
 source scripts/functions.sh
 
 DEFAULT_CONFIG="$SCRIPT_DIR/config/default-config.yaml"
+REGISTRY_CONFIG="$SCRIPT_DIR/config/registry-config.yaml"
 
 usage() {
   cat <<USAGE
@@ -52,9 +53,9 @@ echo "Now that we have the required dependencies, we will define configuration."
 # Read default values
 NAMESPACE=$(yq -r '.namespace' $DEFAULT_CONFIG)
 CONNECTOR_NAME=$(yq -r '.connector.name' $DEFAULT_CONFIG)
-REGISTRY_SERVER=$(yq -r '.dockerRegistry.server' $DEFAULT_CONFIG)
-REGISTRY_USERNAME=$(yq -r '.dockerRegistry.username' $DEFAULT_CONFIG)
-REGISTRY_PASSWORD=$(yq -r '.dockerRegistry.password' $DEFAULT_CONFIG)
+REGISTRY_SERVER=$(yq -r '.dockerRegistry.server' $REGISTRY_CONFIG)
+REGISTRY_USERNAME=$(yq -r '.dockerRegistry.username' $REGISTRY_CONFIG)
+REGISTRY_PASSWORD=$(yq -r '.dockerRegistry.password' $REGISTRY_CONFIG)
 
 # Values provided in config file
 if [[ -n "$CONFIG_FILE" ]]; then
