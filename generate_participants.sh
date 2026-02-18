@@ -52,7 +52,7 @@ done
 
 # --- 2. Validation ---
 if [ -z "$PARTICIPANT" ]; then
-  echo "Usage: $0 PARTICIPANT --host <HN> --host-kc <HN_KC> --password <PASSWORD> [--manual] [--secret <name>]"
+  echo "Usage: $0 PARTICIPANT --host <HN> --host-kc <HN_KC> --password <PASSWORD> [--secret <name>]"
   echo
   echo "Examples:"
   echo "  1. Automatic SSL (Default - Let's Encrypt):"
