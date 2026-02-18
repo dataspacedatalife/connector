@@ -6,14 +6,13 @@ tls:
     crt: tls/tls-kc.crt
     key: tls/tls-kc.key
   connector:
-    secretName: cesga-ds-connector-2-tls-cert
+    secretName: <institution>-tls-cert
     crt: tls/tls.crt
     key: tls/tls.key
-user:
-  password: <user-password>
 connector:
   name: connector
   address: <institution>-ds-connector-1.domain.es
+  password: <default-user-password>
 keycloak:
-  address: cesga-ds-connector-2-kc.dataspace.cesga.es
+  address: <institution>-ds-connector-1-kc.domain.es
   adminPassword: <kc-admin-password>

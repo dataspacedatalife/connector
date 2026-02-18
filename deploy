@@ -84,10 +84,10 @@ if [[ -n "$CONFIG_FILE" ]]; then
 
   CONNECTOR_NAME=$(yq -r '.connector.name // "'$CONNECTOR_NAME'"' $CONFIG_FILE)
   CONNECTOR_ADDRESS=$(yq -r '.connector.address // ""' $CONFIG_FILE)
+  CONNECTOR_PASSWORD=$(yq -r '.user.password // ""' $CONFIG_FILE)
+
   KEYCLOAK_ADDRESS=$(yq -r '.keycloak.address // ""' $CONFIG_FILE)
   KEYCLOAK_ADMIN_PASSWORD=$(yq -r '.keycloak.adminPassword // ""' $CONFIG_FILE)
-
-  USER_PASSWORD=$(yq -r '.user.password // ""' $CONFIG_FILE)
 
   CONNECTOR_SECRET_NAME=$(yq -r '.tls.connector.secretName // ""' "$CONFIG_FILE")
   CONNECTOR_TLS_CRT=$(yq -r '.tls.connector.crt // ""' "$CONFIG_FILE")
@@ -99,21 +99,13 @@ if [[ -n "$CONFIG_FILE" ]]; then
 
 fi
 
-if [ -z "$KEYCLOAK_ADMIN_PASSWORD" ]; then
-    echo "ERROR: Admin password is not defined in $CONFIG_FILE" >&2
-    exit 1
-fi
-
-if [ -z "$USER_PASSWORD" ]; then
-    echo "ERROR: User password is not defined in $CONFIG_FILE" >&2
-    exit 1
-fi
-
 # Prompt interactively for mandatory values that are empty
 prompt_value NAMESPACE "Kubernetes namespace"
 prompt_value CONNECTOR_NAME "Connector name (Helm release / participant)"
 prompt_value CONNECTOR_ADDRESS "Connector public host"
+prompt_value CONNECTOR_PASSWORD "Connector user password" true
 prompt_value KEYCLOAK_ADDRESS "Keycloak public host"
+prompt_value KEYCLOAK_ADMIN_PASSWORD "Keycloak admin password" true
 
 if [[ -z "$USE_LETS_ENCRYPT" || "$USE_LETS_ENCRYPT" == "null" ]]; then
   if ask_yes_no "Do you want to use Let's Encrypt to generate certificates for your domains?" "$USE_LETS_ENCRYPT"; then
@@ -155,9 +147,9 @@ This is the configuration of the connector we are about to deploy:
 - email: $EMAIL
 - connector.name: $CONNECTOR_NAME
 - connector.address: $CONNECTOR_ADDRESS
+- connector.password: ********
 - keycloak.address: $KEYCLOAK_ADDRESS
 - keycloak.adminPassword: ********
-- user.password: ********
 - dockerRegistry.server: $REGISTRY_SERVER
 - dockerRegistry.username: $REGISTRY_USERNAME
 - dockerRegistry.password: ********
@@ -239,9 +231,9 @@ sudo kubectl apply -f keycloak/jobs/job-add-default-client.yaml -n "$NAMESPACE"
 sudo kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s
 
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
-  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$USER_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD"
+  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD"
 else
-  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$USER_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME"
+  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME"
 fi
 
 echo "Creating docker registry secret for pulling harbor images"
