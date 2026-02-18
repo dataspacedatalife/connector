@@ -108,7 +108,7 @@ prompt_value CONNECTOR_ADDRESS "Connector public host"
 prompt_value CONNECTOR_PASSWORD "Connector user password" true
 prompt_value KEYCLOAK_ADDRESS "Keycloak public host"
 prompt_value KEYCLOAK_ADMIN_PASSWORD "Keycloak admin password" true
-prompt_value CONNECTOR_LOGO "Participant logo path or URL"
+prompt_value CONNECTOR_LOGO "Participant logo URL"
 
 if [[ -z "$USE_LETS_ENCRYPT" || "$USE_LETS_ENCRYPT" == "null" ]]; then
   if ask_yes_no "Do you want to use Let's Encrypt to generate certificates for your domains?" "$USE_LETS_ENCRYPT"; then
