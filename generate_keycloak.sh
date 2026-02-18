@@ -109,6 +109,9 @@ echo "---"
 
 echo "✅ Success! Values file '$OUTPUT_FILE' generated."
 
+export KC_ADMIN_PASSWORD
+export KC_DB_PASSWORD
+
 envsubst '${KC_ADMIN_PASSWORD} ${KC_DB_PASSWORD}' \
     < "$SECRET_TEMPLATE_FILE" > "$SECRET_OUTPUT_FILE"
 
