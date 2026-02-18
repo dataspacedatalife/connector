@@ -46,6 +46,7 @@ require_command kind
 require_command kubectl
 require_command helm
 require_command yq
+require_command envsubst
 
 echo "Now that we have the required dependencies, we will define configuration."
 # Read default values
