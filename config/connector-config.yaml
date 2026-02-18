@@ -11,6 +11,7 @@ tls:
     key: tls/tls.key
 connector:
   name: connector
+  logo: /icons/gradiant.svg
   address: <institution>-ds-connector-1.domain.es
   password: <default-user-password>
 keycloak:
