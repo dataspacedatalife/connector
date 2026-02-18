@@ -250,7 +250,7 @@ oauth2-proxy:
 participant-portal:
   configMap:
     nodeEnv: "production"
-    viteIconUrl: "/icons/gradiant.svg"
+    viteIconUrl: "${PARTICIPANT_LOGO}"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
     viteKeycloakUrl: "https://${HOST_KC}"

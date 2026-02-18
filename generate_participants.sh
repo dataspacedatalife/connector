@@ -3,6 +3,7 @@ set -e
 
 # --- 1. Argument Parsing ---
 PARTICIPANT=""
+PARTICIPANT_LOGO=""
 HOST=""
 HOST_KC=""
 PASSWORD="1234"
@@ -57,6 +58,13 @@ while [[ $# -gt 0 ]]; do
       USE_LETS="false"
       shift 2
       ;;
+    --logo)   # <-- nova flag
+          if [[ -z "$2" || "$2" == --* ]]; then
+            echo "Error: --logo flag requires a value." >&2; exit 1
+          fi
+          PARTICIPANT_LOGO="$2"
+          shift 2
+          ;;
     *)
       if [ -n "$PARTICIPANT" ]; then
         echo "Error: Participant name already set to '$PARTICIPANT'. Cannot set it to '$1'." >&2; exit 1
@@ -143,6 +151,7 @@ if [ ! -f "$VALUES_TEMPLATE" ]; then
 fi
 
 export PARTICIPANT
+export PARTICIPANT_LOGO
 export HOST="$PARTICIPANT_HOST"
 export HOST_KC="$PARTICIPANT_HOST_KC"
 export AUTH_KEY_B64
@@ -155,7 +164,7 @@ export CLUSTER_ISSUER
 export KEYCLOAK_ADMIN_USERNAME
 export KEYCLOAK_ADMIN_PASSWORD
 
-envsubst '${PARTICIPANT} ${HOST} ${HOST_KC} ${AUTH_KEY_B64} ${SUPER_USER_KEY_B64} ${DID_B64} ${CLIENT_SECRET} ${TLS_SECRET_NAME} ${PASSWORD} ${CLUSTER_ISSUER} ${KEYCLOAK_ADMIN_Us} ${KEYCLOAK_ADMIN_PASSWORD}' \
+envsubst '${PARTICIPANT} ${PARTICIPANT_LOGO} ${HOST} ${HOST_KC} ${AUTH_KEY_B64} ${SUPER_USER_KEY_B64} ${DID_B64} ${CLIENT_SECRET} ${TLS_SECRET_NAME} ${PASSWORD} ${CLUSTER_ISSUER} ${KEYCLOAK_ADMIN_Us} ${KEYCLOAK_ADMIN_PASSWORD}' \
   < "$VALUES_TEMPLATE" > "$VALUES_OUT"
 
 # If not using let's encrypt remove the marked cluster-issuer lines
