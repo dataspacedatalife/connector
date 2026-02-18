@@ -5,6 +5,7 @@ cd "$SCRIPT_DIR"
 source scripts/functions.sh
 
 DEFAULT_CONFIG="$SCRIPT_DIR/config/default-config.yaml"
+REGISTRY_CONFIG="$SCRIPT_DIR/config/registry-config.yaml"
 
 usage() {
   cat <<USAGE
@@ -46,28 +47,29 @@ require_command kind
 require_command kubectl
 require_command helm
 require_command yq
+require_command envsubst
 
 echo "Now that we have the required dependencies, we will define configuration."
 # Read default values
 NAMESPACE=$(yq -r '.namespace // ""' $DEFAULT_CONFIG)
 CONNECTOR_NAME=$(yq -r '.connector.name // ""' $DEFAULT_CONFIG)
-REGISTRY_SERVER=$(yq -r '.dockerRegistry.server // ""' $DEFAULT_CONFIG)
-REGISTRY_USERNAME=$(yq -r '.dockerRegistry.username // ""' $DEFAULT_CONFIG)
-REGISTRY_PASSWORD=$(yq -r '.dockerRegistry.password // ""' $DEFAULT_CONFIG)
+REGISTRY_SERVER=$(yq -r '.dockerRegistry.server // ""' $REGISTRY_CONFIG)
+REGISTRY_USERNAME=$(yq -r '.dockerRegistry.username // ""' $REGISTRY_CONFIG)
+REGISTRY_PASSWORD=$(yq -r '.dockerRegistry.password // ""' $REGISTRY_CONFIG)
 
 # Validate that each required variable has a value
 if [ -z "$REGISTRY_SERVER" ]; then
-  echo "ERROR: The Registry server variable is not defined in $DEFAULT_CONFIG. (Please add it and run the script again.)" >&2
+  echo "ERROR: The Registry server variable is not defined in $REGISTRY_CONFIG. (Please add it and run the script again.)" >&2
   exit 1
 fi
 
 if [ -z "$REGISTRY_USERNAME" ]; then
-  echo "ERROR: The Registry username variable is not defined in $DEFAULT_CONFIG. (Please add it and run the script again.)" >&2
+  echo "ERROR: The Registry username variable is not defined in $REGISTRY_CONFIG. (Please add it and run the script again.)" >&2
   exit 1
 fi
 
 if [ -z "$REGISTRY_PASSWORD" ]; then
-  echo "ERROR: The Registry password variable is not defined in $DEFAULT_CONFIG. (Please add it and run the script again.)" >&2
+  echo "ERROR: The Registry password variable is not defined in $REGISTRY_CONFIG. (Please add it and run the script again.)" >&2
   exit 1
 fi
 
@@ -83,6 +85,7 @@ if [[ -n "$CONFIG_FILE" ]]; then
 
   CONNECTOR_NAME=$(yq -r '.connector.name // "'$CONNECTOR_NAME'"' $CONFIG_FILE)
   CONNECTOR_ADDRESS=$(yq -r '.connector.address // ""' $CONFIG_FILE)
+  CONNECTOR_PASSWORD=$(yq -r '.connector.password // ""' $CONFIG_FILE)
   KEYCLOAK_ADDRESS=$(yq -r '.keycloak.address // ""' $CONFIG_FILE)
   KEYCLOAK_ADMIN_PASSWORD=$(yq -r '.keycloak.adminPassword // ""' $CONFIG_FILE)
 
@@ -112,7 +115,9 @@ fi
 prompt_value NAMESPACE "Kubernetes namespace"
 prompt_value CONNECTOR_NAME "Connector name (Helm release / participant)"
 prompt_value CONNECTOR_ADDRESS "Connector public host"
+prompt_value CONNECTOR_PASSWORD "Connector password" true
 prompt_value KEYCLOAK_ADDRESS "Keycloak public host"
+prompt_value KEYCLOAK_ADMIN_PASSWORD "Keycloak admin password" true
 
 if [[ -z "$USE_LETS_ENCRYPT" || "$USE_LETS_ENCRYPT" == "null" ]]; then
   if ask_yes_no "Do you want to use Let's Encrypt to generate certificates for your domains?" "$USE_LETS_ENCRYPT"; then
@@ -154,9 +159,9 @@ This is the configuration of the connector we are about to deploy:
 - email: $EMAIL
 - connector.name: $CONNECTOR_NAME
 - connector.address: $CONNECTOR_ADDRESS
+- connector.password: ********
 - keycloak.address: $KEYCLOAK_ADDRESS
 - keycloak.adminPassword: ********
-- user.password: ********
 - dockerRegistry.server: $REGISTRY_SERVER
 - dockerRegistry.username: $REGISTRY_USERNAME
 - dockerRegistry.password: ********

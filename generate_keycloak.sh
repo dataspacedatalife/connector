@@ -81,6 +81,7 @@ if [ "$USE_LETS" == "true" ]; then
     ISSUER_CMD="s|{{CLUSTER_ISSUER}}|letsencrypt|g"
 
     TLS_SECRET_NAME="keycloak-tls-cert"
+    CLUSTER_ISSUER="letsencrypt"
 
     echo "--> SSL Mode: Automatic (Let's Encrypt)"
 else
@@ -88,6 +89,7 @@ else
     ISSUER_CMD="/{{CLUSTER_ISSUER}}/d"
 
     TLS_SECRET_NAME="$CUSTOM_SECRET"
+    CLUSTER_ISSUER="__REMOVE__"
 
     echo "--> SSL Mode: Manual (Secret: $TLS_SECRET_NAME)"
 fi
@@ -98,19 +100,23 @@ if [ ! -f "$TEMPLATE_FILE" ]; then
     exit 1
 fi
 
-# Perform replacements using sed
-sed -e "s|{{HOST_KC}}|$HOST_KC|g" \
-    -e "s|{{TLS_SECRET_NAME}}|$TLS_SECRET_NAME|g" \
-    -e "$ISSUER_CMD" \
-    "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+export HOST_KC
+export TLS_SECRET_NAME
+export CLUSTER_ISSUER
+
+envsubst '${HOST_KC} ${TLS_SECRET_NAME} ${CLUSTER_ISSUER}' \
+    < "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+
+if [ "$USE_LETS" != "true" ]; then
+    sed -i '/^[[:space:]]*cert-manager\.io\/cluster-issuer:[[:space:]]*__REMOVE__[[:space:]]*$/d' "$OUTPUT_FILE"
+fi
 
 echo "---"
 
 echo "✅ Success! Values file '$OUTPUT_FILE' generated."
 
-# Perform replacements using sed
-sed -e "s#{{KC_ADMIN_PASSWORD}}#$KC_ADMIN_PASSWORD#g" \
-    -e "s#{{KC_DB_PASSWORD}}#$KC_DB_PASSWORD#g" \
-    "$SECRET_TEMPLATE_FILE" > "$SECRET_OUTPUT_FILE"
+export KC_ADMIN_PASSWORD
+envsubst '${KC_ADMIN_PASSWORD}' \
+    < "$SECRET_TEMPLATE_FILE" > "$SECRET_OUTPUT_FILE"
 
 echo "✅ Success! Secret file '$SECRET_OUTPUT_FILE' generated."
