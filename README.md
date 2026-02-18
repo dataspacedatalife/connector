@@ -1,6 +1,5 @@
 # Xdatashare Connector Deployment Guide
-This document outlines the two-phase process for adding a new xdatashare connector to an unpopulated Kubernetes cluster (such as kind).This process assumes the cluster is already running NGINX Ingress Controller and Cert-Manager, but has not yet been configured to issue certificates.
-
+This document outlines the process for adding a new xdatashare connector to a Kubernetes cluster (such as Kind). For an agile setup, it is recommended to use the Quickstart Guide, which allows the entire deployment process to be performed in an automated and simplified manner. If, on the other hand, you prefer a more detailed and customized setup, you may skip the Quickstart and follow the manual steps described in the subsequent sections. This manual process assumes that the cluster is already running NGINX Ingress Controller, openEBS and Cert-Manager (Optional), but has not yet been configured for automatic certificate issuance.
 ## Quickstart Guide
 For a generic deploment follow these steps:
 - Clone the repo
@@ -23,7 +22,8 @@ Before starting, ensure you have the following:
 - **Installed Tooling:** kubectl and helm must be installed and configured to point to the cluster.
 - **Installed Cluster Services:**
     - `ingress-nginx` (NGINX Ingress Controller)
-    - `cert-manager`
+    - `cert-manager` (Optional)
+    - `openEBS` (for dynamic storage provisioning)
 - **Deployment Scripts/Jobs:**
     - `setup-issuer.sh` (This script, for Phase 1)
     - `generate_participant.sh` (This script, for Phase 2)

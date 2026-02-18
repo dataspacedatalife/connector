@@ -3,7 +3,7 @@ set -e
 
 # --- 1. Argument Parsing ---
 PARTICIPANT=""
-PARTICIPANT_LOGO=""
+PARTICIPANT_LOGO="/icons/gradiant.svg"
 HOST=""
 HOST_KC=""
 PASSWORD="1234"
@@ -58,13 +58,13 @@ while [[ $# -gt 0 ]]; do
       USE_LETS="false"
       shift 2
       ;;
-    --logo)   # <-- nova flag
-          if [[ -z "$2" || "$2" == --* ]]; then
-            echo "Error: --logo flag requires a value." >&2; exit 1
-          fi
-          PARTICIPANT_LOGO="$2"
-          shift 2
-          ;;
+    --logo)
+      if [[ -z "$2" || "$2" == --* ]]; then
+        echo "Error: --logo flag requires a value." >&2; exit 1
+      fi
+      PARTICIPANT_LOGO="$2"
+      shift 2
+      ;;
     *)
       if [ -n "$PARTICIPANT" ]; then
         echo "Error: Participant name already set to '$PARTICIPANT'. Cannot set it to '$1'." >&2; exit 1

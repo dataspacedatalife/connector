@@ -83,8 +83,9 @@ if [[ -n "$CONFIG_FILE" ]]; then
   EMAIL=$(yq -r '.tls.email // ""' "$CONFIG_FILE")
 
   CONNECTOR_NAME=$(yq -r '.connector.name // "'$CONNECTOR_NAME'"' $CONFIG_FILE)
+  CONNECTOR_LOGO=$(yq -r '.connector.logo // ""' "$CONFIG_FILE")
   CONNECTOR_ADDRESS=$(yq -r '.connector.address // ""' $CONFIG_FILE)
-  CONNECTOR_PASSWORD=$(yq -r '.user.password // ""' $CONFIG_FILE)
+  CONNECTOR_PASSWORD=$(yq -r '.connector.password // ""' $CONFIG_FILE)
 
   KEYCLOAK_ADDRESS=$(yq -r '.keycloak.address // ""' $CONFIG_FILE)
   KEYCLOAK_ADMIN_PASSWORD=$(yq -r '.keycloak.adminPassword // ""' $CONFIG_FILE)
@@ -96,7 +97,6 @@ if [[ -n "$CONFIG_FILE" ]]; then
   KEYCLOAK_SECRET_NAME=$(yq -r '.tls.keycloak.secretName // ""' "$CONFIG_FILE")
   KEYCLOAK_TLS_CRT=$(yq -r '.tls.keycloak.crt // ""' "$CONFIG_FILE")
   KEYCLOAK_TLS_KEY=$(yq -r '.tls.keycloak.key // ""' "$CONFIG_FILE")
-  PARTICIPANT_LOGO=$(yq -r '.participant.logo // ""' "$CONFIG_FILE")
 
 fi
 
@@ -107,7 +107,7 @@ prompt_value CONNECTOR_ADDRESS "Connector public host"
 prompt_value CONNECTOR_PASSWORD "Connector user password" true
 prompt_value KEYCLOAK_ADDRESS "Keycloak public host"
 prompt_value KEYCLOAK_ADMIN_PASSWORD "Keycloak admin password" true
-prompt_value PARTICIPANT_LOGO "Participant logo path or URL"
+prompt_value CONNECTOR_LOGO "Participant logo path or URL"
 
 if [[ -z "$USE_LETS_ENCRYPT" || "$USE_LETS_ENCRYPT" == "null" ]]; then
   if ask_yes_no "Do you want to use Let's Encrypt to generate certificates for your domains?" "$USE_LETS_ENCRYPT"; then
@@ -148,6 +148,7 @@ This is the configuration of the connector we are about to deploy:
 - namespace: $NAMESPACE
 - email: $EMAIL
 - connector.name: $CONNECTOR_NAME
+- connector.logo: $CONNECTOR_LOGO
 - connector.address: $CONNECTOR_ADDRESS
 - connector.password: ********
 - keycloak.address: $KEYCLOAK_ADDRESS
@@ -233,9 +234,9 @@ sudo kubectl apply -f keycloak/jobs/job-add-default-client.yaml -n "$NAMESPACE"
 sudo kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s
 
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
-  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --logo "$PARTICIPANT_LOGO"
+  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --logo "$CONNECTOR_LOGO"
 else
-  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$PARTICIPANT_LOGO"
+  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$CONNECTOR_LOGO"
 fi
 
 echo "Creating docker registry secret for pulling harbor images"
