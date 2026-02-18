@@ -9,7 +9,7 @@ keycloak:
 
   extraEnvVars:
     - name: KC_HOSTNAME
-      value: "https://{{HOST_KC}}"
+      value: "https://${HOST_KC}"
     - name: KC_PROXY_HEADERS
       value: "xforwarded"
     - name: KC_HOSTNAME_STRICT
@@ -62,16 +62,16 @@ keycloak:
 
   ingress:
     enabled: true
-    hostname: {{HOST_KC}}
+    hostname: ${HOST_KC}
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-      cert-manager.io/cluster-issuer: {{CLUSTER_ISSUER}}
+      cert-manager.io/cluster-issuer: ${CLUSTER_ISSUER}
     tls: true
     extraTls:
       - hosts:
-          - {{HOST_KC}}
-        secretName: {{TLS_SECRET_NAME}}
+          - ${HOST_KC}
+        secretName: ${TLS_SECRET_NAME}
 
   postgresql:
     enabled: true
