@@ -1,4 +1,4 @@
 dockerRegistry:
-  server: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616
-  username: token-si-xdatashare-usuarios-pr-01616+dataspace-datalife
-  password: <harbor-token>
+  server: ""
+  username: ""
+  password: ""
