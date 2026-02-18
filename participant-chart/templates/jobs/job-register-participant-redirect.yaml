@@ -18,12 +18,9 @@ spec:
             - name: KC_URL
               value: "{{ .Values.seeding.keycloakUrl }}"
             - name: KC_USER
-              value: "admin"
+              value: "{{ .Values.seeding.auth.adminUsername }}"
             - name: KC_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.seeding.auth.secretName }}
-                  key: {{ .Values.seeding.auth.secretPasswordKey }}
+              value: "{{ .Values.seeding.auth.adminPassword }}"
             - name: KC_REALM
               value: "{{ .Values.seeding.targetRealm }}"
             - name: CLIENT_ID

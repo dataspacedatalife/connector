@@ -9,20 +9,21 @@ SECRET_OUTPUT_FILE="$KEYCLOAK_CHART_DIR/templates/secret.yaml"
 
 # Function to display usage instructions
 usage() {
-    echo "Usage: $0 --host-kc <hostname> --password <admin-password> [--secret <secret-name>]"
+    echo "Usage: $0 --host-kc <hostname> --password <kc-admin-password> [--tls-secret <tls-secret-name>]"
     echo ""
     echo "Examples:"
     echo "  1. Automatic SSL (Default - Let's Encrypt):"
     echo "     $0 --host-kc keycloak.example.com --password MyStrongPassword123"
     echo ""
     echo "  2. Manual SSL (Disable Let's Encrypt, use defined secret):"
-    echo "     $0 --host-kc keycloak.example.com --password MyStrongPassword123 --secret my-wildcard-cert"
+    echo "     $0 --host-kc keycloak.example.com --password MyStrongPassword123 --tls-secret my-wildcard-cert"
     exit 1
 }
 
 # Initialize variables
 HOST_KC=""
 KC_ADMIN_PASSWORD=""
+KC_DB_PASSWORD="admin_keycloak"
 USE_LETS="true"
 CUSTOM_SECRET=""
 
@@ -43,9 +44,16 @@ while [[ "$#" -gt 0 ]]; do
             KC_ADMIN_PASSWORD="$2"
             shift 2
             ;;
-        --secret) # Optional: Define a custom secret name for manual mode
+        --password-db)
             if [[ -z "$2" || "$2" == --* ]]; then
-                echo "Error: --secret flag requires a value." >&2; exit 1
+                echo "Error: --password-db flag requires a value." >&2; exit 1
+            fi
+            KC_DB_PASSWORD="$2"
+            shift 2
+            ;;
+        --tls-secret) # Optional: Define a custom secret name for manual mode
+            if [[ -z "$2" || "$2" == --* ]]; then
+                echo "Error: --tls-secret flag requires a value." >&2; exit 1
             fi
             CUSTOM_SECRET="$2"
             USE_LETS="false"
@@ -102,7 +110,9 @@ echo "---"
 echo "✅ Success! Values file '$OUTPUT_FILE' generated."
 
 export KC_ADMIN_PASSWORD
-envsubst '${KC_ADMIN_PASSWORD}' \
+export KC_DB_PASSWORD
+
+envsubst '${KC_ADMIN_PASSWORD} ${KC_DB_PASSWORD}' \
     < "$SECRET_TEMPLATE_FILE" > "$SECRET_OUTPUT_FILE"
 
 echo "✅ Success! Secret file '$SECRET_OUTPUT_FILE' generated."

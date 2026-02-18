@@ -9,7 +9,7 @@ service:
   targetPort: 5432
 volume:
   accessMode: ReadWriteOnce
-  storageClass: standard
+  storageClass: openebs-hostpath
   mountPath: /var/lib/postgresql/data
   pgdata: /var/lib/postgresql/data/pgdata
   size: 1Gi

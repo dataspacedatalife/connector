@@ -250,7 +250,7 @@ oauth2-proxy:
 participant-portal:
   configMap:
     nodeEnv: "production"
-    viteIconUrl: "/icons/gradiant.svg"
+    viteIconUrl: "${PARTICIPANT_LOGO}"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
     viteKeycloakUrl: "https://${HOST_KC}"
@@ -330,8 +330,9 @@ seeding:
   targetRealm: "dataspace"
   postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2F${HOST_KC}%2Frealms%2Fdataspace%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2F${HOST}%2F%26client_id%3D${PARTICIPANT}-proxy"
   auth:
-    secretName: "keycloak-secrets"
-    secretPasswordKey: "admin-password"
+    adminUsername: "${KEYCLOAK_ADMIN_USERNAME}"
+    adminPassword: "${KEYCLOAK_ADMIN_PASSWORD}"
+
   client:
     clientId: "${PARTICIPANT}-proxy"
     publicUrl: "https://${HOST}"

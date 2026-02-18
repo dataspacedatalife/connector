@@ -1,9 +1,18 @@
-namespace: datalife
-email: dmd@cesga.es
+namespace: cesga-ds-connector-2
+tls:
+  useLetsEncrypt: false
+  keycloak:
+    secretName: keycloak-tls-cert
+    crt: tls/tls-kc.crt
+    key: tls/tls-kc.key
+  connector:
+    secretName: <institution>-tls-cert
+    crt: tls/tls.crt
+    key: tls/tls.key
 connector:
   name: connector
   address: <institution>-ds-connector-1.domain.es
-  password: set_your_very_secret_password
+  password: <default-user-password>
 keycloak:
-  address: <institution>-ds-connector-1-ks.domain.es
-  adminPassword: set_your_very_secret_password
+  address: <institution>-ds-connector-1-kc.domain.es
+  adminPassword: <kc-admin-password>

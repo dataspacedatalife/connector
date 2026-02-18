@@ -51,11 +51,27 @@ require_command envsubst
 
 echo "Now that we have the required dependencies, we will define configuration."
 # Read default values
-NAMESPACE=$(yq -r '.namespace' $DEFAULT_CONFIG)
-CONNECTOR_NAME=$(yq -r '.connector.name' $DEFAULT_CONFIG)
-REGISTRY_SERVER=$(yq -r '.dockerRegistry.server' $REGISTRY_CONFIG)
-REGISTRY_USERNAME=$(yq -r '.dockerRegistry.username' $REGISTRY_CONFIG)
-REGISTRY_PASSWORD=$(yq -r '.dockerRegistry.password' $REGISTRY_CONFIG)
+NAMESPACE=$(yq -r '.namespace // ""' $DEFAULT_CONFIG)
+CONNECTOR_NAME=$(yq -r '.connector.name // ""' $DEFAULT_CONFIG)
+REGISTRY_SERVER=$(yq -r '.dockerRegistry.server // ""' $REGISTRY_CONFIG)
+REGISTRY_USERNAME=$(yq -r '.dockerRegistry.username // ""' $REGISTRY_CONFIG)
+REGISTRY_PASSWORD=$(yq -r '.dockerRegistry.password // ""' $REGISTRY_CONFIG)
+
+# Validate that each required variable has a value
+if [ -z "$REGISTRY_SERVER" ]; then
+  echo "ERROR: The Registry server variable is not defined in $REGISTRY_CONFIG. (Please add it and run the script again.)" >&2
+  exit 1
+fi
+
+if [ -z "$REGISTRY_USERNAME" ]; then
+  echo "ERROR: The Registry username variable is not defined in $REGISTRY_CONFIG. (Please add it and run the script again.)" >&2
+  exit 1
+fi
+
+if [ -z "$REGISTRY_PASSWORD" ]; then
+  echo "ERROR: The Registry password variable is not defined in $REGISTRY_CONFIG. (Please add it and run the script again.)" >&2
+  exit 1
+fi
 
 # Values provided in config file
 if [[ -n "$CONFIG_FILE" ]]; then
@@ -63,23 +79,68 @@ if [[ -n "$CONFIG_FILE" ]]; then
     echo "Error: config file '$CONFIG_FILE' not found." >&2
     exit 1
   }
-  NAMESPACE=$(yq -r '.namespace // "datalife"' $CONFIG_FILE)
-  EMAIL=$(yq -r '.email // ""' $CONFIG_FILE)
-  CONNECTOR_NAME=$(yq -r '.connector.name // "connector"' $CONFIG_FILE)
+  NAMESPACE=$(yq -r '.namespace // "'$NAMESPACE'"' $CONFIG_FILE)
+  USE_LETS_ENCRYPT=$(yq -r '.tls.useLetsEncrypt' "$CONFIG_FILE")
+  EMAIL=$(yq -r '.tls.email // ""' "$CONFIG_FILE")
+
+  CONNECTOR_NAME=$(yq -r '.connector.name // "'$CONNECTOR_NAME'"' $CONFIG_FILE)
+  CONNECTOR_LOGO=$(yq -r '.connector.logo // ""' "$CONFIG_FILE")
   CONNECTOR_ADDRESS=$(yq -r '.connector.address // ""' $CONFIG_FILE)
   CONNECTOR_PASSWORD=$(yq -r '.connector.password // ""' $CONFIG_FILE)
+
   KEYCLOAK_ADDRESS=$(yq -r '.keycloak.address // ""' $CONFIG_FILE)
   KEYCLOAK_ADMIN_PASSWORD=$(yq -r '.keycloak.adminPassword // ""' $CONFIG_FILE)
+
+  CONNECTOR_SECRET_NAME=$(yq -r '.tls.connector.secretName // ""' "$CONFIG_FILE")
+  CONNECTOR_TLS_CRT=$(yq -r '.tls.connector.crt // ""' "$CONFIG_FILE")
+  CONNECTOR_TLS_KEY=$(yq -r '.tls.connector.key // ""' "$CONFIG_FILE")
+
+  KEYCLOAK_SECRET_NAME=$(yq -r '.tls.keycloak.secretName // ""' "$CONFIG_FILE")
+  KEYCLOAK_TLS_CRT=$(yq -r '.tls.keycloak.crt // ""' "$CONFIG_FILE")
+  KEYCLOAK_TLS_KEY=$(yq -r '.tls.keycloak.key // ""' "$CONFIG_FILE")
+
 fi
 
 # Prompt interactively for mandatory values that are empty
 prompt_value NAMESPACE "Kubernetes namespace"
-prompt_value EMAIL "Email for cert-manager issuer"
 prompt_value CONNECTOR_NAME "Connector name (Helm release / participant)"
 prompt_value CONNECTOR_ADDRESS "Connector public host"
-prompt_value CONNECTOR_PASSWORD "Connector password"
+prompt_value CONNECTOR_PASSWORD "Connector user password" true
 prompt_value KEYCLOAK_ADDRESS "Keycloak public host"
 prompt_value KEYCLOAK_ADMIN_PASSWORD "Keycloak admin password" true
+prompt_value CONNECTOR_LOGO "Participant logo path or URL"
+
+if [[ -z "$USE_LETS_ENCRYPT" || "$USE_LETS_ENCRYPT" == "null" ]]; then
+  if ask_yes_no "Do you want to use Let's Encrypt to generate certificates for your domains?" "$USE_LETS_ENCRYPT"; then
+    USE_LETS_ENCRYPT="true"
+  else
+    USE_LETS_ENCRYPT="false"
+  fi
+fi
+
+if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
+  prompt_value EMAIL "Email for cert-manager issuer"
+  KEYCLOAK_TLS_CRT="N/A"
+  KEYCLOAK_TLS_KEY="N/A"
+  CONNECTOR_TLS_CRT="N/A"
+  CONNECTOR_TLS_KEY="N/A"
+else
+  EMAIL="N/A (Let's Encrypt Disabled)"
+  echo "Please provide the paths to your TLS certificates and keys."
+  prompt_value CONNECTOR_SECRET_NAME "Kubernetes secret name for Connector TLS"
+  prompt_value CONNECTOR_TLS_CRT "Path to Connector tls.crt file"
+  prompt_value CONNECTOR_TLS_KEY "Path to Connector tls.key file"
+  prompt_value KEYCLOAK_SECRET_NAME "Kubernetes secret name for Keycloak TLS"
+  prompt_value KEYCLOAK_TLS_CRT "Path to Keycloak tls.crt file"
+  prompt_value KEYCLOAK_TLS_KEY "Path to Keycloak tls.key file"
+
+  for file in "$KEYCLOAK_TLS_CRT" "$KEYCLOAK_TLS_KEY" "$CONNECTOR_TLS_CRT" "$CONNECTOR_TLS_KEY"; do
+    if [[ ! -f "$file" ]]; then
+      echo "Error: Certificate or key file '$file' not found. Please check the path and try again." >&2
+      exit 1
+    fi
+  done
+fi
 
 # Show summary before starting configuration
 echo
@@ -88,6 +149,7 @@ This is the configuration of the connector we are about to deploy:
 - namespace: $NAMESPACE
 - email: $EMAIL
 - connector.name: $CONNECTOR_NAME
+- connector.logo: $CONNECTOR_LOGO
 - connector.address: $CONNECTOR_ADDRESS
 - connector.password: ********
 - keycloak.address: $KEYCLOAK_ADDRESS
@@ -95,7 +157,23 @@ This is the configuration of the connector we are about to deploy:
 - dockerRegistry.server: $REGISTRY_SERVER
 - dockerRegistry.username: $REGISTRY_USERNAME
 - dockerRegistry.password: ********
+- tls.useLetsEncrypt: $USE_LETS_ENCRYPT
 SUMMARY
+
+if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
+  cat <<SUMMARY
+- tls.email: $EMAIL
+SUMMARY
+else
+  cat <<SUMMARY
+- tls.connector.secretName: $CONNECTOR_SECRET_NAME
+- tls.connector.crt path: $CONNECTOR_TLS_CRT
+- tls.connector.key path: $CONNECTOR_TLS_KEY
+- tls.keycloak.secretName: $KEYCLOAK_SECRET_NAME
+- tls.keycloak.crt path: $KEYCLOAK_TLS_CRT
+- tls.keycloak.key path: $KEYCLOAK_TLS_KEY
+SUMMARY
+fi
 
 ask_yes_no "Do you want to proceed?" "Y" || exit 0
 
@@ -110,21 +188,40 @@ if sudo kind get clusters 2>/dev/null | grep -Fxq kind; then
 fi
 sudo kind create cluster --config config/kind-cluster-config.yaml
 
+echo "Creating namespace '$NAMESPACE'"
+sudo kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
+
 echo "Installing ingress-nginx"
 sudo kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-sudo kubectl wait --for=condition=available deployment/ingress-nginx-controller --timeout=300s --namespace ingress-nginx
-echo "Installing cert-manager"
-sudo kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.yaml
-sudo kubectl wait --for=condition=available deployment/cert-manager --timeout=300s --namespace cert-manager
+sudo kubectl rollout status deployment/ingress-nginx-controller --namespace ingress-nginx --timeout=300s
+
+if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
+  echo "Installing cert-manager"
+  sudo kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.yaml
+  sudo kubectl rollout status deployment/cert-manager --namespace cert-manager --timeout=300s
+fi
+
 echo "Installing openebs"
 sudo helm repo add openebs https://openebs.github.io/charts
 sudo helm repo update
 sudo helm upgrade --install openebs --namespace openebs openebs/openebs --create-namespace --set localpv-provisioner.enabled=true --set ndm.enabled=false --wait --timeout 300s
-echo "Setting up cert-issuer"
-sudo ./setup-cert-issuer.sh --email "$EMAIL"
+
+if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
+  echo "Setting up cert-issuer"
+  sudo ./setup-cert-issuer.sh --email "$EMAIL"
+else
+  echo "Creating TLS secrets for Keycloak and Connector"
+  sudo kubectl create secret tls "$KEYCLOAK_SECRET_NAME" --cert="$KEYCLOAK_TLS_CRT" --key="$KEYCLOAK_TLS_KEY" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
+  sudo kubectl create secret tls "$CONNECTOR_SECRET_NAME" --cert="$CONNECTOR_TLS_CRT" --key="$CONNECTOR_TLS_KEY" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
+fi
 
 echo "Generating keycloak config"
-./generate_keycloak.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
+if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
+  ./generate_keycloak.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
+else
+  ./generate_keycloak.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$KEYCLOAK_SECRET_NAME"
+fi
+
 sudo helm repo add bitnami https://charts.bitnami.com/bitnami
 sudo helm repo update
 cd keycloak-chart && sudo helm dependency build && cd ..
@@ -136,13 +233,21 @@ echo "Generating participant config"
 sudo kubectl apply -f keycloak/jobs/job-import-realm.yaml -n "$NAMESPACE"
 sudo kubectl apply -f keycloak/jobs/job-add-default-client.yaml -n "$NAMESPACE"
 sudo kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s
-./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD"
-sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-server='$REGISTRY_SERVER' --docker-username='$REGISTRY_USERNAME' --docker-password='$REGISTRY_PASSWORD' -n '$NAMESPACE' --dry-run=client -o yaml | sudo kubectl apply -f -
 
+if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
+  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --logo "$CONNECTOR_LOGO"
+else
+  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$CONNECTOR_LOGO"
+fi
+
+echo "Creating docker registry secret for pulling harbor images"
+sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-server="$REGISTRY_SERVER" --docker-username="$REGISTRY_USERNAME" --docker-password="$REGISTRY_PASSWORD" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
+
+sudo helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
+sudo helm repo update
 echo "Deploying the participant portal"
 cd participant-chart && sudo helm dependency build && cd ..
-sudo helm upgrade --install "$CONNECTOR_NAME" participant-chart/ -f "participant-chart/values/values-$CONNECTOR_NAME.yaml" -n "$NAMESPACE" --create-namespace --wait --timeout 300s
-
+sudo helm upgrade --install "$CONNECTOR_NAME" participant-chart/ -f "participant-chart/values/values-$CONNECTOR_NAME.yaml" -n "$NAMESPACE" --create-namespace --wait --timeout 480s
 
 echo "Deployment completed"
 echo
@@ -150,13 +255,13 @@ echo "Verifying installation"
 
 TIMEOUT=300
 INTERVAL=5
-
+URL="https://${CONNECTOR_ADDRESS}/identityhub/did"
 end=$((SECONDS + TIMEOUT))
 
 while [ "$SECONDS" -lt "$end" ]; do
     if curl -sf "$URL" | yq -e '.id' >/dev/null 2>&1; then
         echo "Service is ready."
-        DID=$(curl -s "https://${CONNECTOR_ADDRESS}/identityhub/did" | yq '.id')
+        DID=$(curl -s "${URL}" | yq '.id')
         echo "Participant DID: $DID"
         exit 0
     fi

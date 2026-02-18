@@ -1,6 +1,5 @@
 # Xdatashare Connector Deployment Guide
-This document outlines the two-phase process for adding a new xdatashare connector to an unpopulated Kubernetes cluster (such as kind).This process assumes the cluster is already running NGINX Ingress Controller and Cert-Manager, but has not yet been configured to issue certificates.
-
+This document outlines the process for adding a new xdatashare connector to a Kubernetes cluster (such as Kind). For an agile setup, it is recommended to use the Quickstart Guide, which allows the entire deployment process to be performed in an automated and simplified manner. If, on the other hand, you prefer a more detailed and customized setup, you may skip the Quickstart and follow the manual steps described in the subsequent sections. This manual process assumes that the cluster is already running NGINX Ingress Controller, openEBS and Cert-Manager (Optional), but has not yet been configured for automatic certificate issuance.
 ## Quickstart Guide
 For a generic deploment follow these steps:
 - Clone the repo
@@ -23,7 +22,8 @@ Before starting, ensure you have the following:
 - **Installed Tooling:** kubectl and helm must be installed and configured to point to the cluster.
 - **Installed Cluster Services:**
     - `ingress-nginx` (NGINX Ingress Controller)
-    - `cert-manager`
+    - `cert-manager` (Optional)
+    - `openEBS` (for dynamic storage provisioning)
 - **Deployment Scripts/Jobs:**
     - `setup-issuer.sh` (This script, for Phase 1)
     - `generate_participant.sh` (This script, for Phase 2)
@@ -94,7 +94,7 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
   chmod +x generate_keycloak.sh
 
   # Usage:
-  # ./generate_keycloak.sh --host-kc <KEYCLOAK_HOSTNAME> --manual --secret <TLS_SECRET_NAME>
+  # ./generate_keycloak.sh --host-kc <KEYCLOAK_HOSTNAME> --manual --tls-secret <TLS_SECRET_NAME>
 
   # Example:
   ./generate_keycloak.sh --host-kc conector-xdatashare-kc.gradiant.org
@@ -103,8 +103,7 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
 This command will create a new file: `keycloak-chart/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
 The generation script supports several flags:
 - `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.gradiant.org`).
-- `--manual`: If you want to deploy the external Keycloak without the connection to the lets encrypt, you can use this flag to generate a `values.yaml` without the TLS configuration. This is useful if you want to manage the TLS certificates for Keycloak separately (e.g., using wildcard certificates or another certificate management solution).
-- `--secret <TLS_SECRET_NAME>`: If you have an existing TLS secret for Keycloak, you can use this flag to specify the name of that secret. The generated `values.yaml` will then reference this secret instead of creating a new one. If this name is not passed the script will assume the default secret name `keycloak-tls-cert` for the Keycloak deployment. This is useful if you have already set up TLS for Keycloak and want to reuse that configuration without modification.
+- `--tls-secret <TLS_SECRET_NAME>`: If you have an existing TLS secret for Keycloak, you can use this flag to specify the name of that secret. The generated `values.yaml` will then reference this secret instead of creating a new one. If this name is not passed the script will assume the default secret name `keycloak-tls-cert` for the Keycloak deployment. This is useful if you have already set up TLS for Keycloak and want to reuse that configuration without modification.
 
 **Creating a Manual TLS Secret**
 If you are not using Let's Encrypt (Phase 1) and do not have an existing TLS secret configured, you must create one manually before deploying the chart. This secret stores your certificate chain and private key in a format the Ingress controller can consume.
@@ -202,10 +201,7 @@ The script supports the following arguments to customize the deployment:
   - `<PARTICIPANT_NAME>`: (Required) The name of the participant (e.g., gradiant). This is used to prefix resources and name the output file.
   - `--host <MAIN_HOSTNAME>`: The primary domain for the participant (e.g., conector-xdatashare.gradiant.org). This covers the Portal and EDC endpoints.
   - `--host-kc <KEYCLOAK_HOSTNAME>`: The domain where the Keycloak service is reachable.
-  - `--manual`: Disables automatic Let's Encrypt (cert-manager) annotations for the participant's Ingress resources.
-  - `--secret <TLS_SECRET_NAME>`: Specifies an existing TLS secret for the participant's domains. 
-    - If `--manual` is used without this flag, the script defaults to a secret named participant-tls-cert.
-
+  - `--tls-secret <TLS_SECRET_NAME>`: Specifies an existing TLS secret for the participant's domains.
 
 ### 1.2. Deploy Participant Chart
 
