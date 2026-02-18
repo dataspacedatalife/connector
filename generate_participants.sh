@@ -85,7 +85,7 @@ if [ "$USE_LETS" == "true" ]; then
     echo "--> SSL Mode: Automatic (Let's Encrypt)"
 else
     TLS_SECRET_NAME="$CUSTOM_SECRET"
-    CLUSTER_ISSUER=""
+    CLUSTER_ISSUER="__REMOVE__"
     echo "--> SSL Mode: Manual (Secret: $TLS_SECRET_NAME)"
 fi
 
@@ -138,6 +138,11 @@ export CLUSTER_ISSUER
 
 envsubst '${PARTICIPANT} ${HOST} ${HOST_KC} ${AUTH_KEY_B64} ${SUPER_USER_KEY_B64} ${DID_B64} ${CLIENT_SECRET} ${TLS_SECRET_NAME} ${PASSWORD} ${CLUSTER_ISSUER}' \
   < "$VALUES_TEMPLATE" > "$VALUES_OUT"
+
+# If not using let's encrypt remove the marked cluster-issuer lines
+if [ "$USE_LETS" != "true" ]; then
+  sed -i '/^[[:space:]]*cert-manager\.io\/cluster-issuer:[[:space:]]*"__REMOVE__"[[:space:]]*$/d' "$VALUES_OUT"
+fi
 
 echo "Generated $VALUES_OUT"
 echo "---"
