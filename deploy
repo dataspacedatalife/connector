@@ -53,6 +53,7 @@ echo "Now that we have the required dependencies, we will define configuration."
 # Read default values
 NAMESPACE=$(yq -r '.namespace // ""' $DEFAULT_CONFIG)
 CONNECTOR_NAME=$(yq -r '.connector.name // ""' $DEFAULT_CONFIG)
+CONNECTOR_LOGO=$(yq -r '.connector.logo // ""' $DEFAULT_CONFIG)
 REGISTRY_SERVER=$(yq -r '.dockerRegistry.server // ""' $REGISTRY_CONFIG)
 REGISTRY_USERNAME=$(yq -r '.dockerRegistry.username // ""' $REGISTRY_CONFIG)
 REGISTRY_PASSWORD=$(yq -r '.dockerRegistry.password // ""' $REGISTRY_CONFIG)
@@ -84,7 +85,7 @@ if [[ -n "$CONFIG_FILE" ]]; then
   EMAIL=$(yq -r '.tls.email // ""' "$CONFIG_FILE")
 
   CONNECTOR_NAME=$(yq -r '.connector.name // "'$CONNECTOR_NAME'"' $CONFIG_FILE)
-  CONNECTOR_LOGO=$(yq -r '.connector.logo // ""' "$CONFIG_FILE")
+  CONNECTOR_LOGO=$(yq -r '.connector.logo // "'$CONNECTOR_LOGO'"' "$CONFIG_FILE")
   CONNECTOR_ADDRESS=$(yq -r '.connector.address // ""' $CONFIG_FILE)
   CONNECTOR_PASSWORD=$(yq -r '.connector.password // ""' $CONFIG_FILE)
 
