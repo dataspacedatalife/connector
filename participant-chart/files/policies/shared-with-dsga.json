@@ -3,16 +3,16 @@
     "https://w3id.org/edc/connector/management/v0.0.1"
   ],
   "@type": "PolicyDefinition",
-  "@id": "require-xdatashare-membership-pharmacy-role",
+  "@id": "shared-with-dsga",
   "policy": {
     "@type": "Set",
     "obligation": [
       {
         "action": "use",
         "constraint": {
-          "leftOperand": "XDataShareMembershipCredential.role",
+          "leftOperand": "XDataShareMembershipCredential.name",
           "operator": "eq",
-          "rightOperand": "Pharmacy"
+          "rightOperand": "DSGA"
         }
       }
     ]
