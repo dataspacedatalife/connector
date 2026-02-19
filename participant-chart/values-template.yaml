@@ -38,9 +38,6 @@ controlplane:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "${PARTICIPANT}-vault"
-          port: 8200
         - name: "Identityhub"
           host: "${PARTICIPANT}-identityhub"
           port: "8182"
@@ -100,9 +97,6 @@ dataplane:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "${PARTICIPANT}-vault"
-          port: 8200
         - name: "Controlplane"
           host: "${PARTICIPANT}-controlplane"
           port: 9191
@@ -136,9 +130,6 @@ identityhub:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "${PARTICIPANT}-vault"
-          port: 8200
 
   ingress:
     host: ${HOST}
@@ -174,6 +165,82 @@ identityhub:
         backend:
           serviceName: ${PARTICIPANT}-identityhub
           servicePort: 10100
+
+vault:
+  injector:
+    enabled: false
+  server:
+    publishNotReadyAddresses: true
+    resources:
+      requests:
+        memory: '512Mi'
+        cpu: '250m'
+      limits:
+        memory: '1Gi'
+        cpu: '1000m'
+    ha:
+      enabled: true
+      replicas: 1
+      raft:
+        enabled: true
+        setNodeId: true
+        config: |
+          ui = true
+          listener "tcp" {
+            address = "[::]:8200"
+            cluster_address = "[::]:8201"
+            tls_disable = 1
+          }
+          storage "raft" {
+            path = "/vault/data"
+          }
+    dataStorage:
+      enabled: true
+      size: "2Gi"
+      storageClass: "openebs-hostpath"
+    ingress:
+      enabled: true
+      ingressClassName: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+        nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+        nginx.ingress.kubernetes.io/app-root: /vault/ui/
+        nginx.ingress.kubernetes.io/proxy-redirect-from: "default"
+        nginx.ingress.kubernetes.io/proxy-redirect-to: "/vault/"
+
+        nginx.ingress.kubernetes.io/sub-filter-types: "text/html text/css application/javascript application/json"
+        nginx.ingress.kubernetes.io/sub-filter: '"/ui/'
+        nginx.ingress.kubernetes.io/sub-filter-replacement: '"/vault/ui/'
+        nginx.ingress.kubernetes.io/sub-filter-once: "false"
+
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/use-regex: "true"
+      extraPaths:
+        - path: "/vault(/|$)(.*)"
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: ${PARTICIPANT}-vault
+              port:
+                number: 8200
+      hosts:
+        - host: "${HOST}"
+          paths: []
+      tls:
+        - secretName: ${TLS_SECRET_NAME}
+          hosts:
+            - ${HOST}
+    extraEnvironmentVars:
+      VAULT_API_ADDR: "https://${HOST}/vault"
+  ui:
+    enabled: true
+    service:
+      type: ClusterIP
+      port: 8200
+      targetPort: 8200
+      name: ${PARTICIPANT}-vault-ui
 
 oauth2-proxy:
   enable: true
