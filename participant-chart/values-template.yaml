@@ -198,42 +198,6 @@ vault:
       enabled: true
       size: "2Gi"
       storageClass: "openebs-hostpath"
-    ingress:
-      enabled: true
-      ingressClassName: "nginx"
-      annotations:
-        nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-        nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-        nginx.ingress.kubernetes.io/ssl-redirect: "true"
-
-        nginx.ingress.kubernetes.io/app-root: /vault/ui/
-        nginx.ingress.kubernetes.io/proxy-redirect-from: "default"
-        nginx.ingress.kubernetes.io/proxy-redirect-to: "/vault/"
-
-        nginx.ingress.kubernetes.io/sub-filter-types: "text/html text/css application/javascript application/json"
-        nginx.ingress.kubernetes.io/sub-filter: '"/ui/'
-        nginx.ingress.kubernetes.io/sub-filter-replacement: '"/vault/ui/'
-        nginx.ingress.kubernetes.io/sub-filter-once: "false"
-
-        nginx.ingress.kubernetes.io/rewrite-target: /$2
-        nginx.ingress.kubernetes.io/use-regex: "true"
-      extraPaths:
-        - path: "/vault(/|$)(.*)"
-          pathType: ImplementationSpecific
-          backend:
-            service:
-              name: ${PARTICIPANT}-vault
-              port:
-                number: 8200
-      hosts:
-        - host: "${HOST}"
-          paths: []
-      tls:
-        - secretName: ${TLS_SECRET_NAME}
-          hosts:
-            - ${HOST}
-    extraEnvironmentVars:
-      VAULT_API_ADDR: "https://${HOST}/vault"
   ui:
     enabled: true
     service:
@@ -277,6 +241,7 @@ oauth2-proxy:
       skip_provider_button = true
       
       upstreams = [
+        "http://${PARTICIPANT}-vault-ui:8200/ui",
         "http://${PARTICIPANT}-participant-portal-service:80/",
         "http://${PARTICIPANT}-controlplane:8181/api/management/",
         "http://${PARTICIPANT}-controlplane:17171/api/catalog/",
