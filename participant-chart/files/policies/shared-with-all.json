@@ -3,16 +3,16 @@
     "https://w3id.org/edc/connector/management/v0.0.1"
   ],
   "@type": "PolicyDefinition",
-  "@id": "require-xdatashare-membership-healthauthority-role",
+  "@id": "share-with-all",
   "policy": {
     "@type": "Set",
-    "obligation": [
+    "permission": [
       {
         "action": "use",
         "constraint": {
-          "leftOperand": "XDataShareMembershipCredential.role",
+          "leftOperand": "XDataShareMembershipCredential",
           "operator": "eq",
-          "rightOperand": "HealthAuthority"
+          "rightOperand": "active"
         }
       }
     ]
