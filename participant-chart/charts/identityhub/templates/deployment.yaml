@@ -29,13 +29,6 @@ spec:
                 sleep 5
               done
               {{- end }}
-
-              VAULT_HOST="gradiant-vault"
-              VAULT_PORT="8200"
-              until wget -q -O - http://$VAULT_HOST:$VAULT_PORT/v1/sys/health?standbyok=true | grep -q '"sealed":false'; do
-                echo "Vault is accessible but SEALED. Waiting for manual unsealing..."
-                sleep 5
-              done
               echo "All dependencies are ready. Continuing startup..."
       containers:
         - name: {{ .Release.Name }}-identityhub

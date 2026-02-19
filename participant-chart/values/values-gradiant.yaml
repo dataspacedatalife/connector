@@ -12,21 +12,21 @@ global:
 controlplane:
 
   configMap:
-    hostname: "conector3.dataspace.gradiant.org"
-    iamIssuerId: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
-    managementAuthDacKeyUrl: "https://conector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/certs"
+    hostname: "connector3.dataspace.gradiant.org"
+    iamIssuerId: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
+    managementAuthDacKeyUrl: "https://connector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/certs"
     managementAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
-    catalogAuthDacKeyUrl: "https://conector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/certs"
+    catalogAuthDacKeyUrl: "https://connector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/certs"
     catalogAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
-    participantAuthDacKeyUrl: "https://conector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/certs"
+    participantAuthDacKeyUrl: "https://connector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/certs"
     participantAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
-    iamStsPrivateKeyAlias: "did:web:conector3.dataspace.gradiant.org:identityhub:did#key-1"
-    iamStsPublicKeyId: "did:web:conector3.dataspace.gradiant.org:identityhub:did#key-1"
-    participantId: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
-    iamStsOauthClientSecretAlias: "did:web:conector3.dataspace.gradiant.org:identityhub:did-sts-client-secret"
-    iamStsOauthClientId: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
+    iamStsPrivateKeyAlias: "did:web:connector3.dataspace.gradiant.org:identityhub:did#key-1"
+    iamStsPublicKeyId: "did:web:connector3.dataspace.gradiant.org:identityhub:did#key-1"
+    participantId: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
+    iamStsOauthClientSecretAlias: "did:web:connector3.dataspace.gradiant.org:identityhub:did-sts-client-secret"
+    iamStsOauthClientId: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
     iamAuthorityId: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
-    dspCallbackAddress: "https://conector3.dataspace.gradiant.org/controlplane/dsp/api/dsp"
+    dspCallbackAddress: "https://connector3.dataspace.gradiant.org/controlplane/dsp/api/dsp"
     iamStsOauthTokenUrl: "http://gradiant-identityhub:9292/api/sts/token"
     edcParisPublicBaseurl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/participant-public/api/participant-public"
     edcControlEndpoint: "http://gradiant-controlplane:9191/api/control"
@@ -38,12 +38,15 @@ controlplane:
         - name: "Postgres"
           host: "gradiant-postgresql"
           port: 5432
+        - name: "Vault"
+          host: "gradiant-vault"
+          port: 8200
         - name: "Identityhub"
           host: "gradiant-identityhub"
           port: "8182"
 
   ingress:
-    host: conector3.dataspace.gradiant.org
+    host: connector3.dataspace.gradiant.org
     tlsSecretName: gradiant-tls-cert
     annotations:
       kubernetes.io/ingress.class: nginx
@@ -80,15 +83,15 @@ controlplane:
 dataplane:
 
   configMap:
-    hostname: "conector3.dataspace.gradiant.org"
-    transferProxyTokenVerifierPublicKeyAlias: "did:web:conector3.dataspace.gradiant.org:identityhub:did#key-1"
-    transferProxyTokenSignerPrivateKeyAlias: "did:web:conector3.dataspace.gradiant.org:identityhub:did#key-1"
+    hostname: "connector3.dataspace.gradiant.org"
+    transferProxyTokenVerifierPublicKeyAlias: "did:web:connector3.dataspace.gradiant.org:identityhub:did#key-1"
+    transferProxyTokenSignerPrivateKeyAlias: "did:web:connector3.dataspace.gradiant.org:identityhub:did#key-1"
     dpfSelectorUrl: "http://gradiant-controlplane:9191/api/control/v1/dataplanes"
-    participantId: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
-    iamStsOauthClientSecretAlias: "did:web:conector3.dataspace.gradiant.org:identityhub:did-sts-client-secret"
-    iamStsOauthClientId: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
-    iamStsOauthTokenUrl: "https://conector3.dataspace.gradiant.org/identityhub/sts/api/sts/token"
-    edcDataplaneApiPublicBaseurl: "https://conector3.dataspace.gradiant.org/dataplane/public/api/public"
+    participantId: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
+    iamStsOauthClientSecretAlias: "did:web:connector3.dataspace.gradiant.org:identityhub:did-sts-client-secret"
+    iamStsOauthClientId: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
+    iamStsOauthTokenUrl: "https://connector3.dataspace.gradiant.org/identityhub/sts/api/sts/token"
+    edcDataplaneApiPublicBaseurl: "https://connector3.dataspace.gradiant.org/dataplane/public/api/public"
     edcControlEndpoint: "http://gradiant-dataplane:9191/api/control"
 
   deployment:
@@ -97,12 +100,15 @@ dataplane:
         - name: "Postgres"
           host: "gradiant-postgresql"
           port: 5432
+        - name: "Vault"
+          host: "gradiant-vault"
+          port: 8200
         - name: "Controlplane"
           host: "gradiant-controlplane"
           port: 9191
 
   ingress:
-    host: conector3.dataspace.gradiant.org
+    host: connector3.dataspace.gradiant.org
     tlsSecretName: gradiant-tls-cert
     annotations:
       kubernetes.io/ingress.class: nginx
@@ -118,10 +124,10 @@ dataplane:
 
 identityhub:
   configMap:
-    hostname: "conector3.dataspace.gradiant.org"
-    iamStsPrivateKeyAlias: "did:web:conector3.dataspace.gradiant.org:identityhub:did#key-1"
-    iamStsPublicKeyId: "did:web:conector3.dataspace.gradiant.org:identityhub:did#key-1"
-    ihIamId: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
+    hostname: "connector3.dataspace.gradiant.org"
+    iamStsPrivateKeyAlias: "did:web:connector3.dataspace.gradiant.org:identityhub:did#key-1"
+    iamStsPublicKeyId: "did:web:connector3.dataspace.gradiant.org:identityhub:did#key-1"
+    ihIamId: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
     ihApiSuperuserKey: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"
 
   deployment:
@@ -130,9 +136,12 @@ identityhub:
         - name: "Postgres"
           host: "gradiant-postgresql"
           port: 5432
+        - name: "Vault"
+          host: "gradiant-vault"
+          port: 8200
 
   ingress:
-    host: conector3.dataspace.gradiant.org
+    host: connector3.dataspace.gradiant.org
     tlsSecretName: gradiant-tls-cert
     annotations:
       kubernetes.io/ingress.class: nginx
@@ -157,7 +166,7 @@ identityhub:
           servicePort: 15151
 
   ingressDid:
-    host: conector3.dataspace.gradiant.org
+    host: connector3.dataspace.gradiant.org
     tlsSecretName: gradiant-tls-cert
     paths:
       - path: /identityhub/did(/|$)(.*)
@@ -170,15 +179,15 @@ oauth2-proxy:
   enable: true
   config:
     clientID: "gradiant-proxy"
-    clientSecret: "ba3s7cZNUI8zSi8PcV0DUMTwPYG9b4xq"
+    clientSecret: "KXJbVMbapOnKyZgU3JrSHYgKEawKoeBB"
     configFile: |
       http_address = "0.0.0.0:4180"
       pass_authorization_header = true
       custom_templates_dir = "/templates"
       
       whitelist_domains = [ 
-        "conector3.dataspace.gradiant.org", 
-        "conector3-kc.dataspace.gradiant.org"
+        "connector3.dataspace.gradiant.org", 
+        "connector3-kc.dataspace.gradiant.org"
       ]
       
       email_domains = [ "*" ]
@@ -186,16 +195,16 @@ oauth2-proxy:
       cookie_expire  = "8h"
       
       provider = "keycloak-oidc"
-      oidc_issuer_url = "https://conector3-kc.dataspace.gradiant.org/realms/dataspace"
+      oidc_issuer_url = "https://connector3-kc.dataspace.gradiant.org/realms/dataspace"
       
-      login_url = "https://conector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/auth"
-      redeem_url = "https://conector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/token"
-      oidc_jwks_url = "https://conector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/certs"
-      validate_url = "https://conector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/userinfo"
+      login_url = "https://connector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/auth"
+      redeem_url = "https://connector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/token"
+      oidc_jwks_url = "https://connector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/certs"
+      validate_url = "https://connector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/userinfo"
       skip_oidc_discovery = true
       
-      backend_logout_url = "https://conector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/logout?id_token_hint={id_token}"
-      redirect_url = "https://conector3.dataspace.gradiant.org/oauth2/callback"
+      backend_logout_url = "https://connector3-kc.dataspace.gradiant.org/realms/dataspace/protocol/openid-connect/logout?id_token_hint={id_token}"
+      redirect_url = "https://connector3.dataspace.gradiant.org/oauth2/callback"
       
       allowed_groups = [ "/gradiant-group" ]
       skip_provider_button = true
@@ -232,30 +241,30 @@ oauth2-proxy:
     path: /
     pathType: Prefix
     hosts:
-      - "conector3.dataspace.gradiant.org"
+      - "connector3.dataspace.gradiant.org"
     tls:
       - secretName: gradiant-tls-cert
         hosts:
-          - "conector3.dataspace.gradiant.org"
+          - "connector3.dataspace.gradiant.org"
 
 participant-portal:
   configMap:
     nodeEnv: "production"
-    viteIconUrl: "/icons/gradiant.svg"
+    viteIconUrl: "/icons/datalife_logo.webp"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
-    viteKeycloakUrl: "https://conector3-kc.dataspace.gradiant.org"
+    viteKeycloakUrl: "https://connector3-kc.dataspace.gradiant.org"
     viteKeycloakRealm: "dataspace"
     viteKeycloakAuthClientId: "edc-frontend"
     viteEdcConnectorName: "gradiant"
-    viteEdcConnectorBaseUrl: "https://conector3.dataspace.gradiant.org/"
+    viteEdcConnectorBaseUrl: "https://connector3.dataspace.gradiant.org/"
     viteEdcConnectorCatalogUrl: "/api/catalog"
     viteEdcConnectorManagementUrl: "/api/management"
     viteEdcConnectorParticipantUrl: "/api/participant"
-    viteEdcConnectorIdentityUrl: "https://conector3.dataspace.gradiant.org/identityhub/identity/api/identity"
-    viteEdcConnectorPublicUrl: "https://conector3.dataspace.gradiant.org/dataplane/public/api/public"
-    viteEdcConnectorAuthUrl: "https://conector3.dataspace.gradiant.org/"
-    viteEdcConnectorId: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
+    viteEdcConnectorIdentityUrl: "https://connector3.dataspace.gradiant.org/identityhub/identity/api/identity"
+    viteEdcConnectorPublicUrl: "https://connector3.dataspace.gradiant.org/dataplane/public/api/public"
+    viteEdcConnectorAuthUrl: "https://connector3.dataspace.gradiant.org/"
+    viteEdcConnectorId: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
     viteConnectorCheckInterval: "300000"
     viteConnectorTimeout: "15000"
     dev: "true"
@@ -263,12 +272,12 @@ participant-portal:
 seeding:
   enabled: true
   participant:
-    url: "https://conector3.dataspace.gradiant.org"
+    url: "https://connector3.dataspace.gradiant.org"
     name: gradiant
-    did: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
-    didB64: "ZGlkOndlYjpjb25lY3RvcjMuZGF0YXNwYWNlLmdyYWRpYW50Lm9yZzppZGVudGl0eWh1YjpkaWQ="
-    keyId: "did:web:conector3.dataspace.gradiant.org:identityhub:did#key-1"
-    privateKeyAlias: "did:web:conector3.dataspace.gradiant.org:identityhub:did#key-1"
+    did: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
+    didB64: "ZGlkOndlYjpjb25uZWN0b3IzLmRhdGFzcGFjZS5ncmFkaWFudC5vcmc6aWRlbnRpdHlodWI6ZGlk"
+    keyId: "did:web:connector3.dataspace.gradiant.org:identityhub:did#key-1"
+    privateKeyAlias: "did:web:connector3.dataspace.gradiant.org:identityhub:did#key-1"
 
   credentialIssuer:
     did: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
@@ -295,13 +304,13 @@ seeding:
   serviceEndpoints:
     credentials:
       id: gradiant-credentialservice-1
-      host: "conector3.dataspace.gradiant.org/identityhub/credentials"
+      host: "connector3.dataspace.gradiant.org/identityhub/credentials"
       name: gradiant-identityhub
       port: 13131
-      didB64: "ZGlkOndlYjpjb25lY3RvcjMuZGF0YXNwYWNlLmdyYWRpYW50Lm9yZzppZGVudGl0eWh1YjpkaWQ="
+      didB64: "ZGlkOndlYjpjb25uZWN0b3IzLmRhdGFzcGFjZS5ncmFkaWFudC5vcmc6aWRlbnRpdHlodWI6ZGlk"
     controlplane:
       id: gradiant-dsp
-      host: "conector3.dataspace.gradiant.org/controlplane/dsp"
+      host: "connector3.dataspace.gradiant.org/controlplane/dsp"
       name: gradiant-controlplane
       port: 8282
 
@@ -313,18 +322,18 @@ seeding:
     management: "Z3JhZGlhbnQtcGFzc3dvcmQ="
     identityhub: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"
 
-  keycloakUrl: "https://conector3-kc.dataspace.gradiant.org"
+  keycloakUrl: "https://connector3-kc.dataspace.gradiant.org"
   targetRealm: "dataspace"
-  postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2Fconector3-kc.dataspace.gradiant.org%2Frealms%2Fdataspace%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2Fconector3.dataspace.gradiant.org%2F%26client_id%3Dgradiant-proxy"
+  postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2Fconnector3-kc.dataspace.gradiant.org%2Frealms%2Fdataspace%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2Fconnector3.dataspace.gradiant.org%2F%26client_id%3Dgradiant-proxy"
   auth:
     adminUsername: "admin"
     adminPassword: "admin"
 
   client:
     clientId: "gradiant-proxy"
-    publicUrl: "https://conector3.dataspace.gradiant.org"
-    secret: "ba3s7cZNUI8zSi8PcV0DUMTwPYG9b4xq"
-    did: "did:web:conector3.dataspace.gradiant.org:identityhub:did"
+    publicUrl: "https://connector3.dataspace.gradiant.org"
+    secret: "KXJbVMbapOnKyZgU3JrSHYgKEawKoeBB"
+    did: "did:web:connector3.dataspace.gradiant.org:identityhub:did"
   defaultUser:
     create: true
     password: "1234"

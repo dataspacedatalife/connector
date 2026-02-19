@@ -38,6 +38,9 @@ controlplane:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
+        - name: "Vault"
+          host: "${PARTICIPANT}-vault"
+          port: 8200
         - name: "Identityhub"
           host: "${PARTICIPANT}-identityhub"
           port: "8182"
@@ -97,6 +100,9 @@ dataplane:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
+        - name: "Vault"
+          host: "${PARTICIPANT}-vault"
+          port: 8200
         - name: "Controlplane"
           host: "${PARTICIPANT}-controlplane"
           port: 9191
@@ -130,6 +136,9 @@ identityhub:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
+        - name: "Vault"
+          host: "${PARTICIPANT}-vault"
+          port: 8200
 
   ingress:
     host: ${HOST}
