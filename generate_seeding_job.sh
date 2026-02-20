@@ -132,6 +132,17 @@ spec:
                 echo "Error getting token. Check credentials."
                 exit 1
               fi
+
+              # ====================================================
+              # 2.5 WAIT FOR REALM IMPORT
+              # ====================================================
+              echo "Waiting for realm 'dataspace' to be created by the import job..."
+              until curl -s -f -H "Authorization: Bearer \$TOKEN" "\$KC_URL/admin/realms/dataspace" > /dev/null; do
+                echo "Realm 'dataspace' is not yet available - sleeping 5 seconds..."
+                sleep 5
+              done
+              echo "Realm 'dataspace' is fully imported and ready!"
+
               # ====================================================
               # 3. PREPARE THE DEFAULT CLIENT
               # ====================================================

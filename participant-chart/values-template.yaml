@@ -168,7 +168,7 @@ identityhub:
 
 vault:
   injector:
-    enabled: false
+    enabled: true
   server:
     publishNotReadyAddresses: true
     resources:
@@ -332,6 +332,10 @@ seeding:
       identity:
         name: ${PARTICIPANT}-identityhub
         port: 15151
+
+  vault:
+    url: http://${PARTICIPANT}-vault-0.${PARTICIPANT}-vault-internal:8200
+    secret: "${PARTICIPANT}-vault-secret"
 
   serviceEndpoints:
     credentials:
