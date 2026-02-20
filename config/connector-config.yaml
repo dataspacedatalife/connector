@@ -1,24 +1,24 @@
-namespace: <k8s-namespace>  # Ej: cesga-ds-connector-2
+namespace: cesga-ds-connector-2
 
 tls:
-  useLetsEncrypt: <true|false>
+  useLetsEncrypt: false
   # Si useLetsEncrypt es false, definir los certificados:
   keycloak:
-    secretName: <keycloak-tls-secret>
-    crt: <ruta-al-certificado-tls-kc.crt>
-    key: <ruta-a-la-clave-tls-kc.key>
+    secretName: keycloak-tls-secret
+    crt: tls/tls-kc.crt
+    key: tls/tls-kc.key
   connector:
-    secretName: <connector-tls-secret>
-    crt: <ruta-al-certificado-tls.crt>
-    key: <ruta-a-la-clave-tls.key>
+    secretName: cesga-ds-connector-2-tls-secret
+    crt: tls/tls.crt
+    key: tls/tls.key
   # Si useLetsEncrypt es true, definir el email:
-  email: <email-para-lets-encrypt>
+  # email: <email-para-lets-encrypt>
 connector:
-  name: <nombre-del-participante>
-  logo: <URL-del-logo>
-  address: <direccion-del-connector>       # Ej: <institution>-ds-connector-1.domain.es
-  password: <password-del-usuario>
+  name: cesga-ds-connector-2
+  logo: icons/datalife_logo.webp
+  address: cesga-ds-connector-2.dataspace.cesga.es      # Ej: <institution>-ds-connector-1.domain.es
+  password: 1234
 
 keycloak:
-  address: <direccion-del-keycloak>        # Ej: <institution>-ds-connector-1-kc.domain.es
-  adminPassword: <password-admin-kc>
+  address: cesga-ds-connector-2-kc.dataspace.cesga.es        # Ej: <institution>-ds-connector-1-kc.domain.es
+  adminPassword: admin

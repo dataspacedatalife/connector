@@ -42,7 +42,7 @@ spec:
             - name: EDC_VAULT_HASHICORP_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: gradiant-vault-secret # Ensure this matches your setup job output!
+                  name: {{ .Release.Name }}-vault-secret # Ensure this matches your setup job output!
                   key: root_token
                   optional: false
           envFrom:

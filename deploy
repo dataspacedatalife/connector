@@ -280,6 +280,7 @@ fi
 echo "Creating docker registry secret for pulling harbor images"
 sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-server="$REGISTRY_SERVER" --docker-username="$REGISTRY_USERNAME" --docker-password="$REGISTRY_PASSWORD" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
 
+sudo helm repo add vault https://helm.releases.hashicorp.com
 sudo helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
 sudo helm repo update
 echo "Deploying the participant portal"
