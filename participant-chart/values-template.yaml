@@ -250,6 +250,7 @@ oauth2-proxy:
 participant-portal:
   configMap:
     nodeEnv: "production"
+    viteDataspaceName: "Centro Demostrador DATAlife | CESGA"
     viteIconUrl: "${PARTICIPANT_LOGO}"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
