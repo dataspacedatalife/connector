@@ -351,12 +351,8 @@ seeding:
       port: 8282
 
   policies:
-    - file: files/policies/general-role.json
-    - file: files/policies/pharmacy-role.json
-    - file: files/policies/healthauthority-role.json
-    - file: files/policies/investigationcentre-role.json
-    - file: files/policies/techcentre-role.json
-    - file: files/policies/membership.json
+    - file: files/policies/shared-with-all.json
+    - file: files/policies/shared-with-dsga.json
 
   apiKeys:
     management: "${AUTH_KEY_B64}"

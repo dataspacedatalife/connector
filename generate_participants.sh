@@ -3,7 +3,7 @@ set -e
 
 # --- 1. Argument Parsing ---
 PARTICIPANT=""
-PARTICIPANT_LOGO="/icons/gradiant.svg"
+PARTICIPANT_LOGO="/icons/datalife_logo.webp"
 HOST=""
 HOST_KC=""
 PASSWORD="1234"
