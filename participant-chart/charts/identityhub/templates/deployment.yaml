@@ -45,7 +45,13 @@ spec:
             {{- range .Values.service.ports }}
             - containerPort: {{ .port }}
             {{- end }}
-
+          env:
+            - name: EDC_VAULT_HASHICORP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gradiant-vault-secret # Ensure this matches your setup job output!
+                  key: root_token
+                  optional: false
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-identityhub-config

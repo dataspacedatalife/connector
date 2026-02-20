@@ -168,7 +168,7 @@ identityhub:
 
 vault:
   injector:
-    enabled: true
+    enabled: false
   server:
     publishNotReadyAddresses: true
     resources:
@@ -241,7 +241,6 @@ oauth2-proxy:
       skip_provider_button = true
       
       upstreams = [
-        "http://${PARTICIPANT}-vault-ui:8200/ui",
         "http://${PARTICIPANT}-participant-portal-service:80/",
         "http://${PARTICIPANT}-controlplane:8181/api/management/",
         "http://${PARTICIPANT}-controlplane:17171/api/catalog/",
@@ -283,6 +282,7 @@ participant-portal:
   configMap:
     nodeEnv: "production"
     viteIconUrl: "${PARTICIPANT_LOGO}"
+    viteDataspaceName: "Centro Demostrador DATAlife | CESGA"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
     viteKeycloakUrl: "https://${HOST_KC}"

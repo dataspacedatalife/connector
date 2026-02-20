@@ -7,9 +7,7 @@ metadata:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -26,9 +24,7 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list"]
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -46,9 +42,7 @@ roleRef:
   kind: Role
   name: {{ .Release.Name }}-vault-auto-setup-role
   apiGroup: rbac.authorization.k8s.io
-
 ---
-
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -75,12 +69,7 @@ spec:
               SECRET_NAME={{ .Values.seeding.vault.secret | quote }}
               NAMESPACE={{ .Release.Namespace }}
 
-              echo "CONFIGURATION: "
-              echo "--> Vault URL: $VAULT_URL"
-              echo "--> Vault Secret Name: $SECRET_NAME"
-              echo "--> Namespace: $NAMESPACE"
-
-              echo "Waiting for Vault..."
+              echo "Waiting for Vault at $VAULT_URL..."
               until curl -s --connect-timeout 5 $VAULT_URL/v1/sys/health > /dev/null; do
                 sleep 5
               done
@@ -102,7 +91,7 @@ spec:
                 fi
 
                 ROOT_TOKEN=$(echo $INIT_BODY | jq -r .root_token)
-                KEY1=$(echo $INIT_BODY | jq -r .keys_base64[0])
+                KEY1=$(echo $INIT_BODY | jq -r '.keys_base64[0]')
 
                 kubectl create secret generic $SECRET_NAME \
                   --from-literal=root_token=$ROOT_TOKEN \
@@ -113,18 +102,14 @@ spec:
               else
                 echo "Vault is already initialized. Retrieving credentials..."
 
-                SECRET_EXISTS=$(kubectl get secret $SECRET_NAME -n $NAMESPACE --ignore-not-found)
-
-                # Fetch raw base64 data first
                 B64_KEY=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.unseal_key_1}' 2>/dev/null)
                 B64_TOKEN=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.root_token}' 2>/dev/null)
 
-                # Decode it
-                KEY1=$(echo "$B64_KEY" | base64 -d 2>/dev/null)
-                ROOT_TOKEN=$(echo "$B64_TOKEN" | base64 -d 2>/dev/null)
+                KEY1=$(echo "$B64_KEY" | base64 -d 2>/dev/null | tr -d '\n\r')
+                ROOT_TOKEN=$(echo "$B64_TOKEN" | base64 -d 2>/dev/null | tr -d '\n\r')
 
                 if [ -z "$KEY1" ]; then
-                  echo "ERROR: The decoded Unseal Key is completely empty! Exiting before sending bad request."
+                  echo "FATAL: The Unseal Key is empty! The Kubernetes Secret may be missing or corrupted."
                   exit 1
                 fi
               fi
@@ -133,18 +118,18 @@ spec:
               SEALED=$(curl -s $VAULT_URL/v1/sys/health | jq -r .sealed)
 
               if [ "$SEALED" == "true" ]; then
-                echo "Vault is sealed. Preparing manual unseal command..."
+                echo "Vault is sealed. Sending manual unseal command..."
 
-                # Construct payload and print it showing invisible characters
-                UNSEAL_PAYLOAD="{\"key\": \"$KEY1\"}"
+                UNSEAL_PAYLOAD=$(jq -n --arg k "$KEY1" '{key: $k}')
 
-                echo "Sending Unseal POST request..."
-                # Run without -sSf momentarily so we can see the exact Vault error response body
-                curl --request POST --data "$UNSEAL_PAYLOAD" $VAULT_URL/v1/sys/unseal
+                curl -sSf --request POST \
+                  --header "Content-Type: application/json" \
+                  --data "$UNSEAL_PAYLOAD" \
+                  $VAULT_URL/v1/sys/unseal > /dev/null
 
                 echo "Waiting for Vault to become fully active..."
                 until [ "$(curl -s -o /dev/null -w "%{http_code}" $VAULT_URL/v1/sys/health)" == "200" ]; do
-                    sleep 2
+                    sleep 5
                 done
                 echo "Vault successfully unsealed!"
               else
@@ -153,40 +138,12 @@ spec:
 
               # --- STEP 3: ENABLE SECRETS ENGINE ---
               echo "Configuring Secrets Engine..."
-              MOUNTS=$(curl -s --header "X-Vault-Token: $ROOT_TOKEN" $VAULT_URL/v1/sys/mounts)
+              MOUNTS=$(curl -sSf --header "X-Vault-Token: $ROOT_TOKEN" $VAULT_URL/v1/sys/mounts)
               if echo "$MOUNTS" | grep -q "secret/"; then
                 echo "Engine 'secret/' already exists."
               else
-                curl -s --header "X-Vault-Token: $ROOT_TOKEN" --request POST --data '{"type": "kv", "options": {"version": "2"}}' $VAULT_URL/v1/sys/mounts/secret > /dev/null
+                curl -sSf --header "X-Vault-Token: $ROOT_TOKEN" --request POST --data '{"type": "kv", "options": {"version": "2"}}' $VAULT_URL/v1/sys/mounts/secret > /dev/null
                 echo "KV Engine Enabled!"
               fi
 
-              # --- STEP 4: KUBERNETES AUTH, POLICY, AND ROLE ---
-              echo "Configuring Kubernetes Authentication and EDC Role..."
-
-              # Enable Kubernetes Auth
-              AUTH_METHODS=$(curl -s --header "X-Vault-Token: $ROOT_TOKEN" $VAULT_URL/v1/sys/auth)
-              if ! echo "$AUTH_METHODS" | grep -q "kubernetes/"; then
-                curl -s --header "X-Vault-Token: $ROOT_TOKEN" --request POST --data '{"type": "kubernetes"}' $VAULT_URL/v1/sys/auth/kubernetes > /dev/null
-                echo "Kubernetes Auth Method Enabled."
-              fi
-
-              # Link Vault to the Kubernetes Cluster API
-              curl -s --header "X-Vault-Token: $ROOT_TOKEN" --request POST \
-                --data '{"kubernetes_host": "https://'$KUBERNETES_SERVICE_HOST':'$KUBERNETES_SERVICE_PORT'"}' \
-                $VAULT_URL/v1/auth/kubernetes/config > /dev/null
-
-              # Create the EDC Policy
-              POLICY_PAYLOAD='{"policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}\npath \"secret/metadata/*\" {\n  capabilities = [\"list\", \"read\", \"delete\"]\n}\n"}'
-              curl -s --header "X-Vault-Token: $ROOT_TOKEN" --request PUT \
-                --data "$POLICY_PAYLOAD" \
-                $VAULT_URL/v1/sys/policies/acl/edc-policy > /dev/null
-
-              # Create the EDC Role
-              ROLE_PAYLOAD='{"bound_service_account_names": ["edc-sa"], "bound_service_account_namespaces": ["'$NAMESPACE'"], "token_policies": ["edc-policy"], "token_ttl": 86400}'
-              curl -s --header "X-Vault-Token: $ROOT_TOKEN" --request POST \
-                --data "$ROLE_PAYLOAD" \
-                $VAULT_URL/v1/auth/kubernetes/role/edc-role > /dev/null
-
-              echo "Role and Policy Configured Successfully!"
               echo "Auto-Setup Complete!"
