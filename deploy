@@ -183,7 +183,7 @@ if sudo kind get clusters 2>/dev/null | grep -Fxq kind; then
   echo "There is a previously created kind kubernetes cluster in this host."
   echo "If you want to re-deploy the connector, you have to destroy the previous cluster."
   echo "To do that you have to run:"
-  echo "   ./destroy"
+  echo "    ./destroy"
   echo "Keep in mind that this will destroy all previously stored information."
   exit 1
 fi
@@ -210,6 +210,42 @@ sudo helm upgrade --install openebs --namespace openebs openebs/openebs --create
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
   echo "Setting up cert-issuer"
   sudo ./setup-cert-issuer.sh --email "$EMAIL"
+
+  echo "Waiting for Let's Encrypt certificates to be issued for domains..."
+  CERT_TIMEOUT=300
+  CERT_END=$((SECONDS + CERT_TIMEOUT))
+  
+  while [ "$SECONDS" -lt "$CERT_END" ]; do
+    # Check if all certificates in the namespace have the 'Ready' status set to 'True'
+    NOT_READY=$(sudo kubectl get certificate -n "$NAMESPACE" -o jsonpath='{.items[?(@.status.conditions[?(@.type=="Ready")].status!="True")].metadata.name}')
+    
+    if [[ -z "$NOT_READY" ]]; then
+      # Ensure certificates actually exist before claiming success
+      CERT_COUNT=$(sudo kubectl get certificate -n "$NAMESPACE" --no-headers 2>/dev/null | wc -l)
+      if [[ "$CERT_COUNT" -gt 0 ]]; then
+        echo "Let's Encrypt certificates successfully obtained."
+        break
+      fi
+    fi
+    
+    echo "Still waiting for certificates to be validated by Let's Encrypt... (${SECONDS}s)"
+    sleep 10
+
+    if [ "$SECONDS" -ge "$CERT_END" ]; then
+      echo ""
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "ERROR: Could not obtain Let's Encrypt certificates within ${CERT_TIMEOUT}s."
+      echo "Possible reasons:"
+      echo " 1. Public DNS for $CONNECTOR_ADDRESS or $KEYCLOAK_ADDRESS is not set."
+      echo " 2. This machine's port 80/443 is not reachable from the internet."
+      echo " 3. Let's Encrypt rate limits have been reached."
+      echo "Check status with: kubectl describe certificate -n $NAMESPACE"
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      exit 1
+    fi
+  done
+
+
 else
   echo "Creating TLS secrets for Keycloak and Connector"
   sudo kubectl create secret tls "$KEYCLOAK_SECRET_NAME" --cert="$KEYCLOAK_TLS_CRT" --key="$KEYCLOAK_TLS_KEY" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
