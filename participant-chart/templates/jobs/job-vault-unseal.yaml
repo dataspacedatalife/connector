@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-vault-unseal
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-vault-unseal-role
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-vault-unseal-binding
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}-vault-unseal
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ .Release.Name }}-vault-unseal-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-vault-unseal-watcher
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ .Release.Name }}-vault-unseal
+          restartPolicy: OnFailure
+          containers:
+            - name: vault-watcher
+              image: bitnami/kubectl:latest
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  VAULT_URL={{ .Values.seeding.vault.url | quote }}
+                  SECRET_NAME={{ .Values.seeding.vault.secret | quote }}
+                  NAMESPACE={{ .Release.Namespace }}
+
+                  # Check if Vault is online
+                  if ! curl -s --connect-timeout 5 $VAULT_URL/v1/sys/health > /dev/null; then
+                    echo "Vault API is unreachable right now. Exiting."
+                    exit 0
+                  fi
+
+                  # Check Seal Status
+                  SEALED=$(curl -s $VAULT_URL/v1/sys/health | jq -r .sealed)
+
+                  if [ "$SEALED" == "true" ]; then
+                    echo "CRITICAL: Vault is SEALED. Initiating emergency recovery..."
+
+                    # Fetch the unseal key from the Kubernetes Secret
+                    B64_KEY=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.unseal_key_1}' 2>/dev/null)
+                    KEY1=$(echo "$B64_KEY" | base64 -d 2>/dev/null | tr -d '\n\r')
+
+                    if [ -z "$KEY1" ]; then
+                      echo "FATAL: Unseal Key not found in secret. Cannot proceed."
+                      exit 1
+                    fi
+
+                    UNSEAL_PAYLOAD=$(jq -n --arg k "$KEY1" '{key: $k}')
+
+                    curl -sSf --request POST \
+                      --header "Content-Type: application/json" \
+                      --data "$UNSEAL_PAYLOAD" \
+                      $VAULT_URL/v1/sys/unseal > /dev/null
+
+                    echo "SUCCESS: Vault successfully unsealed by CronJob!"
+                  else
+                    echo "Vault is currently unsealed and healthy. No action needed."
+                  fi
