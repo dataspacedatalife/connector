@@ -54,9 +54,9 @@ teardown() {
 @test "generate_keycloak.sh matches golden output in automatic TLS mode" {
   cp "$REPO_ROOT/scripts/generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
   chmod +x "$TEST_TMPDIR/generate_keycloak.sh"
-  mkdir -p "$TEST_TMPDIR/charts/keycloak/templates"
-  cp "$REPO_ROOT/charts/keycloak/values-template.yaml" "$TEST_TMPDIR/charts/keycloak/values-template.yaml"
-  cp "$REPO_ROOT/charts/keycloak/secret-template.yaml" "$TEST_TMPDIR/charts/keycloak/secret-template.yaml"
+  mkdir -p "$TEST_TMPDIR/charts/keycloak/templates" "$TEST_TMPDIR/config/templates/keycloak"
+  cp "$REPO_ROOT/config/templates/keycloak/values-template.yaml" "$TEST_TMPDIR/config/templates/keycloak/values-template.yaml"
+  cp "$REPO_ROOT/config/templates/keycloak/secret-template.yaml" "$TEST_TMPDIR/config/templates/keycloak/secret-template.yaml"
 
   (
     cd "$TEST_TMPDIR"
@@ -74,9 +74,9 @@ teardown() {
 @test "generate_keycloak.sh matches golden output in manual TLS mode" {
   cp "$REPO_ROOT/scripts/generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
   chmod +x "$TEST_TMPDIR/generate_keycloak.sh"
-  mkdir -p "$TEST_TMPDIR/charts/keycloak/templates"
-  cp "$REPO_ROOT/charts/keycloak/values-template.yaml" "$TEST_TMPDIR/charts/keycloak/values-template.yaml"
-  cp "$REPO_ROOT/charts/keycloak/secret-template.yaml" "$TEST_TMPDIR/charts/keycloak/secret-template.yaml"
+  mkdir -p "$TEST_TMPDIR/charts/keycloak/templates" "$TEST_TMPDIR/config/templates/keycloak"
+  cp "$REPO_ROOT/config/templates/keycloak/values-template.yaml" "$TEST_TMPDIR/config/templates/keycloak/values-template.yaml"
+  cp "$REPO_ROOT/config/templates/keycloak/secret-template.yaml" "$TEST_TMPDIR/config/templates/keycloak/secret-template.yaml"
 
   (
     cd "$TEST_TMPDIR"

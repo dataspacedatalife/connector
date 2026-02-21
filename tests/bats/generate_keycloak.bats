@@ -13,11 +13,11 @@ setup() {
   cp "$BATS_TEST_DIRNAME/../../scripts/generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
   chmod +x "$TEST_TMPDIR/generate_keycloak.sh"
 
-  mkdir -p "$TEST_TMPDIR/charts/keycloak/templates"
-  cp "$BATS_TEST_DIRNAME/../../charts/keycloak/values-template.yaml" \
-    "$TEST_TMPDIR/charts/keycloak/values-template.yaml"
-  cp "$BATS_TEST_DIRNAME/../../charts/keycloak/secret-template.yaml" \
-    "$TEST_TMPDIR/charts/keycloak/secret-template.yaml"
+  mkdir -p "$TEST_TMPDIR/charts/keycloak/templates" "$TEST_TMPDIR/config/templates/keycloak"
+  cp "$BATS_TEST_DIRNAME/../../config/templates/keycloak/values-template.yaml" \
+    "$TEST_TMPDIR/config/templates/keycloak/values-template.yaml"
+  cp "$BATS_TEST_DIRNAME/../../config/templates/keycloak/secret-template.yaml" \
+    "$TEST_TMPDIR/config/templates/keycloak/secret-template.yaml"
 
   cd "$TEST_TMPDIR"
 }
