@@ -151,7 +151,6 @@ echo
 cat <<SUMMARY
 This is the configuration of the connector we are about to deploy:
 - namespace: $NAMESPACE
-- email: $EMAIL
 - connector.name: $CONNECTOR_NAME
 - connector.logo: $CONNECTOR_LOGO
 - connector.address: $CONNECTOR_ADDRESS
