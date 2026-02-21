@@ -25,3 +25,12 @@ assert_file_not_contains() {
     return 1
   fi
 }
+
+assert_files_equal() {
+  local expected_file="$1"
+  local actual_file="$2"
+  diff -u "$expected_file" "$actual_file" || {
+    echo "Files differ: expected=$expected_file actual=$actual_file"
+    return 1
+  }
+}

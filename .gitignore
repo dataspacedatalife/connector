@@ -1,0 +1,13 @@
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*~
+*.swp
+*.swo
+*.log
+*.tmp
+*.temp
+.cache/
+.bats/
+**/charts/*.tgz
