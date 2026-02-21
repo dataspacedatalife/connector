@@ -1,0 +1,20 @@
+{
+  "@context": [
+    "https://w3id.org/edc/connector/management/v0.0.1"
+  ],
+  "@type": "PolicyDefinition",
+  "@id": "shared-with-dsga",
+  "policy": {
+    "@type": "Set",
+    "obligation": [
+      {
+        "action": "use",
+        "constraint": {
+          "leftOperand": "XDataShareMembershipCredential.name",
+          "operator": "eq",
+          "rightOperand": "DSGA"
+        }
+      }
+    ]
+  }
+}

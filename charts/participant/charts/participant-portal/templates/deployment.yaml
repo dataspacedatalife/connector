@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-participant-portal
+spec:
+  replicas: {{ .Values.deployment.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-participant-portal
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-participant-portal
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.deployment.imagePullSecret }}
+      containers:
+        - name: {{ .Release.Name }}-participant-portal
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          ports:
+            {{- range .Values.service.ports }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+            {{ end }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-participant-portal-config

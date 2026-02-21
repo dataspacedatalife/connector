@@ -1,0 +1,11 @@
+namespace: datalife
+tls:
+  useLetsEncrypt: true
+  email: dmd@halflife.es
+connector:
+  name: blackmesa
+  address: blackmesa-ds-connector-1.halflife.es
+  password: "#SectorC_AnomalousMaterials_#"
+keycloak:
+  address: blackmesa-ds-connector-1-kc.halflife.es
+  adminPassword: "#BlackMesa_ResonanceCascade_42!#"

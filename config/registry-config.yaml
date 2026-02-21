@@ -1,0 +1,4 @@
+dockerRegistry:
+  server: ""
+  username: ""
+  password: ""

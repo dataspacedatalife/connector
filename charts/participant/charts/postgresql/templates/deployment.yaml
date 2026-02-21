@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-postgresql
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-postgresql
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: "{{ .Values.image.repository | default "postgres" }}:{{ .Values.image.tag | default "15" }}"
+          ports:
+            - containerPort: {{ .Values.service.port | default 5432 }}
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.global.postgres.db.name | default "postgres" }}
+            - name: POSTGRES_USER
+              value: {{ .Values.global.postgres.db.user | default "postgres" }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.global.postgres.db.password | default "postgres" }}
+            - name: PGDATA
+              value: {{ .Values.volume.pgdata | default "/var/lib/postgresql/data/pgdata" }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-postgresql-data
+              mountPath: {{ .Values.volume.mountPath | default "/var/lib/postgresql/data" }}
+      volumes:
+        - name: {{ .Release.Name }}-postgresql-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-postgresql-pvc

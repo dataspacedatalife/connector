@@ -1,0 +1,27 @@
+apiVersion: v2
+name: participant-chart
+description: A Helm chart for the participants of the Kubernetes Cluster
+version: 0.1.0
+dependencies:
+  - name: controlplane
+    version: 0.1.0
+    repository: "file://./charts/controlplane"
+  - name: dataplane
+    version: 0.1.0
+    repository: "file://./charts/dataplane"
+  - name: identityhub
+    version: 0.1.0
+    repository: "file://./charts/identityhub"
+  - name: participant-portal
+    version: 0.1.0
+    repository: "file://./charts/participant-portal"
+  - name: postgresql
+    version: 0.1.0
+    repository: "file://./charts/postgresql"
+  - name: vault
+    version: 0.1.0
+    repository: "file://./charts/vault"
+  - name: oauth2-proxy
+    version: 10.1.1
+    repository: https://oauth2-proxy.github.io/manifests
+    condition: oauth2-proxy.enabled

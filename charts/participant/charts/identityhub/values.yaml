@@ -1,0 +1,29 @@
+deployment:
+  replicaCount: 1
+  imagePullSecret: harbor-regcred-usuarios
+  image:
+    repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/identity-hub
+    tag: "latest"
+    pullPolicy: Always
+
+service:
+  type: ClusterIP
+  ports:
+    - name: version
+      port: 7171
+      targetPort: 7171
+    - name: credentials
+      port: 13131
+      targetPort: 13131
+    - name: identity
+      port: 15151
+      targetPort: 15151
+    - name: did
+      port: 10100
+      targetPort: 10100
+    - name: sts
+      port: 9292
+      targetPort: 9292
+    - name: observability
+      port: 8182
+      targetPort: 8182

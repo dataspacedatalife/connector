@@ -1,0 +1,32 @@
+deployment:
+  replicaCount: 1
+  imagePullSecret: harbor-regcred-usuarios
+  image:
+    repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/controlplane
+    tag: "latest"
+    pullPolicy: Always
+
+service:
+  type: ClusterIP
+  ports:
+    - name: management
+      port: 8181
+      targetPort: 8181
+    - name: paris
+      port: 8081
+      targetPort: 8081
+    - name: version
+      port: 7171
+      targetPort: 7171
+    - name: control
+      port: 9191
+      targetPort: 9191
+    - name: dsp
+      port: 8282
+      targetPort: 8282
+    - name: catalog
+      port: 17171
+      targetPort: 17171
+    - name: observability
+      port: 8182
+      targetPort: 8182

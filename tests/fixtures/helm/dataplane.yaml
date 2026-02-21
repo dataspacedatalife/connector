@@ -1,0 +1,50 @@
+global:
+  vault:
+    url: http://vault:8200
+    token: root
+  postgres:
+    db:
+      url: jdbc:postgresql://postgres:5432/demo
+      user: demo
+      password: demo
+
+deployment:
+  replicaCount: 1
+  imagePullSecret: regcred
+  image:
+    repository: example/dataplane
+    tag: latest
+    pullPolicy: IfNotPresent
+  initContainers:
+    dependencies: []
+
+service:
+  type: ClusterIP
+  ports:
+    - name: public
+      port: 8185
+      targetPort: 8185
+
+configMap:
+  hostname: dp.example.com
+  transferProxyTokenVerifierPublicKeyAlias: key-1
+  transferProxyTokenSignerPrivateKeyAlias: key-1
+  dpfSelectorUrl: http://controlplane:9191/api/control/v1/dataplanes
+  participantId: did:web:dp.example.com:identityhub:did
+  iamStsOauthTokenUrl: https://dp.example.com/identityhub/sts/api/sts/token
+  iamStsOauthClientId: sts-client
+  iamStsOauthClientSecretAlias: sts-secret
+  edcDataplaneApiPublicBaseurl: https://dp.example.com/dataplane/public/api/public
+  edcControlEndpoint: http://dataplane:9191/api/control
+
+ingress:
+  host: dp.example.com
+  tlsSecretName: dp-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+  paths:
+    - path: /dataplane/public
+      pathType: Prefix
+      backend:
+        serviceName: demo-dataplane
+        servicePort: 8185

@@ -1,0 +1,4 @@
+namespace: datalife
+connector:
+  name: connector
+  logo: /icons/datalife_logo.webp

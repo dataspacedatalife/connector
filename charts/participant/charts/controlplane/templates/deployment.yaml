@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-controlplane
+spec:
+  replicas: {{ .Values.deployment.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-controlplane
+  template:
+    metadata:
+      name: {{ .Release.Name }}-controlplane
+      labels:
+        app: {{ .Release.Name }}-controlplane
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.deployment.imagePullSecret }}
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              {{- range .Values.deployment.initContainers.dependencies }}
+              echo "Waiting for {{ .name }} ({{ .host }}:{{ .port }})..."
+              until nc -z -v -w30 {{ .host }} {{ .port }}; do
+                echo "{{ .name }} not ready, retrying in 5s..."
+                sleep 5
+              done
+              {{- end }}
+              echo "All dependencies are ready. Continuing startup..."
+      containers:
+        - name: {{ .Release.Name }}-controlplane
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          ports:
+            {{- range .Values.service.ports }}
+            - containerPort: {{ .port }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-controlplane-config
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          startupProbe:
+            httpGet:
+              path: /api/observability/check/health
+              port: 8182
+            failureThreshold: 45
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/observability/check/health
+              port: 8182
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: trusted-issuers
+              mountPath: /app/deployment/assets/issuers/trusted_issuers.json
+              subPath: trusted_issuers.json
+              readOnly: true
+      volumes:
+        - name: trusted-issuers
+          configMap:
+            name: {{ .Release.Name }}-trusted-issuers

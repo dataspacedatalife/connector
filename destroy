@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+source scripts/functions.sh
+
+if sudo kind get clusters 2>/dev/null | grep -Fxq kind; then
+  echo "There is a previously deployed kind kubernetes cluster in this host."
+  echo "You are about to destroy it. You will not be able to recover it afterwards."
+  ask_yes_no "Do you want to proceed?" "Y" || exit 0
+  sudo kind delete cluster
+else
+  echo "There is no kind kubernetes cluster to destroy."
+fi

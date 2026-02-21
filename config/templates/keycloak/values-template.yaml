@@ -1,0 +1,99 @@
+keycloak:
+  global:
+    security:
+      allowInsecureImages: true
+  replicaCount: 1
+  image:
+    registry: public.ecr.aws
+    repository: bitnami/keycloak
+
+  extraEnvVars:
+    - name: KC_HOSTNAME
+      value: "https://${HOST_KC}"
+    - name: KC_PROXY_HEADERS
+      value: "xforwarded"
+    - name: KC_HOSTNAME_STRICT
+      value: "false"
+    - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+      value: "true"
+    - name: KC_HEALTH_ENABLED
+      value: "true"
+    - name: KC_HTTP_MANAGEMENT_HEALTH_ENABLED
+      value: "false"
+    - name: KC_LEGACY_OBSERVABILITY_INTERFACE
+      value: "true"
+    - name: KC_LOG_LEVEL
+      value: "info"
+    - name: KC_DB_PASSWORD
+      value: "keycloak"
+    - name: KC_DB_USERNAME
+      value: "keycloak"
+
+  auth:
+    adminUser: "admin"
+    existingSecret: "keycloak-secrets"
+    passwordSecretKey: "admin-password"
+
+  service:
+    type: ClusterIP
+    ports:
+      http: 8080
+      https: 8443
+
+  livenessProbe:
+    initialDelaySeconds: 300
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  resources:
+    requests:
+      memory: "1024Mi"
+      cpu: "1000m"
+    limits:
+      memory: "1536Mi"
+      cpu: "2000m"
+
+  ingress:
+    enabled: true
+    hostname: ${HOST_KC}
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      cert-manager.io/cluster-issuer: ${CLUSTER_ISSUER}
+    tls: true
+    extraTls:
+      - hosts:
+          - ${HOST_KC}
+        secretName: ${TLS_SECRET_NAME}
+
+  postgresql:
+    enabled: true
+    image:
+      registry: public.ecr.aws
+      repository: bitnami/postgresql
+      tag: "15"
+    auth:
+      database: "keycloak"
+      username: "keycloak"
+      existingSecret: "keycloak-secrets"
+      secretKeys:
+        userPasswordKey: "postgres-password"
+    primary:
+      persistence:
+        enabled: true
+        size: 2Gi
+        storageClass: openebs-hostpath
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+        limits:
+          memory: "1024Mi"
+          cpu: "500m"

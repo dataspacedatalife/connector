@@ -1,0 +1,97 @@
+{{- if .Values.seeding.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-regist-redirect
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+spec:
+  template:
+    spec:
+      containers:
+        - name: regist-redirect
+          image: badouralix/curl-jq:latest
+          command: ["/bin/sh", "-c"]
+          env:
+            - name: KC_URL
+              value: "{{ .Values.seeding.keycloakUrl }}"
+            - name: KC_USER
+              value: "{{ .Values.seeding.auth.adminUsername }}"
+            - name: KC_PASSWORD
+              value: "{{ .Values.seeding.auth.adminPassword }}"
+            - name: KC_REALM
+              value: "{{ .Values.seeding.targetRealm }}"
+            - name: CLIENT_ID
+              value: "edc-frontend"
+            - name: REDIRECT
+              value: "{{ .Values.seeding.participant.url }}/*"
+
+          args:
+            - |
+              # ====================================================
+              # 1. GET THE ADMIN TOKEN
+              # ====================================================
+              echo "Getting Admin Token..."
+              TOKEN=$(curl -s -f -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
+                -H "Content-Type: application/x-www-form-urlencoded" \
+                -d "username=$KC_USER" \
+                -d "password=$KC_PASSWORD" \
+                -d "grant_type=password" \
+                -d "client_id=admin-cli" | jq -r '.access_token')
+
+              if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
+                echo "Error getting token. Check credentials."
+                exit 1
+              fi
+
+              # ====================================================
+              # 2. GET THE DEFAULT CLIENT UUID
+              # ====================================================
+              # The keycloak needs the client's UUID for updates (we only have the client id).
+              echo "Searching for client '$CLIENT_ID' UUID..."
+              CLIENT_UUID=$(curl -s -f -H "Authorization: Bearer $TOKEN" \
+                "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" | jq -r '.[0].id')
+
+              if [ "$CLIENT_UUID" == "null" ]; then
+                echo "❌ Client '$CLIENT_ID' not found."
+                exit 1
+              fi
+              echo "✅ UUID founded: $CLIENT_UUID"
+
+              # ====================================================
+              # 3. UPDATE THE REDIRECTS LIST
+              # ====================================================
+              echo "Obtaining redirects list..."
+              CURRENT_JSON=$(curl -s -f -H "Authorization: Bearer $TOKEN" \
+                "$KC_URL/admin/realms/$KC_REALM/clients/$CLIENT_UUID")
+
+              # Logic of getting the current list of redirects, adding the new one and removing duplicates (if any)
+              NEW_REDIRECTS_JSON=$(echo "$CURRENT_JSON" | jq --arg new "$REDIRECT" \
+                '.redirectUris + [$new] | unique')
+
+              echo "List of redirects updated: $NEW_REDIRECTS_JSON"
+
+              # ====================================================
+              # 4. UPDATE THE KEYCLOAK CLIENT WITH THE NEW REDIRECTS
+              # ====================================================
+              # Note: We need to send the whole client JSON with the updated list of redirects, not just the list of redirects.
+              FINAL_PAYLOAD=$(echo "$CURRENT_JSON" | jq --argjson redirects "$NEW_REDIRECTS_JSON" '.redirectUris = $redirects')
+
+              echo "Updating Keycloak..."
+              HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X PUT \
+                "$KC_URL/admin/realms/$KC_REALM/clients/$CLIENT_UUID" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "$FINAL_PAYLOAD")
+
+              if [ "$HTTP_CODE" -eq 204 ]; then
+                echo "✅ Success! Redirect added."
+              else
+                echo "❌ Error updating the redirect list. Code: $HTTP_CODE"
+                exit 1
+              fi
+
+      restartPolicy: OnFailure
+{{- end}}

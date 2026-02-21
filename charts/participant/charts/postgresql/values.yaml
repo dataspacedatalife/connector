@@ -1,0 +1,15 @@
+replicaCount: 1
+image:
+  repository: postgres
+  tag: "15"
+  pullPolicy: IfNotPresent
+service:
+  name: postgres
+  port: 5432
+  targetPort: 5432
+volume:
+  accessMode: ReadWriteOnce
+  storageClass: openebs-hostpath
+  mountPath: /var/lib/postgresql/data
+  pgdata: /var/lib/postgresql/data/pgdata
+  size: 1Gi

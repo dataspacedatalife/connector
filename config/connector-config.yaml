@@ -1,0 +1,12 @@
+namespace: datalife
+tls:
+  useLetsEncrypt: true
+  email: "your-email@example.com"
+connector:
+  name: your-institution-name
+  logo: "https://example.com/logo.svg"
+  address: "<institution>-ds-connector-1.your-domain.es"
+  password: "#YourVerySecurePassword#"
+keycloak:
+  address: "<institution>-ds-connector-1-kc.your-domain.es"
+  adminPassword: "#YourVerySecurePassword#"
