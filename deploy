@@ -211,7 +211,7 @@ sudo helm upgrade --install openebs --namespace openebs openebs/openebs --create
 
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
   echo "Setting up cert-issuer"
-  sudo ./setup-cert-issuer.sh --email "$EMAIL"
+  sudo ./scripts/setup-cert-issuer.sh --email "$EMAIL"
 
   echo "Waiting for Let's Encrypt certificates to be issued for domains..."
   CERT_TIMEOUT=300
@@ -256,9 +256,9 @@ fi
 
 echo "Generating keycloak config"
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
-  ./generate_keycloak.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
+  ./scripts/generate_keycloak.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
 else
-  ./generate_keycloak.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$KEYCLOAK_SECRET_NAME"
+  ./scripts/generate_keycloak.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$KEYCLOAK_SECRET_NAME"
 fi
 
 sudo helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -268,15 +268,15 @@ echo "Deploying keycloak"
 sudo helm upgrade --install keycloak "$KEYCLOAK_CHART_DIR/" -n "$NAMESPACE" --create-namespace --wait --timeout 300s
 
 echo "Generating participant config"
-./generate_seeding_job.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
+./scripts/generate_seeding_job.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
 sudo kubectl apply -f keycloak/jobs/job-import-realm.yaml -n "$NAMESPACE"
 sudo kubectl apply -f keycloak/jobs/job-add-default-client.yaml -n "$NAMESPACE"
 sudo kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s
 
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
-  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --logo "$CONNECTOR_LOGO"
+  ./scripts/generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --logo "$CONNECTOR_LOGO"
 else
-  ./generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$CONNECTOR_LOGO"
+  ./scripts/generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$CONNECTOR_LOGO"
 fi
 
 echo "Creating docker registry secret for pulling harbor images"

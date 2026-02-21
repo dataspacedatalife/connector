@@ -6,7 +6,7 @@ setup() {
   TEST_TMPDIR="$(mktemp -d)"
   export TEST_TMPDIR
 
-  cp "$BATS_TEST_DIRNAME/../../setup-cert-issuer.sh" "$TEST_TMPDIR/setup-cert-issuer.sh"
+  cp "$BATS_TEST_DIRNAME/../../scripts/setup-cert-issuer.sh" "$TEST_TMPDIR/setup-cert-issuer.sh"
   chmod +x "$TEST_TMPDIR/setup-cert-issuer.sh"
 
   mkdir -p "$TEST_TMPDIR/fakebin"

@@ -10,7 +10,7 @@ setup() {
   TEST_TMPDIR="$(mktemp -d)"
   export TEST_TMPDIR
 
-  cp "$BATS_TEST_DIRNAME/../../generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
+  cp "$BATS_TEST_DIRNAME/../../scripts/generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
   chmod +x "$TEST_TMPDIR/generate_keycloak.sh"
 
   mkdir -p "$TEST_TMPDIR/charts/keycloak/templates"

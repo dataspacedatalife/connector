@@ -6,7 +6,7 @@ setup() {
   TEST_TMPDIR="$(mktemp -d)"
   export TEST_TMPDIR
 
-  cp "$BATS_TEST_DIRNAME/../../generate_seeding_job.sh" "$TEST_TMPDIR/generate_seeding_job.sh"
+  cp "$BATS_TEST_DIRNAME/../../scripts/generate_seeding_job.sh" "$TEST_TMPDIR/generate_seeding_job.sh"
   chmod +x "$TEST_TMPDIR/generate_seeding_job.sh"
 
   mkdir -p "$TEST_TMPDIR/keycloak/clients" "$TEST_TMPDIR/keycloak/realms" "$TEST_TMPDIR/keycloak/jobs"

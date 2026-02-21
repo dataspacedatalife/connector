@@ -10,7 +10,7 @@ setup() {
   TEST_TMPDIR="$(mktemp -d)"
   export TEST_TMPDIR
 
-  cp "$BATS_TEST_DIRNAME/../../generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
+  cp "$BATS_TEST_DIRNAME/../../scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
   chmod +x "$TEST_TMPDIR/generate_participants.sh"
 
   mkdir -p "$TEST_TMPDIR/charts/participant"

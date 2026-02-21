@@ -81,10 +81,10 @@ if [ -z "$PARTICIPANT" ]; then
   echo
   echo "Examples:"
   echo "  1. Automatic SSL (Default - Let's Encrypt):"
-  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret"
+  echo "     $0 ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret"
   echo
   echo "  2. Manual SSL (Uses wildcard-tls-cert or custom secret):"
-  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret --tls-secret wildcard-tls-cert"
+  echo "     $0 ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret --tls-secret wildcard-tls-cert"
   exit 1
 fi
 

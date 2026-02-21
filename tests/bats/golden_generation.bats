@@ -18,7 +18,7 @@ teardown() {
 }
 
 @test "generate_participants.sh matches golden output in automatic TLS mode" {
-  cp "$REPO_ROOT/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
+  cp "$REPO_ROOT/scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
   chmod +x "$TEST_TMPDIR/generate_participants.sh"
   mkdir -p "$TEST_TMPDIR/charts/participant"
   cp "$REPO_ROOT/charts/participant/values-template.yaml" "$TEST_TMPDIR/charts/participant/values-template.yaml"
@@ -35,7 +35,7 @@ teardown() {
 }
 
 @test "generate_participants.sh matches golden output in manual TLS mode" {
-  cp "$REPO_ROOT/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
+  cp "$REPO_ROOT/scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
   chmod +x "$TEST_TMPDIR/generate_participants.sh"
   mkdir -p "$TEST_TMPDIR/charts/participant"
   cp "$REPO_ROOT/charts/participant/values-template.yaml" "$TEST_TMPDIR/charts/participant/values-template.yaml"
@@ -52,7 +52,7 @@ teardown() {
 }
 
 @test "generate_keycloak.sh matches golden output in automatic TLS mode" {
-  cp "$REPO_ROOT/generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
+  cp "$REPO_ROOT/scripts/generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
   chmod +x "$TEST_TMPDIR/generate_keycloak.sh"
   mkdir -p "$TEST_TMPDIR/charts/keycloak/templates"
   cp "$REPO_ROOT/charts/keycloak/values-template.yaml" "$TEST_TMPDIR/charts/keycloak/values-template.yaml"
@@ -72,7 +72,7 @@ teardown() {
 }
 
 @test "generate_keycloak.sh matches golden output in manual TLS mode" {
-  cp "$REPO_ROOT/generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
+  cp "$REPO_ROOT/scripts/generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
   chmod +x "$TEST_TMPDIR/generate_keycloak.sh"
   mkdir -p "$TEST_TMPDIR/charts/keycloak/templates"
   cp "$REPO_ROOT/charts/keycloak/values-template.yaml" "$TEST_TMPDIR/charts/keycloak/values-template.yaml"
