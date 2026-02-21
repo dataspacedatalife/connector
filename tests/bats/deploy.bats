@@ -7,9 +7,9 @@ setup() {
   cp "$BATS_TEST_DIRNAME/../../deploy" "$TEST_TMPDIR/deploy"
   chmod +x "$TEST_TMPDIR/deploy"
 
-  mkdir -p "$TEST_TMPDIR/scripts" "$TEST_TMPDIR/config" "$TEST_TMPDIR/fakebin"
+  mkdir -p "$TEST_TMPDIR/scripts" "$TEST_TMPDIR/config/defaults" "$TEST_TMPDIR/fakebin"
   cp "$BATS_TEST_DIRNAME/../../scripts/functions.sh" "$TEST_TMPDIR/scripts/functions.sh"
-  cp "$BATS_TEST_DIRNAME/../../config/default-config.yaml" "$TEST_TMPDIR/config/default-config.yaml"
+  cp "$BATS_TEST_DIRNAME/../../config/defaults/default-config.yaml" "$TEST_TMPDIR/config/defaults/default-config.yaml"
   cp "$BATS_TEST_DIRNAME/../../config/registry-config.yaml" "$TEST_TMPDIR/config/registry-config.yaml"
 
   cat > "$TEST_TMPDIR/fakebin/sudo" <<'EOF'

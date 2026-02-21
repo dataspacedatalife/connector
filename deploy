@@ -4,7 +4,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 source scripts/functions.sh
 
-DEFAULT_CONFIG="$SCRIPT_DIR/config/default-config.yaml"
+DEFAULT_CONFIG="$SCRIPT_DIR/config/defaults/default-config.yaml"
 REGISTRY_CONFIG="$SCRIPT_DIR/config/registry-config.yaml"
 PARTICIPANT_CHART_DIR="charts/participant"
 KEYCLOAK_CHART_DIR="charts/keycloak"

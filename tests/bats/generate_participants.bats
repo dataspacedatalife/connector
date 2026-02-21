@@ -13,9 +13,9 @@ setup() {
   cp "$BATS_TEST_DIRNAME/../../scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
   chmod +x "$TEST_TMPDIR/generate_participants.sh"
 
-  mkdir -p "$TEST_TMPDIR/charts/participant"
-  cp "$BATS_TEST_DIRNAME/../../charts/participant/values-template.yaml" \
-    "$TEST_TMPDIR/charts/participant/values-template.yaml"
+  mkdir -p "$TEST_TMPDIR/charts/participant" "$TEST_TMPDIR/config/templates/participant"
+  cp "$BATS_TEST_DIRNAME/../../config/templates/participant/values-template.yaml" \
+    "$TEST_TMPDIR/config/templates/participant/values-template.yaml"
 
   cd "$TEST_TMPDIR"
 }

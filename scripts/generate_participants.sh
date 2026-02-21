@@ -124,7 +124,8 @@ echo "--> KC Host:   $PARTICIPANT_HOST_KC"
 
 # --- 5. Define Variable Paths ---
 PARTICIPANT_CHART_DIR="charts/participant"
-VALUES_TEMPLATE="$PARTICIPANT_CHART_DIR/values-template.yaml"
+PARTICIPANT_TEMPLATE_DIR="config/templates/participant"
+VALUES_TEMPLATE="$PARTICIPANT_TEMPLATE_DIR/values-template.yaml"
 VALUES_OUT_DIR="$PARTICIPANT_CHART_DIR/values"
 
 echo "Sending config file to directory: $VALUES_OUT_DIR"

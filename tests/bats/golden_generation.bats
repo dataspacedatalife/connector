@@ -20,8 +20,8 @@ teardown() {
 @test "generate_participants.sh matches golden output in automatic TLS mode" {
   cp "$REPO_ROOT/scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
   chmod +x "$TEST_TMPDIR/generate_participants.sh"
-  mkdir -p "$TEST_TMPDIR/charts/participant"
-  cp "$REPO_ROOT/charts/participant/values-template.yaml" "$TEST_TMPDIR/charts/participant/values-template.yaml"
+  mkdir -p "$TEST_TMPDIR/charts/participant" "$TEST_TMPDIR/config/templates/participant"
+  cp "$REPO_ROOT/config/templates/participant/values-template.yaml" "$TEST_TMPDIR/config/templates/participant/values-template.yaml"
 
   (
     cd "$TEST_TMPDIR"
@@ -37,8 +37,8 @@ teardown() {
 @test "generate_participants.sh matches golden output in manual TLS mode" {
   cp "$REPO_ROOT/scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
   chmod +x "$TEST_TMPDIR/generate_participants.sh"
-  mkdir -p "$TEST_TMPDIR/charts/participant"
-  cp "$REPO_ROOT/charts/participant/values-template.yaml" "$TEST_TMPDIR/charts/participant/values-template.yaml"
+  mkdir -p "$TEST_TMPDIR/charts/participant" "$TEST_TMPDIR/config/templates/participant"
+  cp "$REPO_ROOT/config/templates/participant/values-template.yaml" "$TEST_TMPDIR/config/templates/participant/values-template.yaml"
 
   (
     cd "$TEST_TMPDIR"
