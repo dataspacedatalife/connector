@@ -282,7 +282,7 @@ sudo helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
 sudo helm repo update
 echo "Deploying the participant portal"
 (cd "$PARTICIPANT_CHART_DIR" && sudo helm dependency build)
-sudo helm upgrade --install "$CONNECTOR_NAME" "$PARTICIPANT_CHART_DIR/" -f "$PARTICIPANT_CHART_DIR/values/values-$CONNECTOR_NAME.yaml" -n "$NAMESPACE" --create-namespace --wait --timeout 480s
+sudo helm upgrade --install "$CONNECTOR_NAME" "$PARTICIPANT_CHART_DIR/" -f "$PARTICIPANT_CHART_DIR/values.yaml" -n "$NAMESPACE" --create-namespace --wait --timeout 480s
 
 echo "Deployment completed"
 echo
