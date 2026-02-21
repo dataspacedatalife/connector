@@ -213,37 +213,6 @@ sudo helm upgrade --install openebs --namespace openebs openebs/openebs --create
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
   echo "Setting up cert-issuer"
   sudo ./scripts/setup-cert-issuer.sh --email "$EMAIL"
-
-  echo "Waiting for Let's Encrypt certificates to be issued for domains..."
-  CERT_TIMEOUT=300
-  CERT_END=$((SECONDS + CERT_TIMEOUT))
-  
-  while [ "$SECONDS" -lt "$CERT_END" ]; do
-    # Ensure certificates exist before waiting for readiness.
-    CERT_COUNT=$(sudo kubectl get certificate -n "$NAMESPACE" --no-headers 2>/dev/null | wc -l)
-    if [[ "$CERT_COUNT" -gt 0 ]] && sudo kubectl wait --for=condition=Ready certificate --all -n "$NAMESPACE" --timeout=10s >/dev/null 2>&1; then
-      echo "Let's Encrypt certificates successfully obtained."
-      break
-    fi
-    
-    echo "Still waiting for certificates to be validated by Let's Encrypt... (${SECONDS}s)"
-    sleep 10
-
-    if [ "$SECONDS" -ge "$CERT_END" ]; then
-      echo ""
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "ERROR: Could not obtain Let's Encrypt certificates within ${CERT_TIMEOUT}s."
-      echo "Possible reasons:"
-      echo " 1. Public DNS for $CONNECTOR_ADDRESS or $KEYCLOAK_ADDRESS is not set."
-      echo " 2. This machine's port 80/443 is not reachable from the internet."
-      echo " 3. Let's Encrypt rate limits have been reached."
-      echo "Check status with: kubectl describe certificate -n $NAMESPACE"
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      exit 1
-    fi
-  done
-
-
 else
   echo "Creating TLS secrets for Keycloak and Connector"
   sudo kubectl create secret tls "$KEYCLOAK_SECRET_NAME" --cert="$KEYCLOAK_TLS_CRT" --key="$KEYCLOAK_TLS_KEY" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
@@ -262,6 +231,33 @@ sudo helm repo update
 (cd "$KEYCLOAK_CHART_DIR" && sudo helm dependency build)
 echo "Deploying keycloak"
 sudo helm upgrade --install keycloak "$KEYCLOAK_CHART_DIR/" -n "$NAMESPACE" --create-namespace --wait --timeout 300s
+
+if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
+  echo "Waiting for Let's Encrypt certificates to be issued for domains..."
+  CERT_TIMEOUT=300
+  CERT_END=$((SECONDS + CERT_TIMEOUT))
+  
+  while [ "$SECONDS" -lt "$CERT_END" ]; do
+    CERT_COUNT=$(sudo kubectl get certificates -n "$NAMESPACE" --no-headers 2>/dev/null | wc -l)
+    if [[ "$CERT_COUNT" -eq 2 ]] && sudo kubectl wait --for=condition=Ready certificate --all -n "$NAMESPACE" --timeout=10s >/dev/null 2>&1; then
+      echo "Let's Encrypt certificates successfully obtained."
+      break
+    fi
+    
+    if [ "$SECONDS" -ge "$CERT_END" ]; then
+      echo ""
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "ERROR: Could not obtain Let's Encrypt certificates within ${CERT_TIMEOUT}s."
+      echo "Possible reasons:"
+      echo " 1. Public DNS for $CONNECTOR_ADDRESS or $KEYCLOAK_ADDRESS is not set."
+      echo " 2. This machine's ports 80/443 are not reachable from the internet."
+      echo " 3. Let's Encrypt rate limits have been reached."
+      echo "Check status with: sudo kubectl get certificates -n $NAMESPACE"
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      exit 1
+    fi
+  done
+fi
 
 echo "Generating participant config"
 ./scripts/generate_seeding_job.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
@@ -282,7 +278,7 @@ sudo helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
 sudo helm repo update
 echo "Deploying the participant portal"
 (cd "$PARTICIPANT_CHART_DIR" && sudo helm dependency build)
-sudo helm upgrade --install "$CONNECTOR_NAME" "$PARTICIPANT_CHART_DIR/" -f "$PARTICIPANT_CHART_DIR/values.yaml" -n "$NAMESPACE" --create-namespace --wait --timeout 480s
+sudo helm upgrade --install "$CONNECTOR_NAME" "$PARTICIPANT_CHART_DIR/" -n "$NAMESPACE" --create-namespace --wait --timeout 480s
 
 echo "Deployment completed"
 echo
