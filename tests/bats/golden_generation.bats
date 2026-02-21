@@ -31,7 +31,7 @@ teardown() {
 
   assert_files_equal \
     "$REPO_ROOT/tests/fixtures/golden/participants/values-demo-auto.yaml" \
-    "$TEST_TMPDIR/charts/participant/values/values-demo.yaml"
+    "$TEST_TMPDIR/charts/participant/values.yaml"
 }
 
 @test "generate_participants.sh matches golden output in manual TLS mode" {
@@ -48,7 +48,7 @@ teardown() {
 
   assert_files_equal \
     "$REPO_ROOT/tests/fixtures/golden/participants/values-demo-manual.yaml" \
-    "$TEST_TMPDIR/charts/participant/values/values-demo.yaml"
+    "$TEST_TMPDIR/charts/participant/values.yaml"
 }
 
 @test "generate_keycloak.sh matches golden output in automatic TLS mode" {

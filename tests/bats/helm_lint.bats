@@ -14,7 +14,7 @@ setup() {
 }
 
 @test "helm lint passes for charts/participant with participant values file" {
-  run helm lint charts/participant -f charts/participant/values/values-gradiant.yaml
+  run helm lint charts/participant -f charts/participant/values.yaml
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"0 chart(s) failed"* ]]

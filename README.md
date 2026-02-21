@@ -196,7 +196,7 @@ Use the `scripts/generate_participants.sh` script. This creates a customized val
   --host conector-xdatashare.gradiant.org \
   --host-kc conector-xdatashare-kc.gradiant.org
 ```
-This command will create a new file: charts/participant/values/values-gradiant.yaml.
+This command will create a new file: charts/participant/values.yaml.
 The script supports the following arguments to customize the deployment:
   - `<PARTICIPANT_NAME>`: (Required) The name of the participant (e.g., gradiant). This is used to prefix resources and name the output file.
   - `--host <MAIN_HOSTNAME>`: The primary domain for the participant (e.g., conector-xdatashare.gradiant.org). This covers the Portal and EDC endpoints.
@@ -212,7 +212,7 @@ The charts/participant no longer contains an internal Keycloak subchart by defau
 ```bash
   # Example for a participant named "gradiant" in namespace "xdatashare"
   helm install gradiant ./charts/participant \
-  -f ./charts/participant/values/values-gradiant.yaml \
+  -f ./charts/participant/values.yaml \
   -n xdatashare
 ```   
 

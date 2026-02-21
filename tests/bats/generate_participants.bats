@@ -60,7 +60,7 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local output_file="$TEST_TMPDIR/charts/participant/values/values-demo.yaml"
+  local output_file="$TEST_TMPDIR/charts/participant/values.yaml"
   assert_file_exists "$output_file"
 
   assert_file_contains "$output_file" 'host: connector.example.com'
@@ -80,7 +80,7 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local output_file="$TEST_TMPDIR/charts/participant/values/values-demo.yaml"
+  local output_file="$TEST_TMPDIR/charts/participant/values.yaml"
   assert_file_exists "$output_file"
 
   assert_file_contains "$output_file" 'tlsSecretName: wildcard-tls-cert'
@@ -97,7 +97,7 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local output_file="$TEST_TMPDIR/charts/participant/values/values-demo.yaml"
+  local output_file="$TEST_TMPDIR/charts/participant/values.yaml"
   assert_file_exists "$output_file"
   assert_file_contains "$output_file" 'adminUsername: "key-admin"'
   assert_file_contains "$output_file" 'adminPassword: "key-pass"'

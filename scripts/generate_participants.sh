@@ -126,12 +126,9 @@ echo "--> KC Host:   $PARTICIPANT_HOST_KC"
 PARTICIPANT_CHART_DIR="charts/participant"
 PARTICIPANT_TEMPLATE_DIR="config/templates/participant"
 VALUES_TEMPLATE="$PARTICIPANT_TEMPLATE_DIR/values-template.yaml"
-VALUES_OUT_DIR="$PARTICIPANT_CHART_DIR/values"
+VALUES_OUT="$PARTICIPANT_CHART_DIR/values.yaml"
 
-echo "Sending config file to directory: $VALUES_OUT_DIR"
-mkdir -p "$VALUES_OUT_DIR"
-
-VALUES_OUT="$VALUES_OUT_DIR/values-$PARTICIPANT.yaml"
+echo "Sending config file to: $VALUES_OUT"
 
 # --- 6. Compute Auth Keys ---
 DID_B64=$(echo -n "did:web:$PARTICIPANT_HOST:identityhub:did" | base64 -w0)
