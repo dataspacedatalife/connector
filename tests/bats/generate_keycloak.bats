@@ -13,11 +13,11 @@ setup() {
   cp "$BATS_TEST_DIRNAME/../../generate_keycloak.sh" "$TEST_TMPDIR/generate_keycloak.sh"
   chmod +x "$TEST_TMPDIR/generate_keycloak.sh"
 
-  mkdir -p "$TEST_TMPDIR/keycloak-chart/templates"
-  cp "$BATS_TEST_DIRNAME/../../keycloak-chart/values-template.yaml" \
-    "$TEST_TMPDIR/keycloak-chart/values-template.yaml"
-  cp "$BATS_TEST_DIRNAME/../../keycloak-chart/secret-template.yaml" \
-    "$TEST_TMPDIR/keycloak-chart/secret-template.yaml"
+  mkdir -p "$TEST_TMPDIR/charts/keycloak/templates"
+  cp "$BATS_TEST_DIRNAME/../../charts/keycloak/values-template.yaml" \
+    "$TEST_TMPDIR/charts/keycloak/values-template.yaml"
+  cp "$BATS_TEST_DIRNAME/../../charts/keycloak/secret-template.yaml" \
+    "$TEST_TMPDIR/charts/keycloak/secret-template.yaml"
 
   cd "$TEST_TMPDIR"
 }
@@ -38,8 +38,8 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local values_file="$TEST_TMPDIR/keycloak-chart/values.yaml"
-  local secret_file="$TEST_TMPDIR/keycloak-chart/templates/secret.yaml"
+  local values_file="$TEST_TMPDIR/charts/keycloak/values.yaml"
+  local secret_file="$TEST_TMPDIR/charts/keycloak/templates/secret.yaml"
   assert_file_exists "$values_file"
   assert_file_exists "$secret_file"
 
@@ -56,7 +56,7 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"Using 'admin' by default"* ]]
 
-  local secret_file="$TEST_TMPDIR/keycloak-chart/templates/secret.yaml"
+  local secret_file="$TEST_TMPDIR/charts/keycloak/templates/secret.yaml"
   assert_file_exists "$secret_file"
   assert_file_contains "$secret_file" 'admin-password: "admin"'
 }
@@ -66,7 +66,7 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local values_file="$TEST_TMPDIR/keycloak-chart/values.yaml"
+  local values_file="$TEST_TMPDIR/charts/keycloak/values.yaml"
   assert_file_exists "$values_file"
   assert_file_contains "$values_file" "secretName: wildcard-cert"
   assert_file_not_contains "$values_file" "cert-manager.io/cluster-issuer"

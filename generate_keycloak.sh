@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-KEYCLOAK_CHART_DIR="keycloak-chart"
+KEYCLOAK_CHART_DIR="charts/keycloak"
 TEMPLATE_FILE="$KEYCLOAK_CHART_DIR/values-template.yaml"
 OUTPUT_FILE="$KEYCLOAK_CHART_DIR/values.yaml"
 SECRET_TEMPLATE_FILE="$KEYCLOAK_CHART_DIR/secret-template.yaml"

@@ -13,9 +13,9 @@ setup() {
   cp "$BATS_TEST_DIRNAME/../../generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
   chmod +x "$TEST_TMPDIR/generate_participants.sh"
 
-  mkdir -p "$TEST_TMPDIR/participant-chart"
-  cp "$BATS_TEST_DIRNAME/../../participant-chart/values-template.yaml" \
-    "$TEST_TMPDIR/participant-chart/values-template.yaml"
+  mkdir -p "$TEST_TMPDIR/charts/participant"
+  cp "$BATS_TEST_DIRNAME/../../charts/participant/values-template.yaml" \
+    "$TEST_TMPDIR/charts/participant/values-template.yaml"
 
   cd "$TEST_TMPDIR"
 }
@@ -60,7 +60,7 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local output_file="$TEST_TMPDIR/participant-chart/values/values-demo.yaml"
+  local output_file="$TEST_TMPDIR/charts/participant/values/values-demo.yaml"
   assert_file_exists "$output_file"
 
   assert_file_contains "$output_file" 'host: connector.example.com'
@@ -80,7 +80,7 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local output_file="$TEST_TMPDIR/participant-chart/values/values-demo.yaml"
+  local output_file="$TEST_TMPDIR/charts/participant/values/values-demo.yaml"
   assert_file_exists "$output_file"
 
   assert_file_contains "$output_file" 'tlsSecretName: wildcard-tls-cert'
@@ -97,7 +97,7 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local output_file="$TEST_TMPDIR/participant-chart/values/values-demo.yaml"
+  local output_file="$TEST_TMPDIR/charts/participant/values/values-demo.yaml"
   assert_file_exists "$output_file"
   assert_file_contains "$output_file" 'adminUsername: "key-admin"'
   assert_file_contains "$output_file" 'adminPassword: "key-pass"'

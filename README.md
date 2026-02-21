@@ -32,15 +32,15 @@ Before starting, ensure you have the following:
     - `job-import-realm.yaml` (Keycloak realm import job, for client's keycloak)
     - `job-add-default-client.yaml` (Keycloak client registration job, for client's keycloak)
 - **Helm Chart:** 
-    - The `keycloak-chart` directory.
-    - The `participant-chart` directory.
+    - The `charts/keycloak` directory.
+    - The `charts/participant` directory.
 - **Public DNS:** You must have public DNS "A" records pointing to the hostnames (e.g., `conector-xdatashare.gradiant.org`, `conector-xdatashare-kc.gradiant.org`) to the cluster's public IP address.
 
 ## Phase 1: Cluster-Level Setup
 
 This phase configures two optional infrastructure components that enable secure communication and identity management for all participants in the dataspace:
 - Configures a ClusterIssuer for cert-manager to interface with Let's Encrypt. This enables automatic SSL certificate generation and renewal for the entire cluster. **This is a one-time configuration per cluster.**
-- Deploy a Keycloak instance using the `keycloak-chart`. This is an optional step, but it provides a ready-to-use IAM solution that can be shared across all participants. If you have an existing Keycloak deployment or prefer to use another IAM solution, you can skip this step and configure your participant to connect to that instead.
+- Deploy a Keycloak instance using the `charts/keycloak`. This is an optional step, but it provides a ready-to-use IAM solution that can be shared across all participants. If you have an existing Keycloak deployment or prefer to use another IAM solution, you can skip this step and configure your participant to connect to that instead.
 
 **Note:** If you already have a valid TLS certificate (or a custom secret) and an existing Keycloak/IAM configuration, you may skip these steps and advance directly to the **Seeding Jobs** section to ensure your IAM is compatible with the connector.
 ### ClusterIssuer Setup
@@ -81,7 +81,7 @@ If `Status` is `True`, the cluster is now ready to automatically issue certifica
 
 ### Keycloak
 
-Deploying `keycloak-chart` is an optional step. This chart deploys a Keycloak image (based on Bitnami) that eliminates the need to integrate a subchart within the participant. In this way, Keycloak is established as a standalone, centralized element, designed to serve all participants deployed in the customer's environment. In any case, the implementation includes the necessary configuration (a Realm and a default Client) so that the participant's portal can communicate correctly.
+Deploying `charts/keycloak` is an optional step. This chart deploys a Keycloak image (based on Bitnami) that eliminates the need to integrate a subchart within the participant. In this way, Keycloak is established as a standalone, centralized element, designed to serve all participants deployed in the customer's environment. In any case, the implementation includes the necessary configuration (a Realm and a default Client) so that the participant's portal can communicate correctly.
 
 #### 1.1. Generate Keycloak Configuration
 
@@ -100,7 +100,7 @@ Use the `generate_keycloak.sh` script to create a customized values.yaml for the
   ./generate_keycloak.sh --host-kc conector-xdatashare-kc.gradiant.org
 
 ```
-This command will create a new file: `keycloak-chart/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
+This command will create a new file: `charts/keycloak/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
 The generation script supports several flags:
 - `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.gradiant.org`).
 - `--tls-secret <TLS_SECRET_NAME>`: If you have an existing TLS secret for Keycloak, you can use this flag to specify the name of that secret. The generated `values.yaml` will then reference this secret instead of creating a new one. If this name is not passed the script will assume the default secret name `keycloak-tls-cert` for the Keycloak deployment. This is useful if you have already set up TLS for Keycloak and want to reuse that configuration without modification.
@@ -126,11 +126,11 @@ kubectl get secret keycloak-tls-cert -n xdatashare -o yaml
 
 #### 1.2. Deploy Keycloak Chart
 
-If the participant does not have an existing IAM solution, deploy the `keycloak-chart`. This chart acts as a complementary service, removing the need for a Keycloak subchart inside the participant deployment. It is now deployed as a centralized, standalone service.
+If the participant does not have an existing IAM solution, deploy the `charts/keycloak`. This chart acts as a complementary service, removing the need for a Keycloak subchart inside the participant deployment. It is now deployed as a centralized, standalone service.
 
 ```bash
 # Example for a participant named "keycloak" in namespace "xdatashare"
-helm install keycloak ./keycloak-chart --namespace xdatashare
+helm install keycloak ./charts/keycloak --namespace xdatashare
 ```
 
 ### Seeding Jobs
@@ -196,7 +196,7 @@ Use the `generate_participant.sh` script. This creates a customized values.yaml 
   --host conector-xdatashare.gradiant.org \
   --host-kc conector-xdatashare-kc.gradiant.org
 ```
-This command will create a new file: participant-chart/values/values-gradiant.yaml.
+This command will create a new file: charts/participant/values/values-gradiant.yaml.
 The script supports the following arguments to customize the deployment:
   - `<PARTICIPANT_NAME>`: (Required) The name of the participant (e.g., gradiant). This is used to prefix resources and name the output file.
   - `--host <MAIN_HOSTNAME>`: The primary domain for the participant (e.g., conector-xdatashare.gradiant.org). This covers the Portal and EDC endpoints.
@@ -205,14 +205,14 @@ The script supports the following arguments to customize the deployment:
 
 ### 1.2. Deploy Participant Chart
 
-The participant-chart no longer contains an internal Keycloak subchart by default. It is now "IAM-agnostic," allowing the participant to opt for our chart-deployed Keycloak or their own.
+The charts/participant no longer contains an internal Keycloak subchart by default. It is now "IAM-agnostic," allowing the participant to opt for our chart-deployed Keycloak or their own.
 
 **Note:** We recommend deploying the participant into a namespace.
 
 ```bash
   # Example for a participant named "gradiant" in namespace "xdatashare"
-  helm install gradiant ./participant-chart \
-  -f ./participant-chart/values/values-gradiant.yaml \
+  helm install gradiant ./charts/participant \
+  -f ./charts/participant/values/values-gradiant.yaml \
   -n xdatashare
 ```   
 

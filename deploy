@@ -6,6 +6,8 @@ source scripts/functions.sh
 
 DEFAULT_CONFIG="$SCRIPT_DIR/config/default-config.yaml"
 REGISTRY_CONFIG="$SCRIPT_DIR/config/registry-config.yaml"
+PARTICIPANT_CHART_DIR="charts/participant"
+KEYCLOAK_CHART_DIR="charts/keycloak"
 
 usage() {
   cat <<USAGE
@@ -261,9 +263,9 @@ fi
 
 sudo helm repo add bitnami https://charts.bitnami.com/bitnami
 sudo helm repo update
-cd keycloak-chart && sudo helm dependency build && cd ..
+(cd "$KEYCLOAK_CHART_DIR" && sudo helm dependency build)
 echo "Deploying keycloak"
-sudo helm upgrade --install keycloak keycloak-chart/ -n "$NAMESPACE" --create-namespace --wait --timeout 300s
+sudo helm upgrade --install keycloak "$KEYCLOAK_CHART_DIR/" -n "$NAMESPACE" --create-namespace --wait --timeout 300s
 
 echo "Generating participant config"
 ./generate_seeding_job.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
@@ -283,8 +285,8 @@ sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-serv
 sudo helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
 sudo helm repo update
 echo "Deploying the participant portal"
-cd participant-chart && sudo helm dependency build && cd ..
-sudo helm upgrade --install "$CONNECTOR_NAME" participant-chart/ -f "participant-chart/values/values-$CONNECTOR_NAME.yaml" -n "$NAMESPACE" --create-namespace --wait --timeout 480s
+(cd "$PARTICIPANT_CHART_DIR" && sudo helm dependency build)
+sudo helm upgrade --install "$CONNECTOR_NAME" "$PARTICIPANT_CHART_DIR/" -f "$PARTICIPANT_CHART_DIR/values/values-$CONNECTOR_NAME.yaml" -n "$NAMESPACE" --create-namespace --wait --timeout 480s
 
 echo "Deployment completed"
 echo

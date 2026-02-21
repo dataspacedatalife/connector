@@ -123,7 +123,7 @@ echo "--> Main Host: $PARTICIPANT_HOST"
 echo "--> KC Host:   $PARTICIPANT_HOST_KC"
 
 # --- 5. Define Variable Paths ---
-PARTICIPANT_CHART_DIR="participant-chart"
+PARTICIPANT_CHART_DIR="charts/participant"
 VALUES_TEMPLATE="$PARTICIPANT_CHART_DIR/values-template.yaml"
 VALUES_OUT_DIR="$PARTICIPANT_CHART_DIR/values"
 

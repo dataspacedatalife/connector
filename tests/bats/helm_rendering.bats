@@ -7,7 +7,7 @@ setup() {
 }
 
 @test "controlplane renders ingress with letsencrypt annotation in automatic TLS mode" {
-  run helm template demo ./participant-chart/charts/controlplane -f ./tests/fixtures/helm/controlplane-auto.yaml
+  run helm template demo ./charts/participant/charts/controlplane -f ./tests/fixtures/helm/controlplane-auto.yaml
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"kind: Ingress"* ]]
@@ -17,7 +17,7 @@ setup() {
 }
 
 @test "controlplane omits cluster-issuer annotation in manual TLS mode" {
-  run helm template demo ./participant-chart/charts/controlplane -f ./tests/fixtures/helm/controlplane-manual.yaml
+  run helm template demo ./charts/participant/charts/controlplane -f ./tests/fixtures/helm/controlplane-manual.yaml
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"host: cp.example.com"* ]]
@@ -26,7 +26,7 @@ setup() {
 }
 
 @test "dataplane renders ingress host and tls secret" {
-  run helm template demo ./participant-chart/charts/dataplane -f ./tests/fixtures/helm/dataplane.yaml
+  run helm template demo ./charts/participant/charts/dataplane -f ./tests/fixtures/helm/dataplane.yaml
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"name: demo-dataplane-ingress"* ]]
@@ -35,7 +35,7 @@ setup() {
 }
 
 @test "identityhub renders both main and did ingresses" {
-  run helm template demo ./participant-chart/charts/identityhub -f ./tests/fixtures/helm/identityhub.yaml
+  run helm template demo ./charts/participant/charts/identityhub -f ./tests/fixtures/helm/identityhub.yaml
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"name: demo-identityhub-ingress"* ]]
@@ -45,10 +45,10 @@ setup() {
 }
 
 @test "top-level chart rendering is skipped when external dependencies are not vendored" {
-  if [[ ! -d "./keycloak-chart/charts/keycloak" ]] && ! compgen -G "./keycloak-chart/charts/keycloak-*.tgz" >/dev/null; then
-    skip "keycloak-chart dependency not vendored locally"
+  if [[ ! -d "./charts/keycloak/charts/keycloak" ]] && ! compgen -G "./charts/keycloak/charts/keycloak-*.tgz" >/dev/null; then
+    skip "charts/keycloak dependency not vendored locally"
   fi
 
-  run helm template keycloak ./keycloak-chart --namespace xdatashare
+  run helm template keycloak ./charts/keycloak --namespace xdatashare
   [ "$status" -eq 0 ]
 }
