@@ -45,7 +45,7 @@ setup() {
 }
 
 @test "top-level chart rendering is skipped when external dependencies are not vendored" {
-  if [[ ! -d "./keycloak-chart/charts/keycloak" && ! -f "./keycloak-chart/charts/keycloak-"*".tgz" ]]; then
+  if [[ ! -d "./keycloak-chart/charts/keycloak" ]] && ! compgen -G "./keycloak-chart/charts/keycloak-*.tgz" >/dev/null; then
     skip "keycloak-chart dependency not vendored locally"
   fi
 

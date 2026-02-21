@@ -1,0 +1,24 @@
+dependencies:
+- name: controlplane
+  repository: file://./charts/controlplane
+  version: 0.1.0
+- name: dataplane
+  repository: file://./charts/dataplane
+  version: 0.1.0
+- name: identityhub
+  repository: file://./charts/identityhub
+  version: 0.1.0
+- name: participant-portal
+  repository: file://./charts/participant-portal
+  version: 0.1.0
+- name: postgresql
+  repository: file://./charts/postgresql
+  version: 0.1.0
+- name: vault
+  repository: file://./charts/vault
+  version: 0.1.0
+- name: oauth2-proxy
+  repository: https://oauth2-proxy.github.io/manifests
+  version: 10.1.1
+digest: sha256:92bc53529bdaf78eb596f1b2b84ac65e9dec3acd2f8c259d1afc775c86cfdd6f
+generated: "2026-02-21T16:40:24.946085817+01:00"
