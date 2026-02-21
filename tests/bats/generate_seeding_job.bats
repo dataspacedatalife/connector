@@ -9,9 +9,9 @@ setup() {
   cp "$BATS_TEST_DIRNAME/../../scripts/generate_seeding_job.sh" "$TEST_TMPDIR/generate_seeding_job.sh"
   chmod +x "$TEST_TMPDIR/generate_seeding_job.sh"
 
-  mkdir -p "$TEST_TMPDIR/keycloak/clients" "$TEST_TMPDIR/keycloak/realms" "$TEST_TMPDIR/keycloak/jobs"
-  cp "$BATS_TEST_DIRNAME/../../keycloak/clients/frontend-client.json" "$TEST_TMPDIR/keycloak/clients/frontend-client.json"
-  cp "$BATS_TEST_DIRNAME/../../keycloak/realms/realm.json" "$TEST_TMPDIR/keycloak/realms/realm.json"
+  mkdir -p "$TEST_TMPDIR/config/keycloak/clients" "$TEST_TMPDIR/config/keycloak/realms"
+  cp "$BATS_TEST_DIRNAME/../../config/keycloak/clients/frontend-client.json" "$TEST_TMPDIR/config/keycloak/clients/frontend-client.json"
+  cp "$BATS_TEST_DIRNAME/../../config/keycloak/realms/realm.json" "$TEST_TMPDIR/config/keycloak/realms/realm.json"
 
   cd "$TEST_TMPDIR"
 }
@@ -28,10 +28,10 @@ teardown() {
 }
 
 @test "fails when client file does not exist" {
-  run ./generate_seeding_job.sh --host-kc kc.example.com --client-file keycloak/clients/missing.json
+  run ./generate_seeding_job.sh --host-kc kc.example.com --client-file config/keycloak/clients/missing.json
 
   [ "$status" -eq 1 ]
-  [[ "$output" == *"File 'keycloak/clients/missing.json' not found."* ]]
+  [[ "$output" == *"File 'config/keycloak/clients/missing.json' not found."* ]]
 }
 
 @test "generates both keycloak seeding jobs with default values" {
@@ -39,8 +39,8 @@ teardown() {
 
   [ "$status" -eq 0 ]
 
-  local client_job="$TEST_TMPDIR/keycloak/jobs/job-add-default-client.yaml"
-  local realm_job="$TEST_TMPDIR/keycloak/jobs/job-import-realm.yaml"
+  local client_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-add-default-client.yaml"
+  local realm_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-import-realm.yaml"
 
   assert_file_exists "$client_job"
   assert_file_exists "$realm_job"
@@ -70,8 +70,8 @@ EOF
 
   [ "$status" -eq 0 ]
 
-  local client_job="$TEST_TMPDIR/keycloak/jobs/job-add-default-client.yaml"
-  local realm_job="$TEST_TMPDIR/keycloak/jobs/job-import-realm.yaml"
+  local client_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-add-default-client.yaml"
+  local realm_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-import-realm.yaml"
   assert_file_contains "$client_job" 'KC_ADMIN_USER: "alice"'
   assert_file_contains "$client_job" 'KC_ADMIN_PASSWORD: "secret123"'
   assert_file_contains "$client_job" '"clientId":"custom-client"'

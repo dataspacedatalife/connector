@@ -167,15 +167,15 @@ This script is configured by passing command-line arguments.
 **Optional Parameters (with default values):**
 - --user <user>: The Keycloak administrator username. (Default: admin).
 - --pass <password>: The Keycloak administrator password. (Default: admin).
-- --realm-file <path>: Path to the JSON file containing the realm configuration to be imported. (Default: keycloak/realms/realm.json).
-- --client-file <path>: Path to the JSON file containing the client configuration to be registered. (Default: keycloak/clients/frontend-client.json).
+- --realm-file <path>: Path to the JSON file containing the realm configuration to be imported. (Default: config/keycloak/realms/realm.json).
+- --client-file <path>: Path to the JSON file containing the client configuration to be registered. (Default: config/keycloak/clients/frontend-client.json).
 - --client-admin <client-admin>: The admin client ID used for the connection. (Default: admin-cli).
 - --realm-admin <realm-admin>: The administration realm name. (Default: master).
 - --help: Displays the help and usage message.
 
 The `scripts/generate_seeding_job.sh` script relies on two pre-configured JSON files by default to construct the Kubernetes job manifests. These files contain the actual payloads that will be applied to Keycloak:
-- **Realm File (keycloak/realms/realm.json):** This file contains the complete definition of the target realm (e.g., the "dataspace" realm). It includes the necessary client scopes and settings required for the initial user login verification. It is used as the blueprint to build the job responsible for importing the realm.
-- **Frontend Client File (keycloak/clients/frontend-client.json):** This file defines the default OIDC client (typically named `edc-frontend`), which is strictly required to secure and enable the authentication flow for the participant portal. It is used to construct the job responsible for registering this client within the previously imported realm.
+- **Realm File (config/keycloak/realms/realm.json):** This file contains the complete definition of the target realm (e.g., the "dataspace" realm). It includes the necessary client scopes and settings required for the initial user login verification. It is used as the blueprint to build the job responsible for importing the realm.
+- **Frontend Client File (config/keycloak/clients/frontend-client.json):** This file defines the default OIDC client (typically named `edc-frontend`), which is strictly required to secure and enable the authentication flow for the participant portal. It is used to construct the job responsible for registering this client within the previously imported realm.
 
 **Note:** If the operator wishes to use custom configurations, they can replace these files or point to a different path using the `--realm-file` and `--client-file` flags explained above.
 
@@ -296,4 +296,3 @@ To streamline the setup process, the chart includes several one-time jobs that r
 - Participant Redirect Registration (job-register-participant-redirect)
     - Purpose: To allow Keycloak to securely redirect the user back to the web portal after a successful login.
     - Functionality: This job updates the configuration of the global client (typically named edc-frontend) in Keycloak. It adds the new participant’s portal URL to the Valid Redirect URIs list. Without this automated step, Keycloak would block access to the participant's portal for security reasons.
-

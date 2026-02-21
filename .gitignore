@@ -11,3 +11,4 @@ Thumbs.db
 .cache/
 .bats/
 **/charts/*.tgz
+config/generated/

@@ -8,6 +8,7 @@ DEFAULT_CONFIG="$SCRIPT_DIR/config/default-config.yaml"
 REGISTRY_CONFIG="$SCRIPT_DIR/config/registry-config.yaml"
 PARTICIPANT_CHART_DIR="charts/participant"
 KEYCLOAK_CHART_DIR="charts/keycloak"
+KEYCLOAK_JOBS_DIR="config/generated/keycloak/jobs"
 
 usage() {
   cat <<USAGE
@@ -269,8 +270,8 @@ sudo helm upgrade --install keycloak "$KEYCLOAK_CHART_DIR/" -n "$NAMESPACE" --cr
 
 echo "Generating participant config"
 ./scripts/generate_seeding_job.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
-sudo kubectl apply -f keycloak/jobs/job-import-realm.yaml -n "$NAMESPACE"
-sudo kubectl apply -f keycloak/jobs/job-add-default-client.yaml -n "$NAMESPACE"
+sudo kubectl apply -f "$KEYCLOAK_JOBS_DIR/job-import-realm.yaml" -n "$NAMESPACE"
+sudo kubectl apply -f "$KEYCLOAK_JOBS_DIR/job-add-default-client.yaml" -n "$NAMESPACE"
 sudo kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s
 
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
