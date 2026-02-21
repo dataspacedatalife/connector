@@ -1,19 +1,36 @@
-# Xdatashare Connector Deployment Guide
+# XDataShare Connector Deployment Guide
 This document outlines the process for adding a new xdatashare connector to a Kubernetes cluster (such as Kind). For an agile setup, it is recommended to use the Quickstart Guide, which allows the entire deployment process to be performed in an automated and simplified manner. If, on the other hand, you prefer a more detailed and customized setup, you may skip the Quickstart and follow the manual steps described in the subsequent sections. This manual process assumes that the cluster is already running NGINX Ingress Controller, openEBS and Cert-Manager (Optional), but has not yet been configured for automatic certificate issuance.
+
 ## Quickstart Guide
-For a generic deploment follow these steps:
-- Clone the repo
+Pre-requisites:
+- One Ubuntu 22.04 server with a public IP (Ubuntu 24.04, Debian 12 and Debian 13 should also work but have not been tested)
+- Two public DNS "A" records pointing to the server public IP (e.g., `participant-name-ds-connector-1.your-domain.es` and `participant-name-ds-connector-1-kc.your-domain.es`)
+- Ports 80 and 443 should be accesible from the internet
+
+Deployment:
+- Connect to the server and clone this repo
+  ```
+  git clone https://github.com/dataspacedatalife/connector.git
+  ```
+- Move into the `connector` directory
+  ```
+  cd connector
+  ```
 - Edit `config/connector-config.yaml`
-- Run the automated deployment
+- Edit `config/registry-config.yaml` or replace it with the one provided
+- Run the automated deployment script
 ```
-./deploy --config config/connector-config.yaml
+sudo ./deploy --config config/connector-config.yaml
 ```
 
 To destroy a previous deployment:
 ```
 ./destroy
 ```
-If you want a customized deployment please read the following sections.
+
+You have configuration examples in `config/examples`.
+
+If you want to know more or do a customized deployment please read the following sections.
 
 ## Prerequisites
 
@@ -48,6 +65,7 @@ This phase configures two optional infrastructure components that enable secure 
 The objective of this phase is to set up a global `ClusterIssuer` resource in cert-manager that uses Let's Encrypt to automatically issue TLS certificates for any participant deployed in the cluster.
 
 **Note:** Skip this phase if you intend to use manual TLS secrets (e.g., wildcard certificates) or if your cluster already has a configured ClusterIssuer.
+
 #### 1. Run the Setup Issuer Script (Optional)
 
 This script verifies that NGINX and `cert-manager` are ready, then creates the global `ClusterIssuer`. You must provide a valid email address for `Let's Encrypt` registration.
@@ -139,8 +157,8 @@ If you choose to use an external Keycloak not managed by this chart, you must ma
 
 To do these step of configuring the keycloak, two configuration jobs are used:
 
-- **Realm import job (job-import-realm.json):** Imports a preconfigured realm with the client scopes necessary for the user's initial login verifications.
-- **Client registration job (job-add-default-client.json):** Registers a new client in this realm that will serve as the default client for the participant interface.
+- **Realm import job (job-import-realm.yaml):** Imports a preconfigured realm with the client scopes necessary for the user's initial login verifications.
+- **Client registration job (job-add-default-client.yaml):** Registers a new client in this realm that will serve as the default client for the participant interface.
 
 To automatically generate both of the previously mentioned jobs (the realm import and the frontend client registration), we use the `scripts/generate_seeding_job.sh` script.
 
@@ -151,10 +169,10 @@ The following image illustrates how to grant execution permissions to the script
   chmod +x scripts/generate_seeding_job.sh
 
   # Usage:
-  # ./scripts/generate_seeding_job.sh --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --pass <KEYCLOAK_ADMIN_PASSWORD>
+  # ./scripts/generate_seeding_job.sh --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --password <KEYCLOAK_ADMIN_PASSWORD>
 
   # Example:
-  ./scripts/generate_seeding_job.sh --host-kc conector-xdatashare-kc.gradiant.org --pass admin
+  ./scripts/generate_seeding_job.sh --host-kc conector-xdatashare-kc.gradiant.org --password admin
 
 ```
 The `scripts/generate_seeding_job.sh` script automates the creation of the Kubernetes jobs responsible for initializing the Keycloak environment (realm import and frontend client registration).
@@ -166,11 +184,9 @@ This script is configured by passing command-line arguments.
 
 **Optional Parameters (with default values):**
 - --user <user>: The Keycloak administrator username. (Default: admin).
-- --pass <password>: The Keycloak administrator password. (Default: admin).
+- --password <password>: The Keycloak administrator password. (Default: admin).
 - --realm-file <path>: Path to the JSON file containing the realm configuration to be imported. (Default: config/keycloak/realms/realm.json).
 - --client-file <path>: Path to the JSON file containing the client configuration to be registered. (Default: config/keycloak/clients/frontend-client.json).
-- --client-admin <client-admin>: The admin client ID used for the connection. (Default: admin-cli).
-- --realm-admin <realm-admin>: The administration realm name. (Default: master).
 - --help: Displays the help and usage message.
 
 The `scripts/generate_seeding_job.sh` script relies on two pre-configured JSON files by default to construct the Kubernetes job manifests. These files contain the actual payloads that will be applied to Keycloak:
@@ -220,7 +236,9 @@ The charts/participant no longer contains an internal Keycloak subchart by defau
 ### Verify the Deployment
 
 After running helm install, cert-manager will automatically begin obtaining the SSL certificates.
-This may take 1-2 minutes.You can monitor the status of the certificates:# Watch the certificates in the participant's namespace
+This may take 1-2 minutes. You can monitor the status of the certificates:
+
+# Watch the certificates in the participant's namespace
 ```bash
   kubectl get certificate -n xdatashare -w
 ```    
