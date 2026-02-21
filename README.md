@@ -26,7 +26,7 @@ Before starting, ensure you have the following:
     - `openEBS` (for dynamic storage provisioning)
 - **Deployment Scripts/Jobs:**
     - `scripts/setup-cert-issuer.sh` (This script, for Phase 1)
-    - `scripts/generate_participants.sh` (This script, for Phase 2)
+    - `scripts/generate_participant.sh` (This script, for Phase 2)
     - `scripts/generate_keycloak.sh` (This script, for Phase 1 if deploying Keycloak is needed)
     - `scripts/generate_seeding_job.sh` (This script, for Phase 1 always needed)
     - `job-import-realm.yaml` (Keycloak realm import job, for client's keycloak)
@@ -183,16 +183,16 @@ The `scripts/generate_seeding_job.sh` script relies on two pre-configured JSON f
 
 ### 1.1. Generate Participant Configuration
 
-Use the `scripts/generate_participants.sh` script. This creates a customized values.yaml that points to either the Keycloak deployed in the previous step or an external one.
+Use the `scripts/generate_participant.sh` script. This creates a customized values.yaml that points to either the Keycloak deployed in the previous step or an external one.
 ```bash
   # Make the script executable
-  chmod +x scripts/generate_participants.sh
+  chmod +x scripts/generate_participant.sh
 
   # Usage:
-  # ./scripts/generate_participants.sh <PARTICIPANT_NAME> --host <MAIN_HOSTNAME> --host-kc <KEYCLOAK_HOSTNAME>
+  # ./scripts/generate_participant.sh <PARTICIPANT_NAME> --host <MAIN_HOSTNAME> --host-kc <KEYCLOAK_HOSTNAME>
 
   # Example:
-  ./scripts/generate_participants.sh gradiant \
+  ./scripts/generate_participant.sh gradiant \
   --host conector-xdatashare.gradiant.org \
   --host-kc conector-xdatashare-kc.gradiant.org
 ```

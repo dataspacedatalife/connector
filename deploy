@@ -265,9 +265,9 @@ sudo kubectl apply -f "$KEYCLOAK_JOBS_DIR/job-add-default-client.yaml" -n "$NAME
 sudo kubectl wait --for=condition=complete job --all -n "$NAMESPACE" --timeout=300s
 
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
-  ./scripts/generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --logo "$CONNECTOR_LOGO"
+  ./scripts/generate_participant.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --logo "$CONNECTOR_LOGO"
 else
-  ./scripts/generate_participants.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$CONNECTOR_LOGO"
+  ./scripts/generate_participant.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$CONNECTOR_LOGO"
 fi
 
 echo "Creating docker registry secret for pulling harbor images"

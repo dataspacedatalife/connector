@@ -7,7 +7,7 @@ Guidance for coding agents working in this repository.
 - This repo is primarily Bash + Helm.
 - Main scripts:
   - `deploy`
-  - `scripts/generate_participants.sh`
+  - `scripts/generate_participant.sh`
   - `scripts/generate_keycloak.sh`
   - `scripts/generate_seeding_job.sh`
   - `scripts/setup-cert-issuer.sh`
@@ -39,7 +39,7 @@ Current test layout:
 
 For reproducible tests and fixture generation:
 
-- `scripts/generate_participants.sh`:
+- `scripts/generate_participant.sh`:
   - Uses `PARTICIPANT_CLIENT_SECRET` when set.
   - Falls back to random `/dev/urandom` only when unset.
 - `scripts/generate_keycloak.sh`:

@@ -17,16 +17,16 @@ teardown() {
   rm -rf "$TEST_TMPDIR"
 }
 
-@test "generate_participants.sh matches golden output in automatic TLS mode" {
-  cp "$REPO_ROOT/scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
-  chmod +x "$TEST_TMPDIR/generate_participants.sh"
+@test "generate_participant.sh matches golden output in automatic TLS mode" {
+  cp "$REPO_ROOT/scripts/generate_participant.sh" "$TEST_TMPDIR/generate_participant.sh"
+  chmod +x "$TEST_TMPDIR/generate_participant.sh"
   mkdir -p "$TEST_TMPDIR/charts/participant" "$TEST_TMPDIR/config/templates/participant"
   cp "$REPO_ROOT/config/templates/participant/values-template.yaml" "$TEST_TMPDIR/config/templates/participant/values-template.yaml"
 
   (
     cd "$TEST_TMPDIR"
     PARTICIPANT_CLIENT_SECRET=fixedparticipantclientsecret0001 \
-      ./generate_participants.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret >/dev/null
+      ./generate_participant.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret >/dev/null
   )
 
   assert_files_equal \
@@ -34,16 +34,16 @@ teardown() {
     "$TEST_TMPDIR/charts/participant/values.yaml"
 }
 
-@test "generate_participants.sh matches golden output in manual TLS mode" {
-  cp "$REPO_ROOT/scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
-  chmod +x "$TEST_TMPDIR/generate_participants.sh"
+@test "generate_participant.sh matches golden output in manual TLS mode" {
+  cp "$REPO_ROOT/scripts/generate_participant.sh" "$TEST_TMPDIR/generate_participant.sh"
+  chmod +x "$TEST_TMPDIR/generate_participant.sh"
   mkdir -p "$TEST_TMPDIR/charts/participant" "$TEST_TMPDIR/config/templates/participant"
   cp "$REPO_ROOT/config/templates/participant/values-template.yaml" "$TEST_TMPDIR/config/templates/participant/values-template.yaml"
 
   (
     cd "$TEST_TMPDIR"
     PARTICIPANT_CLIENT_SECRET=fixedparticipantclientsecret0001 \
-      ./generate_participants.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret --tls-secret wildcard-cert >/dev/null
+      ./generate_participant.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret --tls-secret wildcard-cert >/dev/null
   )
 
   assert_files_equal \

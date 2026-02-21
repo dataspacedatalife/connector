@@ -4,14 +4,14 @@ load test_helper.bash
 
 setup() {
   if ! command -v envsubst >/dev/null 2>&1; then
-    skip "envsubst is required for generate_participants.sh tests"
+    skip "envsubst is required for generate_participant.sh tests"
   fi
 
   TEST_TMPDIR="$(mktemp -d)"
   export TEST_TMPDIR
 
-  cp "$BATS_TEST_DIRNAME/../../scripts/generate_participants.sh" "$TEST_TMPDIR/generate_participants.sh"
-  chmod +x "$TEST_TMPDIR/generate_participants.sh"
+  cp "$BATS_TEST_DIRNAME/../../scripts/generate_participant.sh" "$TEST_TMPDIR/generate_participant.sh"
+  chmod +x "$TEST_TMPDIR/generate_participant.sh"
 
   mkdir -p "$TEST_TMPDIR/charts/participant" "$TEST_TMPDIR/config/templates/participant"
   cp "$BATS_TEST_DIRNAME/../../config/templates/participant/values-template.yaml" \
@@ -25,35 +25,35 @@ teardown() {
 }
 
 @test "fails when participant name is missing" {
-  run ./generate_participants.sh --host connector.example.com --host-kc kc.example.com
+  run ./generate_participant.sh --host connector.example.com --host-kc kc.example.com
 
   [ "$status" -eq 1 ]
   [[ "$output" == *"Usage:"* ]]
 }
 
 @test "fails when host and host-kc are not provided together" {
-  run ./generate_participants.sh demo --host connector.example.com
+  run ./generate_participant.sh demo --host connector.example.com
 
   [ "$status" -eq 1 ]
   [[ "$output" == *"--host and --host-kc must be used together."* ]]
 }
 
 @test "fails when host flags are missing" {
-  run ./generate_participants.sh demo
+  run ./generate_participant.sh demo
 
   [ "$status" -eq 1 ]
   [[ "$output" == *"--host and --host-kc flags are mandatory."* ]]
 }
 
 @test "fails when participant argument is duplicated" {
-  run ./generate_participants.sh demo other --host connector.example.com --host-kc kc.example.com
+  run ./generate_participant.sh demo other --host connector.example.com --host-kc kc.example.com
 
   [ "$status" -eq 1 ]
   [[ "$output" == *"Participant name already set to 'demo'"* ]]
 }
 
 @test "generates values file using automatic TLS defaults" {
-  run ./generate_participants.sh demo \
+  run ./generate_participant.sh demo \
     --host connector.example.com \
     --host-kc kc.example.com \
     --password super-secret
@@ -72,7 +72,7 @@ teardown() {
 }
 
 @test "generates values file using manual TLS secret and removes cluster issuer" {
-  run ./generate_participants.sh demo \
+  run ./generate_participant.sh demo \
     --host connector.example.com \
     --host-kc kc.example.com \
     --password super-secret \
@@ -88,7 +88,7 @@ teardown() {
 }
 
 @test "overrides keycloak admin credentials when provided" {
-  run ./generate_participants.sh demo \
+  run ./generate_participant.sh demo \
     --host connector.example.com \
     --host-kc kc.example.com \
     --password super-secret \
