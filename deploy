@@ -219,16 +219,11 @@ if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
   CERT_END=$((SECONDS + CERT_TIMEOUT))
   
   while [ "$SECONDS" -lt "$CERT_END" ]; do
-    # Check if all certificates in the namespace have the 'Ready' status set to 'True'
-    NOT_READY=$(sudo kubectl get certificate -n "$NAMESPACE" -o jsonpath='{.items[?(@.status.conditions[?(@.type=="Ready")].status!="True")].metadata.name}')
-    
-    if [[ -z "$NOT_READY" ]]; then
-      # Ensure certificates actually exist before claiming success
-      CERT_COUNT=$(sudo kubectl get certificate -n "$NAMESPACE" --no-headers 2>/dev/null | wc -l)
-      if [[ "$CERT_COUNT" -gt 0 ]]; then
-        echo "Let's Encrypt certificates successfully obtained."
-        break
-      fi
+    # Ensure certificates exist before waiting for readiness.
+    CERT_COUNT=$(sudo kubectl get certificate -n "$NAMESPACE" --no-headers 2>/dev/null | wc -l)
+    if [[ "$CERT_COUNT" -gt 0 ]] && sudo kubectl wait --for=condition=Ready certificate --all -n "$NAMESPACE" --timeout=10s >/dev/null 2>&1; then
+      echo "Let's Encrypt certificates successfully obtained."
+      break
     fi
     
     echo "Still waiting for certificates to be validated by Let's Encrypt... (${SECONDS}s)"
