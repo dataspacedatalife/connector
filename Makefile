@@ -1,14 +1,23 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: help test test-bats test-helm test-helm-rendering test-helm-lint
+.PHONY: help deploy destroy test test-bats test-helm test-helm-rendering test-helm-lint
 
 help:
 	@echo "Available targets:"
-	@echo "  make test       Run current test suite"
-	@echo "  make test-bats  Run Bats tests"
-	@echo "  make test-helm  Run Helm rendering + lint tests (Bats)"
-	@echo "  make test-helm-rendering  Run Helm rendering tests only"
-	@echo "  make test-helm-lint       Run Helm lint tests only"
+	@echo "  make deploy [CONFIG=path]  Run ./deploy with config (default: config/connector-config.yaml)"
+	@echo "  make destroy               Run ./destroy (destructive)"
+	@echo "  make test                  Run current test suite"
+	@echo "  make test-bats             Run Bats tests"
+	@echo "  make test-helm             Run Helm rendering + lint tests (Bats)"
+	@echo "  make test-helm-rendering   Run Helm rendering tests only"
+	@echo "  make test-helm-lint        Run Helm lint tests only"
+
+deploy:
+	@CONFIG_PATH="$(if $(CONFIG),$(CONFIG),config/connector-config.yaml)"; \
+	./deploy --config "$$CONFIG_PATH"
+
+destroy:
+	./destroy
 
 test: test-bats
 
