@@ -7,7 +7,6 @@ global:
       password: ${PARTICIPANT}
   vault:
     url: http://${PARTICIPANT}-vault:8200
-    token: root
 
 controlplane:
 

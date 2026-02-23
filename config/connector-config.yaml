@@ -1,12 +1,19 @@
-namespace: datalife
+namespace: cesga-ds-connector-2
 tls:
-  useLetsEncrypt: true
-  email: "your-email@example.com"
+  useLetsEncrypt: false
+  keycloak:
+    secretName: keycloak-tls-secret
+    crt: ./tls/tls-kc.crt
+    key: ./tls/tls-kc.key
+  connector:
+    secretName: cesga-ds-connector-2-tls-secret
+    crt: ./tls/tls.crt
+    key: ./tls/tls.key
+  #email: "your-email@example.com"
 connector:
-  name: your-institution-name
-  logo: "https://example.com/logo.svg"
-  address: "<institution>-ds-connector-1.your-domain.es"
-  password: "#YourVerySecurePassword#"
+  name: cesga-ds-connector-2
+  address: "cesga-ds-connector-2.dataspace.cesga.es"
+  password: "1234"
 keycloak:
-  address: "<institution>-ds-connector-1-kc.your-domain.es"
-  adminPassword: "#YourVerySecurePassword#"
+  address: "cesga-ds-connector-2-kc.dataspace.cesga.es"
+  adminPassword: "admin"

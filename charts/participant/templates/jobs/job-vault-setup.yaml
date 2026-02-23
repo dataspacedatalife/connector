@@ -30,9 +30,6 @@ kind: Job
 metadata:
   name: "{{ .Release.Name }}-vault-auto-setup-job"
   namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook-weight": "1"
-    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
 spec:
   backoffLimit: 5
   template:
@@ -42,6 +39,7 @@ spec:
       containers:
         - name: vault-auto-setup
           image: bitnami/kubectl:latest
+          imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -58,7 +56,6 @@ spec:
 
               # --- STEP 1: INITIALIZE ---
               INIT_STATUS=$(curl -s $VAULT_URL/v1/sys/health | jq -r .initialized)
-              VAULT_INITIALIZED="false"
 
               if [ "$INIT_STATUS" == "false" ]; then
                 echo "Initializing Vault..."
@@ -74,7 +71,11 @@ spec:
 
                 ROOT_TOKEN=$(echo $INIT_BODY | jq -r .root_token)
                 KEY1=$(echo $INIT_BODY | jq -r '.keys_base64[0]')
-                VAULT_INITIALIZED="true"
+
+                kubectl create secret generic $SECRET_NAME \
+                  --from-literal=root_token=$ROOT_TOKEN \
+                  --from-literal=unseal_key_1=$KEY1 \
+                  -n $NAMESPACE
 
                 echo "Init complete. Keys held in memory for final Secret creation."
               else
@@ -122,41 +123,6 @@ spec:
               else
                 curl -sSf --header "X-Vault-Token: $ROOT_TOKEN" --request POST --data '{"type": "kv", "options": {"version": "2"}}' $VAULT_URL/v1/sys/mounts/secret > /dev/null
                 echo "KV Engine Enabled!"
-              fi
-
-              # --- STEP 4: CREATE RENEWABLE TOKEN & SAVE SECRET ---
-              if [ "$VAULT_INITIALIZED" == "true" ]; then
-                echo "Creating Read/Write Policy for EDC components..."
-
-                # Define the strictly scoped read/write policy for the KV engine
-                POLICY_PAYLOAD='{"policy": "path \"secret/data/*\" {\n  capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]\n}\npath \"secret/metadata/*\" {\n  capabilities = [\"list\", \"read\", \"delete\"]\n}\n"}'
-
-                curl -sSf --header "X-Vault-Token: $ROOT_TOKEN" --request PUT \
-                      --data "$POLICY_PAYLOAD" \
-                      $VAULT_URL/v1/sys/policies/acl/edc-rw-policy > /dev/null
-
-                echo "Generating strictly scoped renewable token..."
-
-                # Request the token using the new policy instead of 'root'
-                TOKEN_PAYLOAD='{"policies": ["edc-rw-policy"], "ttl": "24h", "renewable": true}'
-
-                EDC_TOKEN_RESP=$(curl -sSf --header "X-Vault-Token: $ROOT_TOKEN" --request POST --data "$TOKEN_PAYLOAD" $VAULT_URL/v1/auth/token/create)
-                EDC_TOKEN=$(echo "$EDC_TOKEN_RESP" | jq -r .auth.client_token)
-                if [ -z "$EDC_TOKEN" ] || [ "$EDC_TOKEN" == "null" ]; then
-                  echo "FATAL: Failed to generate renewable EDC token."
-                  exit 1
-                fi
-
-                echo "Creating unified Kubernetes Secret..."
-                kubectl create secret generic $SECRET_NAME \
-                  --from-literal=root_token=$ROOT_TOKEN \
-                  --from-literal=unseal_key_1=$KEY1 \
-                  --from-literal=edc_token=$EDC_TOKEN \
-                  -n $NAMESPACE
-
-                echo "Unified Secret successfully created!"
-              else
-                 echo "Setup verified. Skipping Secret creation as it already exists."
               fi
 
               echo "Auto-Setup Complete!"

@@ -43,7 +43,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-vault-secret # Ensure this matches your setup job output!
-                  key: edc_token
+                  key: root_token
                   optional: false
           envFrom:
             - configMapRef:

@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ .Release.Name }}-postgresql
 spec:
@@ -24,12 +24,16 @@ spec:
               value: {{ .Values.global.postgres.db.user | default "postgres" }}
             - name: POSTGRES_PASSWORD
               value: {{ .Values.global.postgres.db.password | default "postgres" }}
-            - name: PGDATA
-              value: {{ .Values.volume.pgdata | default "/var/lib/postgresql/data/pgdata" }}
           volumeMounts:
             - name: {{ .Release.Name }}-postgresql-data
               mountPath: {{ .Values.volume.mountPath | default "/var/lib/postgresql/data" }}
-      volumes:
-        - name: {{ .Release.Name }}-postgresql-data
-          persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-postgresql-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Release.Name }}-postgresql-data
+      spec:
+        accessModes:
+          - {{ .Values.volume.accessMode | default "ReadWriteOnce" }}
+        storageClassName: {{ .Values.volume.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.volume.size | default "1Gi" }}

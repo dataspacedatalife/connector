@@ -40,6 +40,7 @@ data:
   EDC_PARTICIPANT_HEARTBEAT_MANAGER_EXECUTION_PERIOD_SECONDS: "10"
   EDC_PARTICIPANT_HEARTBEAT_MANAGER_EXECUTION_ON_START: "true"
   EDC_VAULT_HASHICORP_URL: {{ .Values.global.vault.url | quote }}
+  EDC_VAULT_HASHICORP_TOKEN_SCHEDULED-RENEW-ENABLED: "false"
   EDC_DATASOURCE_DEFAULT_URL: {{ .Values.global.postgres.db.url | quote}}
   EDC_DATASOURCE_DEFAULT_USER: {{ .Values.global.postgres.db.user | quote}}
   EDC_DATASOURCE_DEFAULT_PASSWORD: {{ .Values.global.postgres.db.password | quote}}

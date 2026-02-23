@@ -103,6 +103,7 @@ spec:
       containers:
         - name: seeder-keycloak-client
           image: badouralix/curl-jq:latest
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: keycloak-frontend-client-seeding-config
@@ -223,6 +224,7 @@ spec:
       containers:
         - name: realm-importer
           image: alpine:latest
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: keycloak-realm-config
