@@ -81,10 +81,10 @@ if [ -z "$PARTICIPANT" ]; then
   echo
   echo "Examples:"
   echo "  1. Automatic SSL (Default - Let's Encrypt):"
-  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret"
+  echo "     $0 ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret"
   echo
   echo "  2. Manual SSL (Uses wildcard-tls-cert or custom secret):"
-  echo "     $0 ./generate_participant.sh ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret --tls-secret wildcard-tls-cert"
+  echo "     $0 ext-partner-dns --host my-app.com --host-kc kc.my-app.com --password verysecret --tls-secret wildcard-tls-cert"
   exit 1
 fi
 
@@ -123,14 +123,12 @@ echo "--> Main Host: $PARTICIPANT_HOST"
 echo "--> KC Host:   $PARTICIPANT_HOST_KC"
 
 # --- 5. Define Variable Paths ---
-PARTICIPANT_CHART_DIR="participant-chart"
-VALUES_TEMPLATE="$PARTICIPANT_CHART_DIR/values-template.yaml"
-VALUES_OUT_DIR="$PARTICIPANT_CHART_DIR/values"
+PARTICIPANT_CHART_DIR="charts/participant"
+PARTICIPANT_TEMPLATE_DIR="config/templates/participant"
+VALUES_TEMPLATE="$PARTICIPANT_TEMPLATE_DIR/values-template.yaml"
+VALUES_OUT="$PARTICIPANT_CHART_DIR/values.yaml"
 
-echo "Sending config file to directory: $VALUES_OUT_DIR"
-mkdir -p "$VALUES_OUT_DIR"
-
-VALUES_OUT="$VALUES_OUT_DIR/values-$PARTICIPANT.yaml"
+echo "Sending config file to: $VALUES_OUT"
 
 # --- 6. Compute Auth Keys ---
 DID_B64=$(echo -n "did:web:$PARTICIPANT_HOST:identityhub:did" | base64 -w0)
@@ -139,7 +137,9 @@ PART1_B64=$(echo -n "super-user" | base64 -w0)
 PART2_B64=$(echo -n "super-$PARTICIPANT-key" | base64 -w0)
 SUPER_USER_KEY_B64="$PART1_B64.$PART2_B64"
 
-CLIENT_SECRET=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)
+if [ -z "$PARTICIPANT_CLIENT_SECRET" ]; then
+  PARTICIPANT_CLIENT_SECRET=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)
+fi
 
 # --- 7. Generate Participant values.yaml ---
 echo "---"
@@ -157,14 +157,14 @@ export HOST_KC="$PARTICIPANT_HOST_KC"
 export AUTH_KEY_B64
 export SUPER_USER_KEY_B64
 export DID_B64
-export CLIENT_SECRET
+export PARTICIPANT_CLIENT_SECRET
 export TLS_SECRET_NAME
 export PASSWORD
 export CLUSTER_ISSUER
 export KEYCLOAK_ADMIN_USERNAME
 export KEYCLOAK_ADMIN_PASSWORD
 
-envsubst '${PARTICIPANT} ${PARTICIPANT_LOGO} ${HOST} ${HOST_KC} ${AUTH_KEY_B64} ${SUPER_USER_KEY_B64} ${DID_B64} ${CLIENT_SECRET} ${TLS_SECRET_NAME} ${PASSWORD} ${CLUSTER_ISSUER} ${KEYCLOAK_ADMIN_USERNAME} ${KEYCLOAK_ADMIN_PASSWORD}' \
+envsubst '${PARTICIPANT} ${PARTICIPANT_LOGO} ${HOST} ${HOST_KC} ${AUTH_KEY_B64} ${SUPER_USER_KEY_B64} ${DID_B64} ${PARTICIPANT_CLIENT_SECRET} ${TLS_SECRET_NAME} ${PASSWORD} ${CLUSTER_ISSUER} ${KEYCLOAK_ADMIN_USERNAME} ${KEYCLOAK_ADMIN_PASSWORD}' \
   < "$VALUES_TEMPLATE" > "$VALUES_OUT"
 
 # If not using let's encrypt remove the marked cluster-issuer lines

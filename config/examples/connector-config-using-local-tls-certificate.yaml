@@ -1,0 +1,18 @@
+namespace: datalife
+tls:
+  useLetsEncrypt: false
+  keycloak:
+    secretName: keycloak-tls-secret
+    crt: /etc/ssl/certs/keycloak-certificate.crt
+    key: /etc/ssl/private/keycloak-certificate.key
+  connector:
+    secretName: connector-tls-secret
+    crt: /etc/ssl/certs/connector-certificate.crt
+    key: /etc/ssl/private/connector-certificate.key
+connector:
+  name: blackmesa
+  address: blackmesa-ds-connector-1.example.es
+  password: "#SectorC_AnomalousMaterials_#"
+keycloak:
+  address: blackmesa-ds-connector-1-kc.example.es
+  adminPassword: "#BlackMesa_ResonanceCascade_42!#"

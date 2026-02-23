@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-KEYCLOAK_CHART_DIR="keycloak-chart"
-TEMPLATE_FILE="$KEYCLOAK_CHART_DIR/values-template.yaml"
+KEYCLOAK_CHART_DIR="charts/keycloak"
+KEYCLOAK_TEMPLATE_DIR="config/templates/keycloak"
+TEMPLATE_FILE="$KEYCLOAK_TEMPLATE_DIR/values-template.yaml"
 OUTPUT_FILE="$KEYCLOAK_CHART_DIR/values.yaml"
-SECRET_TEMPLATE_FILE="$KEYCLOAK_CHART_DIR/secret-template.yaml"
+SECRET_TEMPLATE_FILE="$KEYCLOAK_TEMPLATE_DIR/secret-template.yaml"
 SECRET_OUTPUT_FILE="$KEYCLOAK_CHART_DIR/templates/secret.yaml"
 
 # Function to display usage instructions

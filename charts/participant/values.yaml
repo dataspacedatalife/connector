@@ -1,0 +1,339 @@
+global:
+  postgres:
+    db:
+      url: jdbc:postgresql://blackmesa-postgresql:5432/blackmesa
+      name: blackmesa
+      user: blackmesa
+      password: blackmesa
+  vault:
+    url: http://blackmesa-vault:8200
+    token: root
+
+controlplane:
+
+  configMap:
+    hostname: "connector3.dataspace.blackmesa.org"
+    iamIssuerId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+    managementAuthDacKeyUrl: "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/certs"
+    managementAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    catalogAuthDacKeyUrl: "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/certs"
+    catalogAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    participantAuthDacKeyUrl: "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/certs"
+    participantAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    iamStsPrivateKeyAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
+    iamStsPublicKeyId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
+    participantId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+    iamStsOauthClientSecretAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did-sts-client-secret"
+    iamStsOauthClientId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+    iamAuthorityId: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
+    dspCallbackAddress: "https://connector3.dataspace.blackmesa.org/controlplane/dsp/api/dsp"
+    iamStsOauthTokenUrl: "http://blackmesa-identityhub:9292/api/sts/token"
+    edcParisPublicBaseurl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/participant-public/api/participant-public"
+    edcControlEndpoint: "http://blackmesa-controlplane:9191/api/control"
+    edcUseCaseApiUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/use-case/api/use-case"
+
+  deployment:
+    initContainers:
+      dependencies:
+        - name: "Postgres"
+          host: "blackmesa-postgresql"
+          port: 5432
+        - name: "Vault"
+          host: "blackmesa-vault"
+          port: 8200
+        - name: "Identityhub"
+          host: "blackmesa-identityhub"
+          port: "8182"
+
+  ingress:
+    host: connector3.dataspace.blackmesa.org
+    tlsSecretName: blackmesa-tls-cert
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: "letsencrypt"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+    paths:
+      - path: /controlplane/management(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-controlplane
+          servicePort: 8181
+      - path: /controlplane/participant(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-controlplane
+          servicePort: 8081
+      - path: /controlplane/version(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-controlplane
+          servicePort: 7171
+      - path: /controlplane/dsp(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-controlplane
+          servicePort: 8282
+      - path: /controlplane/catalog(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-controlplane
+          servicePort: 17171
+
+dataplane:
+
+  configMap:
+    hostname: "connector3.dataspace.blackmesa.org"
+    transferProxyTokenVerifierPublicKeyAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
+    transferProxyTokenSignerPrivateKeyAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
+    dpfSelectorUrl: "http://blackmesa-controlplane:9191/api/control/v1/dataplanes"
+    participantId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+    iamStsOauthClientSecretAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did-sts-client-secret"
+    iamStsOauthClientId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+    iamStsOauthTokenUrl: "https://connector3.dataspace.blackmesa.org/identityhub/sts/api/sts/token"
+    edcDataplaneApiPublicBaseurl: "https://connector3.dataspace.blackmesa.org/dataplane/public/api/public"
+    edcControlEndpoint: "http://blackmesa-dataplane:9191/api/control"
+
+  deployment:
+    initContainers:
+      dependencies:
+        - name: "Postgres"
+          host: "blackmesa-postgresql"
+          port: 5432
+        - name: "Vault"
+          host: "blackmesa-vault"
+          port: 8200
+        - name: "Controlplane"
+          host: "blackmesa-controlplane"
+          port: 9191
+
+  ingress:
+    host: connector3.dataspace.blackmesa.org
+    tlsSecretName: blackmesa-tls-cert
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: "letsencrypt"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+    paths:
+      - path: /dataplane/public(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-dataplane
+          servicePort: 8185
+
+identityhub:
+  configMap:
+    hostname: "connector3.dataspace.blackmesa.org"
+    iamStsPrivateKeyAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
+    iamStsPublicKeyId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
+    ihIamId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+    ihApiSuperuserKey: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"
+
+  deployment:
+    initContainers:
+      dependencies:
+        - name: "Postgres"
+          host: "blackmesa-postgresql"
+          port: 5432
+        - name: "Vault"
+          host: "blackmesa-vault"
+          port: 8200
+
+  ingress:
+    host: connector3.dataspace.blackmesa.org
+    tlsSecretName: blackmesa-tls-cert
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: "letsencrypt"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+    paths:
+      - path: /identityhub/version(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-identityhub
+          servicePort: 7171
+      - path: /identityhub/credentials(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-identityhub
+          servicePort: 13131
+      - path: /identityhub/identity(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-identityhub
+          servicePort: 15151
+
+  ingressDid:
+    host: connector3.dataspace.blackmesa.org
+    tlsSecretName: blackmesa-tls-cert
+    paths:
+      - path: /identityhub/did(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: blackmesa-identityhub
+          servicePort: 10100
+
+oauth2-proxy:
+  enable: true
+  config:
+    clientID: "blackmesa-proxy"
+    clientSecret: "KXJbVMbapOnKyZgU3JrSHYgKEawKoeBB"
+    configFile: |
+      http_address = "0.0.0.0:4180"
+      pass_authorization_header = true
+      custom_templates_dir = "/templates"
+      
+      whitelist_domains = [ 
+        "connector3.dataspace.blackmesa.org", 
+        "connector3-kc.dataspace.blackmesa.org"
+      ]
+      
+      email_domains = [ "*" ]
+      cookie_refresh = "5m"
+      cookie_expire  = "8h"
+      
+      provider = "keycloak-oidc"
+      oidc_issuer_url = "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace"
+      
+      login_url = "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/auth"
+      redeem_url = "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/token"
+      oidc_jwks_url = "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/certs"
+      validate_url = "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/userinfo"
+      skip_oidc_discovery = true
+      
+      backend_logout_url = "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/logout?id_token_hint={id_token}"
+      redirect_url = "https://connector3.dataspace.blackmesa.org/oauth2/callback"
+      
+      allowed_groups = [ "/blackmesa-group" ]
+      skip_provider_button = true
+      
+      upstreams = [
+        "http://blackmesa-participant-portal-service:80/",
+        "http://blackmesa-controlplane:8181/api/management/",
+        "http://blackmesa-controlplane:17171/api/catalog/",
+        "http://blackmesa-controlplane:8081/api/participant/"
+      ]
+
+  extraVolumes:
+    - name: templates
+      configMap:
+        name: blackmesa-oauth2-proxy-templates
+  extraVolumeMounts:
+    - name: templates
+      mountPath: "/templates"
+      readOnly: true
+
+  service:
+    portNumber: 4180
+
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/pass-authorization-header: "true"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+      nginx.ingress.kubernetes.io/large-client-header-buffers: "4 16k"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      cert-manager.io/cluster-issuer: "letsencrypt"
+    className: "nginx"
+    path: /
+    pathType: Prefix
+    hosts:
+      - "connector3.dataspace.blackmesa.org"
+    tls:
+      - secretName: blackmesa-tls-cert
+        hosts:
+          - "connector3.dataspace.blackmesa.org"
+
+participant-portal:
+  configMap:
+    nodeEnv: "production"
+    viteIconUrl: "/icons/datalife_logo.webp"
+    viteEnableAudit: "true"
+    viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
+    viteKeycloakUrl: "https://connector3-kc.dataspace.blackmesa.org"
+    viteKeycloakRealm: "dataspace"
+    viteKeycloakAuthClientId: "edc-frontend"
+    viteEdcConnectorName: "blackmesa"
+    viteEdcConnectorBaseUrl: "https://connector3.dataspace.blackmesa.org/"
+    viteEdcConnectorCatalogUrl: "/api/catalog"
+    viteEdcConnectorManagementUrl: "/api/management"
+    viteEdcConnectorParticipantUrl: "/api/participant"
+    viteEdcConnectorIdentityUrl: "https://connector3.dataspace.blackmesa.org/identityhub/identity/api/identity"
+    viteEdcConnectorPublicUrl: "https://connector3.dataspace.blackmesa.org/dataplane/public/api/public"
+    viteEdcConnectorAuthUrl: "https://connector3.dataspace.blackmesa.org/"
+    viteEdcConnectorId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+    viteConnectorCheckInterval: "300000"
+    viteConnectorTimeout: "15000"
+    dev: "true"
+
+seeding:
+  enabled: true
+  participant:
+    url: "https://connector3.dataspace.blackmesa.org"
+    name: blackmesa
+    did: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+    didB64: "ZGlkOndlYjpjb25uZWN0b3IzLmRhdGFzcGFjZS5ncmFkaWFudC5vcmc6aWRlbnRpdHlodWI6ZGlk"
+    keyId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
+    privateKeyAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
+
+  credentialIssuer:
+    did: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
+    pid: "credential-request-blackmesa-1"
+
+  controlplane:
+    service:
+      observability:
+        name: blackmesa-controlplane
+        port: 8182
+      management:
+        name: blackmesa-controlplane
+        port: 8181
+
+  identityhub:
+    service:
+      observability:
+        name: blackmesa-identityhub
+        port: 8182
+      identity:
+        name: blackmesa-identityhub
+        port: 15151
+
+  serviceEndpoints:
+    credentials:
+      id: blackmesa-credentialservice-1
+      host: "connector3.dataspace.blackmesa.org/identityhub/credentials"
+      name: blackmesa-identityhub
+      port: 13131
+      didB64: "ZGlkOndlYjpjb25uZWN0b3IzLmRhdGFzcGFjZS5ncmFkaWFudC5vcmc6aWRlbnRpdHlodWI6ZGlk"
+    controlplane:
+      id: blackmesa-dsp
+      host: "connector3.dataspace.blackmesa.org/controlplane/dsp"
+      name: blackmesa-controlplane
+      port: 8282
+
+  policies:
+    - file: files/policies/shared-with-all.json
+    - file: files/policies/shared-with-dsga.json
+
+  apiKeys:
+    management: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    identityhub: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"
+
+  keycloakUrl: "https://connector3-kc.dataspace.blackmesa.org"
+  targetRealm: "dataspace"
+  postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2Fconnector3-kc.dataspace.blackmesa.org%2Frealms%2Fdataspace%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2Fconnector3.dataspace.blackmesa.org%2F%26client_id%3Dblackmesa-proxy"
+  auth:
+    adminUsername: "admin"
+    adminPassword: "*Ax#fAXj-*@TSx_"
+
+  client:
+    clientId: "blackmesa-proxy"
+    publicUrl: "https://connector3.dataspace.blackmesa.org"
+    secret: "KXJbVMbapOnKyZgU3JrSHYgKEawKoeBB"
+    did: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
+  defaultUser:
+    create: true
+    password: "#ax13$fAxS$a8_"

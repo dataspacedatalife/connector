@@ -1,24 +1,12 @@
-namespace: cesga-ds-connector-2
-
+namespace: datalife
 tls:
-  useLetsEncrypt: false
-  # Si useLetsEncrypt es false, definir los certificados:
-  keycloak:
-    secretName: keycloak-tls-secret
-    crt: tls/tls-kc.crt
-    key: tls/tls-kc.key
-  connector:
-    secretName: cesga-ds-connector-2-tls-secret
-    crt: tls/tls.crt
-    key: tls/tls.key
-  # Si useLetsEncrypt es true, definir el email:
-  # email: <email-para-lets-encrypt>
+  useLetsEncrypt: true
+  email: "your-email@example.com"
 connector:
-  name: cesga-ds-connector-2
-  logo: icons/datalife_logo.webp
-  address: cesga-ds-connector-2.dataspace.cesga.es      # Ej: <institution>-ds-connector-1.domain.es
-  password: 1234
-
+  name: your-institution-name
+  logo: "https://example.com/logo.svg"
+  address: "<institution>-ds-connector-1.your-domain.es"
+  password: "#YourVerySecurePassword#"
 keycloak:
-  address: cesga-ds-connector-2-kc.dataspace.cesga.es        # Ej: <institution>-ds-connector-1-kc.domain.es
-  adminPassword: admin
+  address: "<institution>-ds-connector-1-kc.your-domain.es"
+  adminPassword: "#YourVerySecurePassword#"

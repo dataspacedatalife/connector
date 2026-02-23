@@ -1,0 +1,57 @@
+global:
+  vault:
+    url: http://vault:8200
+    token: root
+  postgres:
+    db:
+      url: jdbc:postgresql://postgres:5432/demo
+      user: demo
+      password: demo
+
+deployment:
+  replicaCount: 1
+  imagePullSecret: regcred
+  image:
+    repository: example/controlplane
+    tag: latest
+    pullPolicy: IfNotPresent
+  initContainers:
+    dependencies: []
+
+service:
+  type: ClusterIP
+  ports:
+    - name: management
+      port: 8181
+      targetPort: 8181
+
+configMap:
+  hostname: cp.example.com
+  iamIssuerId: did:web:cp.example.com:identityhub:did
+  managementAuthKey: auth
+  managementAuthDacKeyUrl: https://kc.example.com/certs
+  catalogAuthKey: auth
+  catalogAuthDacKeyUrl: https://kc.example.com/certs
+  participantAuthKey: auth
+  participantAuthDacKeyUrl: https://kc.example.com/certs
+  iamStsPrivateKeyAlias: did:web:cp.example.com:identityhub:did#key-1
+  iamStsPublicKeyId: did:web:cp.example.com:identityhub:did#key-1
+  dspCallbackAddress: https://cp.example.com/controlplane/dsp/api/dsp
+  participantId: did:web:cp.example.com:identityhub:did
+  iamStsOauthClientSecretAlias: sts-secret
+  iamStsOauthClientId: sts-client
+  iamStsOauthTokenUrl: http://identityhub:9292/api/sts/token
+  edcParisPublicBaseurl: https://paris.example.com
+  iamAuthorityId: did:web:issuer.example.com:did
+  edcControlEndpoint: http://controlplane:9191/api/control
+  edcUseCaseApiUrl: https://usecase.example.com
+
+ingress:
+  host: cp.example.com
+  tlsSecretName: cp-manual-tls
+  paths:
+    - path: /controlplane
+      pathType: Prefix
+      backend:
+        serviceName: demo-controlplane
+        servicePort: 8181
