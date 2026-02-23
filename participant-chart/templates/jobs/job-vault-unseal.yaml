@@ -1,50 +1,11 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: {{ .Release.Name }}-vault-unseal
-  namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "0"
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: {{ .Release.Name }}-vault-unseal-role
-  namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "0"
-rules:
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: {{ .Release.Name }}-vault-unseal-binding
-  namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "0"
-subjects:
-  - kind: ServiceAccount
-    name: {{ .Release.Name }}-vault-unseal
-    namespace: {{ .Release.Namespace }}
-roleRef:
-  kind: Role
-  name: {{ .Release.Name }}-vault-unseal-role
-  apiGroup: rbac.authorization.k8s.io
----
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ .Release.Name }}-vault-unseal-watcher
   namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "7"
 spec:
   schedule: "*/1 * * * *"
   concurrencyPolicy: Forbid
@@ -54,7 +15,7 @@ spec:
     spec:
       template:
         spec:
-          serviceAccountName: {{ .Release.Name }}-vault-unseal
+          serviceAccountName: {{ .Release.Name }}-vault
           restartPolicy: OnFailure
           containers:
             - name: vault-watcher
@@ -85,7 +46,7 @@ spec:
 
                     if [ -z "$KEY1" ]; then
                       echo "FATAL: Unseal Key not found in secret. Cannot proceed."
-                      exit 1
+                      exit 0
                     fi
 
                     UNSEAL_PAYLOAD=$(jq -n --arg k "$KEY1" '{key: $k}')

@@ -1,22 +1,8 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: {{ .Release.Name }}-vault-auto-setup
-  namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "0"
-    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ .Release.Name }}-vault-auto-setup-role
+  name: {{ .Release.Name }}-vault-unseal-role
   namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "0"
-    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
@@ -28,19 +14,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .Release.Name }}-vault-auto-setup-binding
+  name: {{ .Release.Name }}-vault-unseal-binding
   namespace: {{ .Release.Namespace }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "0"
-    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-vault-auto-setup
+    name: {{ .Release.Name }}-vault
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
-  name: {{ .Release.Name }}-vault-auto-setup-role
+  name: {{ .Release.Name }}-vault-unseal-role
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: batch/v1
@@ -49,14 +31,13 @@ metadata:
   name: "{{ .Release.Name }}-vault-auto-setup-job"
   namespace: {{ .Release.Namespace }}
   annotations:
-    "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "1"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
 spec:
   backoffLimit: 5
   template:
     spec:
-      serviceAccountName: {{ .Release.Name }}-vault-auto-setup
+      serviceAccountName: {{ .Release.Name }}-vault
       restartPolicy: OnFailure
       containers:
         - name: vault-auto-setup
