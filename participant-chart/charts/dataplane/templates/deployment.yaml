@@ -43,7 +43,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-vault-secret
-                  key: root_token
+                  key: edc_token
                   optional: false
           envFrom:
             - configMapRef:
