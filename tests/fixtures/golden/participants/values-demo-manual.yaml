@@ -363,7 +363,7 @@ seeding:
   client:
     clientId: "demo-proxy"
     publicUrl: "https://connector.example.com"
-    secret: "${CLIENT_SECRET}"
+    secret: "fixedparticipantclientsecret0001"
     did: "did:web:connector.example.com:identityhub:did"
   defaultUser:
     create: true
