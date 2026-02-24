@@ -1,0 +1,58 @@
+global:
+  vault:
+    url: http://vault:8200
+    token: root
+  postgres:
+    db:
+      url: jdbc:postgresql://postgres:5432/demo
+      user: demo
+      password: demo
+
+deployment:
+  replicaCount: 1
+  imagePullSecret: regcred
+  image:
+    repository: example/identityhub
+    tag: latest
+    pullPolicy: IfNotPresent
+  initContainers:
+    dependencies: []
+
+service:
+  type: ClusterIP
+  ports:
+    - name: identity
+      port: 15151
+      targetPort: 15151
+    - name: did
+      port: 10100
+      targetPort: 10100
+
+configMap:
+  hostname: ih.example.com
+  iamStsPrivateKeyAlias: did:web:ih.example.com:identityhub:did#key-1
+  iamStsPublicKeyId: did:web:ih.example.com:identityhub:did#key-1
+  ihIamId: did:web:ih.example.com:identityhub:did
+  ihApiSuperuserKey: super-key
+
+ingress:
+  host: ih.example.com
+  tlsSecretName: ih-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+  paths:
+    - path: /identityhub/identity
+      pathType: Prefix
+      backend:
+        serviceName: demo-identityhub
+        servicePort: 15151
+
+ingressDid:
+  host: ih.example.com
+  tlsSecretName: ih-tls
+  paths:
+    - path: /identityhub/did
+      pathType: Prefix
+      backend:
+        serviceName: demo-identityhub
+        servicePort: 10100

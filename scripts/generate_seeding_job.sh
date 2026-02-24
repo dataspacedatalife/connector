@@ -6,9 +6,9 @@ KC_ADMIN_PASSWORD="admin"
 KC_URL=""
 CLIENT_ADMIN="admin-cli"
 REALM_ADMIN="master"
-CLIENT_FILE="keycloak/clients/frontend-client.json"
-REALM_FILE="keycloak/realms/realm.json"
-JOBS_DIRECTORY="keycloak/jobs"
+CLIENT_FILE="config/keycloak/clients/frontend-client.json"
+REALM_FILE="config/keycloak/realms/realm.json"
+JOBS_DIRECTORY="config/generated/keycloak/jobs"
 
 # Function to display usage
 usage() {
@@ -19,8 +19,8 @@ usage() {
   echo "  --password <password>             Keycloak Admin Password (default: admin)"
   echo "  --client-admin <client-admin>     Admin Client ID (default: admin-cli)"
   echo "  --realm-admin <realm-admin>       Admin Realm (default: master)"
-  echo "  --realm-file <path>               Path to Realm JSON file (default: keycloak/realms/realm.json)"
-  echo "  --client-file <path>              Path to client JSON file (default: keycloak/clients/frontend-client.json)"
+  echo "  --realm-file <path>               Path to Realm JSON file (default: config/keycloak/realms/realm.json)"
+  echo "  --client-file <path>              Path to client JSON file (default: config/keycloak/clients/frontend-client.json)"
   echo "  --help                            Show this help message"
   exit 1
 }
@@ -65,6 +65,8 @@ if [ ! -f "$REALM_FILE" ]; then
     echo "Error: Realm file '$REALM_FILE' not found."
     exit 1
 fi
+
+mkdir -p "$JOBS_DIRECTORY"
 
 # ==============================================================================
 # 1. GENERATE CLIENT SEEDING JOB (job-add-default-client.yaml)
