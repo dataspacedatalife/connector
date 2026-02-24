@@ -7,7 +7,6 @@ global:
       password: blackmesa
   vault:
     url: http://blackmesa-vault:8200
-    token: root
 
 controlplane:
 
@@ -15,11 +14,11 @@ controlplane:
     hostname: "connector3.dataspace.blackmesa.org"
     iamIssuerId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
     managementAuthDacKeyUrl: "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/certs"
-    managementAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    managementAuthKey: "YmxhY2ttZXNhLXBhc3N3b3Jk"
     catalogAuthDacKeyUrl: "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/certs"
-    catalogAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    catalogAuthKey: "YmxhY2ttZXNhLXBhc3N3b3Jk"
     participantAuthDacKeyUrl: "https://connector3-kc.dataspace.blackmesa.org/realms/dataspace/protocol/openid-connect/certs"
-    participantAuthKey: "Z3JhZGlhbnQtcGFzc3dvcmQ="
+    participantAuthKey: "YmxhY2ttZXNhLXBhc3N3b3Jk"
     iamStsPrivateKeyAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
     iamStsPublicKeyId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
     participantId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
@@ -38,9 +37,6 @@ controlplane:
         - name: "Postgres"
           host: "blackmesa-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "blackmesa-vault"
-          port: 8200
         - name: "Identityhub"
           host: "blackmesa-identityhub"
           port: "8182"
@@ -100,9 +96,6 @@ dataplane:
         - name: "Postgres"
           host: "blackmesa-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "blackmesa-vault"
-          port: 8200
         - name: "Controlplane"
           host: "blackmesa-controlplane"
           port: 9191
@@ -128,7 +121,7 @@ identityhub:
     iamStsPrivateKeyAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
     iamStsPublicKeyId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
     ihIamId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
-    ihApiSuperuserKey: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"
+    ihApiSuperuserKey: "c3VwZXItdXNlcg==.c3VwZXItYmxhY2ttZXNhLWtleQ=="
 
   deployment:
     initContainers:
@@ -136,9 +129,6 @@ identityhub:
         - name: "Postgres"
           host: "blackmesa-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "blackmesa-vault"
-          port: 8200
 
   ingress:
     host: connector3.dataspace.blackmesa.org
@@ -175,11 +165,51 @@ identityhub:
           serviceName: blackmesa-identityhub
           servicePort: 10100
 
+vault:
+  injector:
+    enabled: false
+  server:
+    publishNotReadyAddresses: true
+    resources:
+      requests:
+        memory: '512Mi'
+        cpu: '250m'
+      limits:
+        memory: '1Gi'
+        cpu: '1000m'
+    ha:
+      enabled: true
+      replicas: 1
+      raft:
+        enabled: true
+        setNodeId: true
+        config: |
+          ui = true
+          listener "tcp" {
+            address = "[::]:8200"
+            cluster_address = "[::]:8201"
+            tls_disable = 1
+          }
+          storage "raft" {
+            path = "/vault/data"
+          }
+    dataStorage:
+      enabled: true
+      size: "2Gi"
+      storageClass: "openebs-hostpath"
+  ui:
+    enabled: true
+    service:
+      type: ClusterIP
+      port: 8200
+      targetPort: 8200
+      name: blackmesa-vault-ui
+
 oauth2-proxy:
   enable: true
   config:
     clientID: "blackmesa-proxy"
-    clientSecret: "KXJbVMbapOnKyZgU3JrSHYgKEawKoeBB"
+    clientSecret: "${CLIENT_SECRET}"
     configFile: |
       http_address = "0.0.0.0:4180"
       pass_authorization_header = true
@@ -251,6 +281,7 @@ participant-portal:
   configMap:
     nodeEnv: "production"
     viteIconUrl: "/icons/datalife_logo.webp"
+    viteDataspaceName: "Centro Demostrador DATAlife | CESGA"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
     viteKeycloakUrl: "https://connector3-kc.dataspace.blackmesa.org"
@@ -275,7 +306,7 @@ seeding:
     url: "https://connector3.dataspace.blackmesa.org"
     name: blackmesa
     did: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
-    didB64: "ZGlkOndlYjpjb25uZWN0b3IzLmRhdGFzcGFjZS5ncmFkaWFudC5vcmc6aWRlbnRpdHlodWI6ZGlk"
+    didB64: "ZGlkOndlYjpjb25uZWN0b3IzLmRhdGFzcGFjZS5ibGFja21lc2Eub3JnOmlkZW50aXR5aHViOmRpZA=="
     keyId: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
     privateKeyAlias: "did:web:connector3.dataspace.blackmesa.org:identityhub:did#key-1"
 
@@ -301,13 +332,17 @@ seeding:
         name: blackmesa-identityhub
         port: 15151
 
+  vault:
+    url: http://blackmesa-vault-0.blackmesa-vault-internal:8200
+    secret: "blackmesa-vault-secret"
+
   serviceEndpoints:
     credentials:
       id: blackmesa-credentialservice-1
       host: "connector3.dataspace.blackmesa.org/identityhub/credentials"
       name: blackmesa-identityhub
       port: 13131
-      didB64: "ZGlkOndlYjpjb25uZWN0b3IzLmRhdGFzcGFjZS5ncmFkaWFudC5vcmc6aWRlbnRpdHlodWI6ZGlk"
+      didB64: "ZGlkOndlYjpjb25uZWN0b3IzLmRhdGFzcGFjZS5ibGFja21lc2Eub3JnOmlkZW50aXR5aHViOmRpZA=="
     controlplane:
       id: blackmesa-dsp
       host: "connector3.dataspace.blackmesa.org/controlplane/dsp"
@@ -319,20 +354,20 @@ seeding:
     - file: files/policies/shared-with-dsga.json
 
   apiKeys:
-    management: "Z3JhZGlhbnQtcGFzc3dvcmQ="
-    identityhub: "c3VwZXItdXNlcg==.c3VwZXItZ3JhZGlhbnQta2V5"
+    management: "YmxhY2ttZXNhLXBhc3N3b3Jk"
+    identityhub: "c3VwZXItdXNlcg==.c3VwZXItYmxhY2ttZXNhLWtleQ=="
 
   keycloakUrl: "https://connector3-kc.dataspace.blackmesa.org"
   targetRealm: "dataspace"
   postLogoutRedirectUrl: "/oauth2/sign_out?rd=https%3A%2F%2Fconnector3-kc.dataspace.blackmesa.org%2Frealms%2Fdataspace%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttps%3A%2F%2Fconnector3.dataspace.blackmesa.org%2F%26client_id%3Dblackmesa-proxy"
   auth:
     adminUsername: "admin"
-    adminPassword: "*Ax#fAXj-*@TSx_"
+    adminPassword: "admin"
 
   client:
     clientId: "blackmesa-proxy"
     publicUrl: "https://connector3.dataspace.blackmesa.org"
-    secret: "KXJbVMbapOnKyZgU3JrSHYgKEawKoeBB"
+    secret: "NigKOEjXhEKoxTWgOcaKiRr0hUdsrCnM"
     did: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
   defaultUser:
     create: true
