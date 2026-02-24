@@ -31,6 +31,7 @@ metadata:
   name: "{{ .Release.Name }}-vault-auto-setup-job"
   namespace: {{ .Release.Namespace }}
 spec:
+  ttlSecondsAfterFinished: 480
   backoffLimit: 5
   template:
     spec:
@@ -76,6 +77,11 @@ spec:
                   --from-literal=root_token=$ROOT_TOKEN \
                   --from-literal=unseal_key_1=$KEY1 \
                   -n $NAMESPACE
+
+                echo "Waiting for Secret to be created..."
+                until kubectl get secret $SECRET_NAME -n $NAMESPACE > /dev/null 2>&1; do
+                  sleep 5
+                done
 
                 echo "Init complete. Keys held in memory for final Secret creation."
               else

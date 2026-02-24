@@ -97,6 +97,7 @@ kind: Job
 metadata:
   name: keycloak-frontend-client-seeding
 spec:
+  ttlSecondsAfterFinished: 120
   template:
     spec:
       restartPolicy: OnFailure
@@ -218,6 +219,7 @@ kind: Job
 metadata:
   name: keycloak-realm-import-api
 spec:
+  ttlSecondsAfterFinished: 120
   template:
     spec:
       restartPolicy: OnFailure

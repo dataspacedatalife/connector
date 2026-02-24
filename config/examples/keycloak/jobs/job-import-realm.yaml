@@ -2250,12 +2250,14 @@ kind: Job
 metadata:
   name: keycloak-realm-import-api
 spec:
+  ttlSecondsAfterFinished: 120
   template:
     spec:
       restartPolicy: OnFailure
       containers:
         - name: realm-importer
           image: alpine:latest
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: keycloak-realm-config
