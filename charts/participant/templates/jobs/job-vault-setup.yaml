@@ -1,0 +1,128 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-vault-unseal-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-vault-unseal-binding
+  namespace: {{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}-vault
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ .Release.Name }}-vault-unseal-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-vault-auto-setup-job"
+  namespace: {{ .Release.Namespace }}
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      serviceAccountName: {{ .Release.Name }}-vault
+      restartPolicy: OnFailure
+      containers:
+        - name: vault-auto-setup
+          image: bitnami/kubectl:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              VAULT_URL={{ .Values.seeding.vault.url | quote }}
+              SECRET_NAME={{ .Values.seeding.vault.secret | quote }}
+              NAMESPACE={{ .Release.Namespace }}
+
+              echo "Waiting for Vault at $VAULT_URL..."
+              until curl -s --connect-timeout 5 $VAULT_URL/v1/sys/health > /dev/null; do
+                sleep 5
+              done
+              echo "Vault is online!"
+
+              # --- STEP 1: INITIALIZE ---
+              INIT_STATUS=$(curl -s $VAULT_URL/v1/sys/health | jq -r .initialized)
+
+              if [ "$INIT_STATUS" == "false" ]; then
+                echo "Initializing Vault..."
+                INIT_PAYLOAD='{"secret_shares": 1, "secret_threshold": 1}'
+                response=$(curl -s -w "\n%{http_code}" --request POST --header "Content-Type: application/json" --data "$INIT_PAYLOAD" $VAULT_URL/v1/sys/init)
+                INIT_BODY=$(echo "$response" | head -n -1)
+                HTTP_CODE=$(echo "$response" | tail -n 1)
+
+                if [ "$HTTP_CODE" != "200" ]; then
+                   echo "INIT FAILED. Response: $INIT_BODY"
+                   exit 1
+                fi
+
+                ROOT_TOKEN=$(echo $INIT_BODY | jq -r .root_token)
+                KEY1=$(echo $INIT_BODY | jq -r '.keys_base64[0]')
+
+                kubectl create secret generic $SECRET_NAME \
+                  --from-literal=root_token=$ROOT_TOKEN \
+                  --from-literal=unseal_key_1=$KEY1 \
+                  -n $NAMESPACE
+
+                echo "Init complete. Keys held in memory for final Secret creation."
+              else
+                echo "Vault is already initialized. Retrieving credentials..."
+
+                B64_KEY=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.unseal_key_1}' 2>/dev/null)
+                B64_TOKEN=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.root_token}' 2>/dev/null)
+
+                KEY1=$(echo "$B64_KEY" | base64 -d 2>/dev/null | tr -d '\n\r')
+                ROOT_TOKEN=$(echo "$B64_TOKEN" | base64 -d 2>/dev/null | tr -d '\n\r')
+
+                if [ -z "$KEY1" ]; then
+                  echo "FATAL: The Unseal Key is empty! The Kubernetes Secret may be missing or corrupted."
+                  exit 1
+                fi
+              fi
+
+              # --- STEP 2: UNSEAL VAULT ---
+              SEALED=$(curl -s $VAULT_URL/v1/sys/health | jq -r .sealed)
+
+              if [ "$SEALED" == "true" ]; then
+                echo "Vault is sealed. Sending manual unseal command..."
+
+                UNSEAL_PAYLOAD=$(jq -n --arg k "$KEY1" '{key: $k}')
+
+                curl -sSf --request POST \
+                  --header "Content-Type: application/json" \
+                  --data "$UNSEAL_PAYLOAD" \
+                  $VAULT_URL/v1/sys/unseal > /dev/null
+
+                echo "Waiting for Vault to become fully active..."
+                until [ "$(curl -s -o /dev/null -w "%{http_code}" $VAULT_URL/v1/sys/health)" == "200" ]; do
+                    sleep 5
+                done
+                echo "Vault successfully unsealed!"
+              else
+                echo "Vault is already unsealed."
+              fi
+
+              # --- STEP 3: ENABLE SECRETS ENGINE ---
+              echo "Configuring Secrets Engine..."
+              MOUNTS=$(curl -sSf --header "X-Vault-Token: $ROOT_TOKEN" $VAULT_URL/v1/sys/mounts)
+              if echo "$MOUNTS" | grep -q "secret/"; then
+                echo "Engine 'secret/' already exists."
+              else
+                curl -sSf --header "X-Vault-Token: $ROOT_TOKEN" --request POST --data '{"type": "kv", "options": {"version": "2"}}' $VAULT_URL/v1/sys/mounts/secret > /dev/null
+                echo "KV Engine Enabled!"
+              fi
+
+              echo "Auto-Setup Complete!"

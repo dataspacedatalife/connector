@@ -19,8 +19,8 @@ dependencies:
     version: 0.1.0
     repository: "file://./charts/postgresql"
   - name: vault
-    version: 0.1.0
-    repository: "file://./charts/vault"
+    version: "0.30.0"
+    repository: "https://helm.releases.hashicorp.com"
   - name: oauth2-proxy
     version: 10.1.1
     repository: https://oauth2-proxy.github.io/manifests

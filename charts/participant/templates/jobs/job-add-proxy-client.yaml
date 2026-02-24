@@ -5,8 +5,8 @@ metadata:
   name: {{ .Release.Name }}-keycloak-seeding
   annotations:
     "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "4"
-    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
 spec:
   template:
     spec:
@@ -14,6 +14,7 @@ spec:
       containers:
         - name: seed-keycloak-client
           image: badouralix/curl-jq:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: KC_ADMIN_USER
               value: {{ .Values.seeding.auth.adminUsername | quote }}

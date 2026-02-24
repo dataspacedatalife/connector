@@ -7,7 +7,6 @@ global:
       password: ${PARTICIPANT}
   vault:
     url: http://${PARTICIPANT}-vault:8200
-    token: root
 
 controlplane:
 
@@ -38,9 +37,6 @@ controlplane:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "${PARTICIPANT}-vault"
-          port: 8200
         - name: "Identityhub"
           host: "${PARTICIPANT}-identityhub"
           port: "8182"
@@ -100,9 +96,6 @@ dataplane:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "${PARTICIPANT}-vault"
-          port: 8200
         - name: "Controlplane"
           host: "${PARTICIPANT}-controlplane"
           port: 9191
@@ -136,9 +129,6 @@ identityhub:
         - name: "Postgres"
           host: "${PARTICIPANT}-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "${PARTICIPANT}-vault"
-          port: 8200
 
   ingress:
     host: ${HOST}
@@ -174,6 +164,46 @@ identityhub:
         backend:
           serviceName: ${PARTICIPANT}-identityhub
           servicePort: 10100
+
+vault:
+  injector:
+    enabled: false
+  server:
+    publishNotReadyAddresses: true
+    resources:
+      requests:
+        memory: '512Mi'
+        cpu: '250m'
+      limits:
+        memory: '1Gi'
+        cpu: '1000m'
+    ha:
+      enabled: true
+      replicas: 1
+      raft:
+        enabled: true
+        setNodeId: true
+        config: |
+          ui = true
+          listener "tcp" {
+            address = "[::]:8200"
+            cluster_address = "[::]:8201"
+            tls_disable = 1
+          }
+          storage "raft" {
+            path = "/vault/data"
+          }
+    dataStorage:
+      enabled: true
+      size: "2Gi"
+      storageClass: "openebs-hostpath"
+  ui:
+    enabled: true
+    service:
+      type: ClusterIP
+      port: 8200
+      targetPort: 8200
+      name: ${PARTICIPANT}-vault-ui
 
 oauth2-proxy:
   enable: true
@@ -250,8 +280,8 @@ oauth2-proxy:
 participant-portal:
   configMap:
     nodeEnv: "production"
-    viteDataspaceName: "Centro Demostrador DATAlife | CESGA"
     viteIconUrl: "${PARTICIPANT_LOGO}"
+    viteDataspaceName: "Centro Demostrador DATAlife | CESGA"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
     viteKeycloakUrl: "https://${HOST_KC}"
@@ -301,6 +331,10 @@ seeding:
       identity:
         name: ${PARTICIPANT}-identityhub
         port: 15151
+
+  vault:
+    url: http://${PARTICIPANT}-vault-0.${PARTICIPANT}-vault-internal:8200
+    secret: "${PARTICIPANT}-vault-secret"
 
   serviceEndpoints:
     credentials:

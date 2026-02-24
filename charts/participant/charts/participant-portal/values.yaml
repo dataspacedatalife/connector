@@ -3,7 +3,7 @@ deployment:
   imagePullSecret: harbor-regcred-usuarios
   image:
     repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/participant-portal
-    tag: "proxy"
+    tag: "0.4.0"
     pullPolicy: Always
 service:
   type: ClusterIP
