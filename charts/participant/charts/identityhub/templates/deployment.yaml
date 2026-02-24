@@ -29,6 +29,12 @@ spec:
                 sleep 5
               done
               {{- end }}
+
+              until wget -q -O - {{ .Values.global.vault.url }}/v1/sys/health?standbyok=true | grep -q '"sealed":false'; do
+                echo "Vault is accessible but SEALED. Waiting for manual unsealing..."
+                sleep 5
+              done
+
               echo "All dependencies are ready. Continuing startup..."
       containers:
         - name: {{ .Release.Name }}-identityhub
