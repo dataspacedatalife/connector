@@ -367,7 +367,7 @@ seeding:
   client:
     clientId: "${PARTICIPANT}-proxy"
     publicUrl: "https://${HOST}"
-    secret: "${CLIENT_SECRET}"
+    secret: "${PARTICIPANT_CLIENT_SECRET}"
     did: "did:web:${HOST}:identityhub:did"
   defaultUser:
     create: true

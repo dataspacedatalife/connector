@@ -367,7 +367,7 @@ seeding:
   client:
     clientId: "blackmesa-proxy"
     publicUrl: "https://connector3.dataspace.blackmesa.org"
-    secret: "${CLIENT_SECRET}"
+    secret: "NigKOEjXhEKoxTWgOcaKiRr0hUdsrCnM"
     did: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
   defaultUser:
     create: true
