@@ -7,7 +7,6 @@ global:
       password: demo
   vault:
     url: http://demo-vault:8200
-    token: root
 
 controlplane:
 
@@ -38,9 +37,6 @@ controlplane:
         - name: "Postgres"
           host: "demo-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "demo-vault"
-          port: 8200
         - name: "Identityhub"
           host: "demo-identityhub"
           port: "8182"
@@ -99,9 +95,6 @@ dataplane:
         - name: "Postgres"
           host: "demo-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "demo-vault"
-          port: 8200
         - name: "Controlplane"
           host: "demo-controlplane"
           port: 9191
@@ -134,9 +127,6 @@ identityhub:
         - name: "Postgres"
           host: "demo-postgresql"
           port: 5432
-        - name: "Vault"
-          host: "demo-vault"
-          port: 8200
 
   ingress:
     host: connector.example.com
@@ -171,6 +161,46 @@ identityhub:
         backend:
           serviceName: demo-identityhub
           servicePort: 10100
+
+vault:
+  injector:
+    enabled: false
+  server:
+    publishNotReadyAddresses: true
+    resources:
+      requests:
+        memory: '512Mi'
+        cpu: '250m'
+      limits:
+        memory: '1Gi'
+        cpu: '1000m'
+    ha:
+      enabled: true
+      replicas: 1
+      raft:
+        enabled: true
+        setNodeId: true
+        config: |
+          ui = true
+          listener "tcp" {
+            address = "[::]:8200"
+            cluster_address = "[::]:8201"
+            tls_disable = 1
+          }
+          storage "raft" {
+            path = "/vault/data"
+          }
+    dataStorage:
+      enabled: true
+      size: "2Gi"
+      storageClass: "openebs-hostpath"
+  ui:
+    enabled: true
+    service:
+      type: ClusterIP
+      port: 8200
+      targetPort: 8200
+      name: demo-vault-ui
 
 oauth2-proxy:
   enable: true
@@ -247,6 +277,7 @@ participant-portal:
   configMap:
     nodeEnv: "production"
     viteIconUrl: "/icons/datalife_logo.webp"
+    viteDataspaceName: "Centro Demostrador DATAlife | CESGA"
     viteEnableAudit: "true"
     viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
     viteKeycloakUrl: "https://kc.example.com"
@@ -296,6 +327,10 @@ seeding:
       identity:
         name: demo-identityhub
         port: 15151
+
+  vault:
+    url: http://demo-vault-0.demo-vault-internal:8200
+    secret: "demo-vault-secret"
 
   serviceEndpoints:
     credentials:
