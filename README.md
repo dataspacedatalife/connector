@@ -314,3 +314,9 @@ To streamline the setup process, the chart includes several one-time jobs that r
 - Participant Redirect Registration (job-register-participant-redirect)
     - Purpose: To allow Keycloak to securely redirect the user back to the web portal after a successful login.
     - Functionality: This job updates the configuration of the global client (typically named edc-frontend) in Keycloak. It adds the new participant’s portal URL to the Valid Redirect URIs list. Without this automated step, Keycloak would block access to the participant's portal for security reasons.
+- Vault Automatic Setup (`job-vault-setup.yaml`):
+    - Purpose: Automates the initial configuration of the Vault instance required for cryptographic operations.
+    - Functionality: This job configures Vault to be ready for use by the participant's services. Upon deployment, it initializes the Vault database, enables the KV v2 secrets engine, and stores the master keys in a Kubernetes Secret. This secret is subsequently used by all EDC components for authentication.
+- Vault Recovery (`cronjob-vault-unseal-watcher.yaml`):
+    - Purpose: Ensures the Vault instance remains operational by automatically unsealing it if it becomes sealed.
+    - Functionality: This cron job runs at regular intervals to check the status of the Vault instance. If it detects that Vault is sealed, it retrieves the unseal keys from the Kubernetes Secret and performs the unseal operation. This ensures that Vault remains available for cryptographic operations without manual intervention.

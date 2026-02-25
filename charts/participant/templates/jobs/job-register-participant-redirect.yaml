@@ -5,14 +5,15 @@ metadata:
   name: {{ .Release.Name }}-regist-redirect
   annotations:
     "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "5"
-    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
 spec:
   template:
     spec:
       containers:
         - name: regist-redirect
           image: badouralix/curl-jq:latest
+          imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           env:
             - name: KC_URL

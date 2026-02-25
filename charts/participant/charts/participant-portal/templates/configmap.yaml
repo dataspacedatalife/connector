@@ -4,6 +4,7 @@ metadata:
   name: {{ .Release.Name }}-participant-portal-config
 data:
   NODE_ENV: {{ .Values.configMap.nodeEnv | quote }}
+  VITE_DATASPACE_NAME: {{ .Values.configMap.viteDataspaceName | quote }}
   VITE_ICON_URL: {{ .Values.configMap.viteIconUrl | quote }}
   VITE_ENABLE_AUDIT: {{ .Values.configMap.viteEnableAudit | quote }}
   VITE_PARIS_URL: {{ .Values.configMap.viteParisUrl | quote }}
