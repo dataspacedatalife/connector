@@ -209,7 +209,7 @@ oauth2-proxy:
   enable: true
   config:
     clientID: "blackmesa-proxy"
-    clientSecret: "${CLIENT_SECRET}"
+    clientSecret: "8r5itDLe3aAqHUULPPpFuwIxT1hCvwiF"
     configFile: |
       http_address = "0.0.0.0:4180"
       pass_authorization_header = true
@@ -367,7 +367,7 @@ seeding:
   client:
     clientId: "blackmesa-proxy"
     publicUrl: "https://connector3.dataspace.blackmesa.org"
-    secret: "NigKOEjXhEKoxTWgOcaKiRr0hUdsrCnM"
+    secret: "8r5itDLe3aAqHUULPPpFuwIxT1hCvwiF"
     did: "did:web:connector3.dataspace.blackmesa.org:identityhub:did"
   defaultUser:
     create: true
