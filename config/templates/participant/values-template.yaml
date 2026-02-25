@@ -209,7 +209,7 @@ oauth2-proxy:
   enable: true
   config:
     clientID: "${PARTICIPANT}-proxy"
-    clientSecret: "${CLIENT_SECRET}"
+    clientSecret: "${PARTICIPANT_CLIENT_SECRET}"
     configFile: |
       http_address = "0.0.0.0:4180"
       pass_authorization_header = true
