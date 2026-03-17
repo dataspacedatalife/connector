@@ -2,9 +2,9 @@ deployment:
   replicaCount: 1
   imagePullSecret: harbor-regcred-usuarios
   image:
-    repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/identity-hub
-    tag: "0.4.0"
-    pullPolicy: Always
+    repository: docker.io/library/identity-hub
+    tag: latest
+    pullPolicy: IfNotPresent
 
 service:
   type: ClusterIP

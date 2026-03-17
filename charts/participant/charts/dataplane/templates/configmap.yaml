@@ -29,3 +29,5 @@ data:
   USE_WAIT_FOR_IT: "false"
   EDC_DATAPLANE_API_PUBLIC_BASEURL: {{ .Values.configMap.edcDataplaneApiPublicBaseurl | quote }}
   EDC_CONTROL_ENDPOINT: {{ .Values.configMap.edcControlEndpoint | quote }}
+  EDC_DATAPLANE_MAIL_SENDER: test@test.com
+  EDC_DATAPLANE_MAIL_PASSWORD: password
