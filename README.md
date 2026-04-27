@@ -179,6 +179,7 @@ The `scripts/generate_seeding_job.sh` script automates the creation of the Kuber
 
 This script is configured by passing command-line arguments.
 
+
 **Required Parameters:**
 - --host-kc <host-kc>: The hostname or URL where Keycloak is deployed (e.g., conector-xdatashare-kc.gradiant.org).
 
@@ -195,6 +196,16 @@ The `scripts/generate_seeding_job.sh` script relies on two pre-configured JSON f
 
 **Note:** If the operator wishes to use custom configurations, they can replace these files or point to a different path using the `--realm-file` and `--client-file` flags explained above.
 
+After creating the seeding jobs, apply them.
+```bash
+  # Import Keycloak realm "dataspace"
+  kubectl apply -f config/generated/keycloak/jobs/job-import-realm.yaml -n xdatashare
+
+  # Import default Keycloak client
+  kubectl apply -f config/generated/keycloak/jobs/job-add-default-client.yaml -n xdatashare
+
+
+```
 ## Phase 2: Deploying a New Participant
 
 ### 1.1. Generate Participant Configuration
