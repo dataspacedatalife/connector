@@ -13,8 +13,6 @@ spec:
       labels:
         app: {{ .Release.Name }}-dataplane
     spec:
-      imagePullSecrets:
-        - name: {{ .Values.deployment.imagePullSecret }}
       initContainers:
         - name: wait-for-dependencies
           image: busybox:1.35
