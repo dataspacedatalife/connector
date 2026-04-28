@@ -72,7 +72,14 @@ spec:
               mountPath: /app/deployment/assets/issuers/trusted_issuers.json
               subPath: trusted_issuers.json
               readOnly: true
+            - name: business-partners
+              mountPath: /tmp/business-partners.json
+              subPath: business-partners.json
+              readOnly: true
       volumes:
         - name: trusted-issuers
           configMap:
             name: {{ .Release.Name }}-trusted-issuers
+        - name: business-partners
+          configMap:
+            name: {{ .Release.Name }}-business-partners

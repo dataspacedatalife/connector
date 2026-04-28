@@ -53,3 +53,4 @@ data:
   USE_WAIT_FOR_IT: "false"
   EDC_CONTROL_ENDPOINT: {{ .Values.configMap.edcControlEndpoint | quote }}
   EDC_USE-CASE_API_BASE_URL: {{ .Values.configMap.edcUseCaseApiUrl | quote }}
+  EDC_BUSINESS_PARTNER_FILE: "/tmp/business-partners.json"
