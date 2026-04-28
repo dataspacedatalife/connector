@@ -53,7 +53,7 @@ Before starting, ensure you have the following:
     - The `charts/participant` directory.
 - **Public DNS:** You must have public DNS "A" records pointing to the hostnames (e.g., `conector-xdatashare.gradiant.org`, `conector-xdatashare-kc.gradiant.org`) to the cluster's public IP address.
 
-## Phase 1: Cluster-Level Setup
+## Phase 1: Cluster-Level Setup (Optional)
 
 This phase configures two optional infrastructure components that enable secure communication and identity management for all participants in the dataspace:
 - Configures a ClusterIssuer for cert-manager to interface with Let's Encrypt. This enables automatic SSL certificate generation and renewal for the entire cluster. **This is a one-time configuration per cluster.**
@@ -105,7 +105,7 @@ Deploying `charts/keycloak` is an optional step. This chart deploys a Keycloak i
 
 If you already have an enterprise Keycloak or a pre-configured IAM solution, you can skip this deployment. However, you must manually ensure your IAM is configured with the necessary clients. You can jump directly to the **Seeding Jobs** section to understand the required configuration that your existing instance must provide.
 
-Use the `scripts/generate_keycloak.sh` script to create a customized values.yaml for the Keycloak chart. This step is only necessary if you plan to deploy the Keycloak chart as part of your participant deployment. If you are using an external Keycloak, you can skip this step and manually configure your Keycloak instance.
+Use the `scripts/generate_keycloak.sh` script to create a customized `values.yaml` for the Keycloak chart. This step is only necessary if you plan to deploy the Keycloak chart as part of your participant deployment. If you are using an external Keycloak, you can skip this step and manually configure your Keycloak instance.
 
 ```bash
   # Make the script executable
@@ -121,10 +121,12 @@ Use the `scripts/generate_keycloak.sh` script to create a customized values.yaml
 This command will create a new file: `charts/keycloak/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
 The generation script supports several flags:
 - `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.gradiant.org`).
+- `--password <KEYCLOAK_ADMIN_PASSWORD>`: This flag allows you to set a custom administrator password for the Keycloak instance (default: `admin`).
+- `--password-db <KEYCLOAK_DB_PASSWORD>`: This flag allows you to set a custom password for the Keycloak database (default: `admin_keycloak`).
 - `--tls-secret <TLS_SECRET_NAME>`: If you have an existing TLS secret for Keycloak, you can use this flag to specify the name of that secret. The generated `values.yaml` will then reference this secret instead of creating a new one. If this name is not passed the script will assume the default secret name `keycloak-tls-cert` for the Keycloak deployment. This is useful if you have already set up TLS for Keycloak and want to reuse that configuration without modification.
 
 **Creating a Manual TLS Secret**
-If you are not using Let's Encrypt (Phase 1) and do not have an existing TLS secret configured, you must create one manually before deploying the chart. This secret stores your certificate chain and private key in a format the Ingress controller can consume.
+If you are not using Let's Encrypt (Cluster Issuer) and do not have an existing TLS secret configured, you must create one manually before deploying the chart. This secret stores your certificate chain and private key in a format the Ingress controller can consume.
 You will need your certificate file (e.g., tls.crt) and your private key file (e.g., tls.key)
 
 **1. Create the secret**
@@ -150,6 +152,7 @@ If the participant does not have an existing IAM solution, deploy the `charts/ke
 # Example for a participant named "keycloak" in namespace "xdatashare"
 helm install keycloak ./charts/keycloak --namespace xdatashare
 ```
+The installation process automatically provisions the required persistence layer for PostgreSQL, creating the necessary PersistentVolumeClaims (PVCs). Additionally, a Secret containing the database credentials is created in the namespace.
 
 ### Seeding Jobs
 
@@ -178,11 +181,7 @@ The following image illustrates how to grant execution permissions to the script
 The `scripts/generate_seeding_job.sh` script automates the creation of the Kubernetes jobs responsible for initializing the Keycloak environment (realm import and frontend client registration).
 
 This script is configured by passing command-line arguments.
-
-**Required Parameters:**
 - --host-kc <host-kc>: The hostname or URL where Keycloak is deployed (e.g., conector-xdatashare-kc.gradiant.org).
-
-**Optional Parameters (with default values):**
 - --user <user>: The Keycloak administrator username. (Default: admin).
 - --password <password>: The Keycloak administrator password. (Default: admin).
 - --realm-file <path>: Path to the JSON file containing the realm configuration to be imported. (Default: config/keycloak/realms/realm.json).
@@ -197,9 +196,9 @@ The `scripts/generate_seeding_job.sh` script relies on two pre-configured JSON f
 
 ## Phase 2: Deploying a New Participant
 
-### 1.1. Generate Participant Configuration
+### 2.1. Generate Participant Configuration
 
-Use the `scripts/generate_participant.sh` script. This creates a customized values.yaml that points to either the Keycloak deployed in the previous step or an external one.
+Use the `scripts/generate_participant.sh` script. This creates a customized `values.yaml` that points to either the Keycloak deployed in the previous step or an external one.
 ```bash
   # Make the script executable
   chmod +x scripts/generate_participant.sh
@@ -217,13 +216,24 @@ The script supports the following arguments to customize the deployment:
   - `<PARTICIPANT_NAME>`: (Required) The name of the participant (e.g., gradiant). This is used to prefix resources and name the output file.
   - `--host <MAIN_HOSTNAME>`: The primary domain for the participant (e.g., conector-xdatashare.gradiant.org). This covers the Portal and EDC endpoints.
   - `--host-kc <KEYCLOAK_HOSTNAME>`: The domain where the Keycloak service is reachable.
+  - `--username-kc <KEYCLOAK_ADMIN_USER>`: The administrator username for Keycloak (default: admin).
+  - `--password-kc <KEYCLOAK_ADMIN_PASSWORD>`: The administrator password for Keycloak (default: admin).
+  - `--password <PARTICIPANT_PORTAL_PASSWORD>`: The password for the initial user of the participant portal (default: 1234).
+  - `--logo <PARTICIPANT_LOGO_URL>`: A URL pointing to the participant's logo, which will be displayed in the portal (default: a placeholder image).
   - `--tls-secret <TLS_SECRET_NAME>`: Specifies an existing TLS secret for the participant's domains.
 
-### 1.2. Deploy Participant Chart
+### 2.2. Deploy Participant Chart
 
-The charts/participant no longer contains an internal Keycloak subchart by default. It is now "IAM-agnostic," allowing the participant to opt for our chart-deployed Keycloak or their own.
+The charts/participant is a base Helm chart that participants can configure and extend to deploy their own connector into the dataspace. It bundles the following subcharts:
 
-**Note:** We recommend deploying the participant into a namespace.
+- `Controlplane & Dataplane`: Core EDC components responsible for data negotiation and transfer.
+- `Identity Hub`: Manages the participant's DID and Verifiable Credentials.
+- `PostgreSQL & Vault`: Supporting infrastructure for persistent storage and secret management.
+- `Participant Portal & oauth2-proxy`: User interface and authentication proxy.
+
+The chart is IAM-agnostic by default, it does not bundle a Keycloak subchart, allowing participants to opt for a chart-deployed Keycloak instance or bring their own identity provider.
+
+**Note:** We recommend deploying the participant into a new namespace.
 
 ```bash
   # Example for a participant named "gradiant" in namespace "xdatashare"
@@ -231,14 +241,14 @@ The charts/participant no longer contains an internal Keycloak subchart by defau
   -f ./charts/participant/values.yaml \
   -n xdatashare
 ```   
+The installation process automatically provisions the required persistence layer for both PostgreSQL and Vault, creating the necessary PersistentVolumeClaims (PVCs). Additionally, a Secret containing the Vault access keys is created in the namespace. This Secret is generated by the Vault auto-setup Job, described in a later section.
 
-## 3. Verification Steps (Optional)
-### Verify the Deployment
+### 2.3. Verification Steps (Optional)
 
 After running helm install, cert-manager will automatically begin obtaining the SSL certificates.
 This may take 1-2 minutes. You can monitor the status of the certificates:
 
-# Watch the certificates in the participant's namespace
+#### Watch the certificates in the participant's namespace
 ```bash
   kubectl get certificate -n xdatashare -w
 ```    
@@ -252,7 +262,7 @@ Wait for the `READY` column to switch from `False` to `True`.
 
 Once `READY` is `True`, the participant is fully deployed, secured with HTTPS, and accessible at the domain (e.g., `https://conector-xdatashare.gradiant.org`).
 
-### Veryfing Did Document Creation (Optional)
+#### Veryfing Did Document Creation (Optional)
 To confirm that the participant's Decentralized Identifier (DID) document has been successfully created and registered in the Identity Hub, we can query the Identity Hub's DID endpoint.
 
 ```bash
@@ -260,7 +270,7 @@ curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/did"| jq
 ```
 
 
-### Verifying Credential Issuance (Optional)
+#### Verifying Credential Issuance (Optional)
 
 After deployment, the `job-request-credentials.yaml` job (described below) automatically requests a Verifiable Credential from the central **dataspace-issuer**.
 
@@ -275,7 +285,7 @@ curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/identity/ap
 -H "X-Api-Key: $API_KEY" | jq
 ```
 
-## 4. Component Architecture
+### 2.4. Component Architecture
 
 **Keycloak Chart Components:**
 
@@ -311,7 +321,7 @@ To streamline the setup process, the chart includes several one-time jobs that r
 - Create Keycloak User (`job-add-proxy-client.yaml`):
     - Purpose: Ensures that the necessary Keycloak users and clients are created if the participant is using the chart-deployed Keycloak.
     - Functionality: This job interacts with the Keycloak Admin API to create the required client for securing the participant portal and to set up an initial user with appropriate permissions. This step is essential for enabling access to the participant portal immediately after deployment.
-- Participant Redirect Registration (job-register-participant-redirect)
+- Participant Redirect Registration (`job-register-participant-redirect.yaml`):
     - Purpose: To allow Keycloak to securely redirect the user back to the web portal after a successful login.
     - Functionality: This job updates the configuration of the global client (typically named edc-frontend) in Keycloak. It adds the new participant’s portal URL to the Valid Redirect URIs list. Without this automated step, Keycloak would block access to the participant's portal for security reasons.
 - Vault Automatic Setup (`job-vault-setup.yaml`):
