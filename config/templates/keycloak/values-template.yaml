@@ -4,8 +4,8 @@ keycloak:
       allowInsecureImages: true
   replicaCount: 1
   image:
-    registry: public.ecr.aws
-    repository: bitnami/keycloak
+    registry: docker.io
+    repository: bitnamilegacy/keycloak
 
   extraEnvVars:
     - name: KC_HOSTNAME
@@ -76,8 +76,8 @@ keycloak:
   postgresql:
     enabled: true
     image:
-      registry: public.ecr.aws
-      repository: bitnami/postgresql
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
       tag: "15"
     auth:
       database: "keycloak"
