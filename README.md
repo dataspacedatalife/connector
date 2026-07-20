@@ -1,13 +1,17 @@
+![OHDS](https://dataspace.cesga.es/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fonehealth_imagotipo.7b578353.png&w=828&q=75)
+
 # XDataShare Connector Deployment Guide
-This document outlines the process for adding a new xdatashare connector to a Kubernetes cluster (such as Kind). For an agile setup, it is recommended to use the Quickstart Guide, which allows the entire deployment process to be performed in an automated and simplified manner. If, on the other hand, you prefer a more detailed and customized setup, you may skip the Quickstart and follow the manual steps described in the subsequent sections. This manual process assumes that the cluster is already running NGINX Ingress Controller, openEBS and Cert-Manager (Optional), but has not yet been configured for automatic certificate issuance.
+This document describes how to deploy a new XDataShare connector on a Kubernetes cluster (such as Kind). The connector is the component that allows a participant to connect to **[OneHealth DataSpace (OHDS)](https://dataspace.cesga.es/en)**.
+
+For an agile setup, we recommend following the Quickstart Guide, which automates the entire deployment process. If instead you prefer a more detailed, customized setup, you can skip the Quickstart and follow the manual steps in the subsequent sections. The manual process assumes the cluster is already running NGINX Ingress Controller, openEBS and, optionally, Cert-Manager, but has not yet been configured for automatic certificate issuance.
 
 ## Quickstart Guide
-Pre-requisites:
-- One Ubuntu 22.04 server with a public IP (Ubuntu 24.04, Debian 12 and Debian 13 should also work but have not been tested)
-- Two public DNS "A" records pointing to the server public IP (e.g., `participant-name-ds-connector-1.your-domain.es` and `participant-name-ds-connector-1-kc.your-domain.es`)
-- Ports 80 and 443 should be accesible from the internet
+**Pre-requisites**:
+- One Ubuntu 22.04 server with a public IP (Ubuntu 24.04, Debian 12 and Debian 13 are also supported).
+- Two public DNS "A" records pointing to the server public IP (e.g., `participant-name-ds-connector-1.your-domain.es` and `participant-name-ds-connector-1-kc.your-domain.es`).
+- Ports 80 and 443 should be accessible from the Internet.
 
-Deployment:
+**Deployment**:
 - Connect to the server and clone this repo
   ```
   git clone https://github.com/dataspacedatalife/connector.git
@@ -32,26 +36,26 @@ You have configuration examples in `config/examples`.
 
 If you want to know more or do a customized deployment please read the following sections.
 
-## Prerequisites
+## Prerequisites for manual installation
 
 Before starting, ensure you have the following:
 - **A Running Kubernetes Cluster:** A cluster (like kind) with correct port-forwarding for ports 80 and 443.
 - **Installed Tooling:** kubectl and helm must be installed and configured to point to the cluster.
 - **Installed Cluster Services:**
-    - `ingress-nginx` (NGINX Ingress Controller)
-    - `cert-manager` (Optional)
-    - `openEBS` (for dynamic storage provisioning)
+    - `ingress-nginx` (NGINX Ingress Controller).
+    - `cert-manager` (Optional).
+    - `openEBS` (for dynamic storage provisioning).
 - **Deployment Scripts/Jobs:**
-    - `scripts/setup-cert-issuer.sh` (This script, for Phase 1)
-    - `scripts/generate_participant.sh` (This script, for Phase 2)
-    - `scripts/generate_keycloak.sh` (This script, for Phase 1 if deploying Keycloak is needed)
-    - `scripts/generate_seeding_job.sh` (This script, for Phase 1 always needed)
-    - `job-import-realm.yaml` (Keycloak realm import job, for client's keycloak)
-    - `job-add-default-client.yaml` (Keycloak client registration job, for client's keycloak)
-- **Helm Chart:** 
+    - `scripts/setup-cert-issuer.sh` (This script, for Phase 1).
+    - `scripts/generate_participant.sh` (This script, for Phase 2).
+    - `scripts/generate_keycloak.sh` (This script, for Phase 1 if deploying Keycloak is needed).
+    - `scripts/generate_seeding_job.sh` (This script, for Phase 1 always needed).
+    - `job-import-realm.yaml` (Keycloak realm import job, for client's keycloak).
+    - `job-add-default-client.yaml` (Keycloak client registration job, for client's keycloak).
+- **Helm Chart:**
     - The `charts/keycloak` directory.
     - The `charts/participant` directory.
-- **Public DNS:** You must have public DNS "A" records pointing to the hostnames (e.g., `conector-xdatashare.gradiant.org`, `conector-xdatashare-kc.gradiant.org`) to the cluster's public IP address.
+- **Public DNS:** You must have public DNS "A" records pointing to the hostnames (e.g., `conector-xdatashare.cesga.es`, `conector-xdatashare-kc.cesga.es`) to the cluster's public IP address.
 
 ## Phase 1: Cluster-Level Setup
 
@@ -60,6 +64,7 @@ This phase configures two optional infrastructure components that enable secure 
 - Deploy a Keycloak instance using the `charts/keycloak`. This is an optional step, but it provides a ready-to-use IAM solution that can be shared across all participants. If you have an existing Keycloak deployment or prefer to use another IAM solution, you can skip this step and configure your participant to connect to that instead.
 
 **Note:** If you already have a valid TLS certificate (or a custom secret) and an existing Keycloak/IAM configuration, you may skip these steps and advance directly to the **Seeding Jobs** section to ensure your IAM is compatible with the connector.
+
 ### ClusterIssuer Setup
 
 The objective of this phase is to set up a global `ClusterIssuer` resource in cert-manager that uses Let's Encrypt to automatically issue TLS certificates for any participant deployed in the cluster.
@@ -84,7 +89,7 @@ After the script finishes, you can manually verify that the `ClusterIssuer` is R
   kubectl describe clusterissuer letsencrypt
 ```
 
-Look for the following in the status: section at the end of the output:
+Look for the following in the `status` section at the end of the output:
 
 ```txt
   Status:
@@ -115,12 +120,12 @@ Use the `scripts/generate_keycloak.sh` script to create a customized values.yaml
   # ./scripts/generate_keycloak.sh --host-kc <KEYCLOAK_HOSTNAME> --manual --tls-secret <TLS_SECRET_NAME>
 
   # Example:
-  ./scripts/generate_keycloak.sh --host-kc conector-xdatashare-kc.gradiant.org
+  ./scripts/generate_keycloak.sh --host-kc conector-xdatashare-kc.cesga.es
 
 ```
 This command will create a new file: `charts/keycloak/values.yaml`, which contains the necessary configuration for deploying the Keycloak chart with the specified hostname.
 The generation script supports several flags:
-- `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.gradiant.org`).
+- `--host-kc <KEYCLOAK_HOSTNAME>`: This is the hostname that will be used for the Keycloak deployment. It should match the DNS record you have set up for Keycloak (e.g., `conector-xdatashare-kc.cesga.es`).
 - `--tls-secret <TLS_SECRET_NAME>`: If you have an existing TLS secret for Keycloak, you can use this flag to specify the name of that secret. The generated `values.yaml` will then reference this secret instead of creating a new one. If this name is not passed the script will assume the default secret name `keycloak-tls-cert` for the Keycloak deployment. This is useful if you have already set up TLS for Keycloak and want to reuse that configuration without modification.
 
 **Creating a Manual TLS Secret**
@@ -172,7 +177,7 @@ The following image illustrates how to grant execution permissions to the script
   # ./scripts/generate_seeding_job.sh --host-kc <KEYCLOAK_HOSTNAME> --user <KEYCLOAK_ADMIN_USER> --password <KEYCLOAK_ADMIN_PASSWORD>
 
   # Example:
-  ./scripts/generate_seeding_job.sh --host-kc conector-xdatashare-kc.gradiant.org --password admin
+  ./scripts/generate_seeding_job.sh --host-kc conector-xdatashare-kc.cesga.es --password admin
 
 ```
 The `scripts/generate_seeding_job.sh` script automates the creation of the Kubernetes jobs responsible for initializing the Keycloak environment (realm import and frontend client registration).
@@ -180,7 +185,7 @@ The `scripts/generate_seeding_job.sh` script automates the creation of the Kuber
 This script is configured by passing command-line arguments.
 
 **Required Parameters:**
-- --host-kc <host-kc>: The hostname or URL where Keycloak is deployed (e.g., conector-xdatashare-kc.gradiant.org).
+- --host-kc <host-kc>: The hostname or URL where Keycloak is deployed (e.g., conector-xdatashare-kc.cesga.es).
 
 **Optional Parameters (with default values):**
 - --user <user>: The Keycloak administrator username. (Default: admin).
@@ -208,14 +213,14 @@ Use the `scripts/generate_participant.sh` script. This creates a customized valu
   # ./scripts/generate_participant.sh <PARTICIPANT_NAME> --host <MAIN_HOSTNAME> --host-kc <KEYCLOAK_HOSTNAME>
 
   # Example:
-  ./scripts/generate_participant.sh gradiant \
-  --host conector-xdatashare.gradiant.org \
-  --host-kc conector-xdatashare-kc.gradiant.org
+  ./scripts/generate_participant.sh cesga \
+  --host conector-xdatashare.cesga.es \
+  --host-kc conector-xdatashare-kc.cesga.es
 ```
 This command will create a new file: charts/participant/values.yaml.
 The script supports the following arguments to customize the deployment:
-  - `<PARTICIPANT_NAME>`: (Required) The name of the participant (e.g., gradiant). This is used to prefix resources and name the output file.
-  - `--host <MAIN_HOSTNAME>`: The primary domain for the participant (e.g., conector-xdatashare.gradiant.org). This covers the Portal and EDC endpoints.
+  - `<PARTICIPANT_NAME>`: (Required) The name of the participant (e.g., cesga). This is used to prefix resources and name the output file.
+  - `--host <MAIN_HOSTNAME>`: The primary domain for the participant (e.g., conector-xdatashare.cesga.es). This covers the Portal and EDC endpoints.
   - `--host-kc <KEYCLOAK_HOSTNAME>`: The domain where the Keycloak service is reachable.
   - `--tls-secret <TLS_SECRET_NAME>`: Specifies an existing TLS secret for the participant's domains.
 
@@ -226,13 +231,14 @@ The charts/participant no longer contains an internal Keycloak subchart by defau
 **Note:** We recommend deploying the participant into a namespace.
 
 ```bash
-  # Example for a participant named "gradiant" in namespace "xdatashare"
-  helm install gradiant ./charts/participant \
+  # Example for a participant named "cesga" in namespace "xdatashare"
+  helm install cesga ./charts/participant \
   -f ./charts/participant/values.yaml \
   -n xdatashare
 ```   
 
-## 3. Verification Steps (Optional)
+## Verification Steps (Optional)
+
 ### Verify the Deployment
 
 After running helm install, cert-manager will automatically begin obtaining the SSL certificates.
@@ -246,17 +252,18 @@ This may take 1-2 minutes. You can monitor the status of the certificates:
 Wait for the `READY` column to switch from `False` to `True`.
 ```txt
    NAME                    READY   SECRET                  AGE
-   gradiant-keycloak-tls   True    gradiant-keycloak-tls   1m
-   gradiant-main-tls       True    gradiant-main-tls       1m
+   cesga-keycloak-tls   True    cesga-keycloak-tls   1m
+   cesga-main-tls       True    cesga-main-tls       1m
 ```
 
-Once `READY` is `True`, the participant is fully deployed, secured with HTTPS, and accessible at the domain (e.g., `https://conector-xdatashare.gradiant.org`).
+Once `READY` is `True`, the participant is fully deployed, secured with HTTPS, and accessible at the domain (e.g., `https://conector-xdatashare.cesga.es`).
 
-### Veryfing Did Document Creation (Optional)
+### Verifying DID Document Creation (Optional)
+
 To confirm that the participant's Decentralized Identifier (DID) document has been successfully created and registered in the Identity Hub, we can query the Identity Hub's DID endpoint.
 
 ```bash
-curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/did"| jq
+curl -s -X GET "https://conector-xdatashare.cesga.es/identityhub/did"| jq
 ```
 
 
@@ -271,11 +278,11 @@ To confirm that the credential was successfully issued, we can query the connect
 export API_KEY="<issuer-api-key>"
 
 # Query the issuer's /credentials endpoint
-curl -s -X GET "https://conector-xdatashare.gradiant.org/identityhub/identity/api/identity/v1alpha/credentials" \
+curl -s -X GET "https://conector-xdatashare.cesga.es/identityhub/identity/api/identity/v1alpha/credentials" \
 -H "X-Api-Key: $API_KEY" | jq
 ```
 
-## 4. Component Architecture
+## Component Architecture
 
 **Keycloak Chart Components:**
 
@@ -301,7 +308,7 @@ To streamline the setup process, the chart includes several one-time jobs that r
 
 - Create Default Policies (`job-seed-policies.yaml`):
     - Purpose: Establishes the foundational data access and usage policies for the participant.
-    - Functionality: Create the default set of data acess and usage policies, defining the rules under which participant will access the data.
+    - Functionality: Create the default set of data access and usage policies, defining the rules under which participant will access the data.
 - Create Participant DID (`job-seed-identityhub.yaml`):
     - Purpose: Establishes the participant's identity within the dataspace by creating and registering its Decentralized Identifier (DID).
     - Functionality: This job generates and registers the participant's Decentralized Identifier (DID) in the Identity Hub. The DID is essential for establishing the participant's identity within the dataspace.
