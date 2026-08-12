@@ -78,7 +78,6 @@ keycloak:
     image:
       registry: public.ecr.aws
       repository: bitnami/postgresql
-      tag: "15"
     auth:
       database: "keycloak"
       username: "keycloak"

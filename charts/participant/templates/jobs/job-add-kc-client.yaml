@@ -6,8 +6,10 @@ metadata:
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "1"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
   template:
     spec:
       restartPolicy: OnFailure
@@ -30,6 +32,8 @@ spec:
               value: {{ .Values.seeding.defaultUser.create | quote }}
             - name: DEFAULT_USER_PASSWORD
               value: {{ .Values.seeding.defaultUser.password | quote }}
+            - name: REALM_ROLES
+              value: {{ .Values.seeding.defaultUser.role | quote }}
 
           command: ["/bin/sh", "-c"]
           args:
@@ -37,7 +41,7 @@ spec:
               # ====================================================
               # 1. GET THE ADMIN TOKEN
               # ====================================================
-              echo "Getting Admin Token..."
+              echo "[INFO] Getting Admin Token..."
               TOKEN=$(curl -s -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
                 -H "Content-Type: application/x-www-form-urlencoded" \
                 -d "username=$KC_ADMIN_USER" \
@@ -46,28 +50,31 @@ spec:
                 -d "client_id=admin-cli" | jq -r '.access_token')
 
               if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
-                echo "Error getting token. Check credentials."
+                echo "[ERROR] Failed to obtain token. Check credentials."
                 exit 1
               fi
 
               # ====================================================
-              # 3. CREATE CLIENTS
+              # 2. CREATE CLIENTS
               # ====================================================
-
               create_client() {
                 local FILE=$1
-                echo "Creating Client from $FILE..."
-                local HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
+                echo "[INFO] Creating Client from $FILE..."
+
+                local HTTP_CODE=$(curl -s -o /tmp/client_resp.txt -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
                   -H "Authorization: Bearer $TOKEN" \
                   -H "Content-Type: application/json" \
                   -d @$FILE)
 
+                local BODY=$(cat /tmp/client_resp.txt)
+
                 if [ "$HTTP_CODE" -eq 201 ]; then
-                   echo " -> Created successfully."
+                   echo "[SUCCESS] Client created successfully."
                 elif [ "$HTTP_CODE" -eq 409 ]; then
-                   echo " -> Already exists (409). Skipping."
+                   echo "[WARN] Client already exists (HTTP 409). Skipping."
                 else
-                   echo " -> Failed. HTTP Code: $HTTP_CODE"
+                   echo "[ERROR] Failed to create client. HTTP Code: $HTTP_CODE"
+                   echo "[ERROR] Keycloak Response: $BODY"
                    exit 1
                 fi
               }
@@ -76,9 +83,9 @@ spec:
               create_client "/payload/proxy-client.json"
 
               # ====================================================
-              # 4. CREATE GRUP
+              # 3. CREATE GROUP
               # ====================================================
-              echo "Creating Group: ${RELEASE_NAME}-group..."
+              echo "[INFO] Creating Group: ${RELEASE_NAME}-group..."
 
               GROUP_JSON=$(jq -n --arg name "${RELEASE_NAME}-group" '{"name": $name}')
 
@@ -87,32 +94,29 @@ spec:
                 -H "Content-Type: application/json" \
                 -d "$GROUP_JSON")
 
-              if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 409 ]; then
-                 echo "Group processing finished (Created or Exists)."
+              if [ "$HTTP_CODE" -eq 201 ]; then
+                 echo "[SUCCESS] Group created successfully."
+              elif [ "$HTTP_CODE" -eq 409 ]; then
+                 echo "[WARN] Group already exists (HTTP 409)."
               else
-                 echo "Failed to create group. HTTP: $HTTP_CODE"
+                 echo "[ERROR] Failed to create group. HTTP Code: $HTTP_CODE"
                  exit 1
               fi
 
-              echo "Searching for Group ID..."
-              # Capture response instead of piping to jq
+              echo "[INFO] Searching for Group ID..."
               RESPONSE=$(curl -s -H "Authorization: Bearer $TOKEN" \
                 "$KC_URL/admin/realms/$KC_REALM/groups?search=${RELEASE_NAME}-group")
 
-              # Print it to the logs
-              echo "DEBUG: Keycloak Response: $RESPONSE"
-
-              # Then process it
               GROUP_ID=$(echo "$RESPONSE" | jq -r --arg name "${RELEASE_NAME}-group" \
                 'if type=="array" then .[] | select(.name == $name) | .id else empty end')
 
-              echo "Group ID is: $GROUP_ID"
+              echo "[INFO] Group ID is: $GROUP_ID"
 
               # ====================================================
-              # 5. CREATE DEFAULT USER AND ASSIGN TO GROUP (OPTIONAL)
+              # 4. CREATE DEFAULT USER AND ASSIGN TO GROUP
               # ====================================================
               if [ "$CREATE_DEFAULT_USER" == "true" ]; then
-                echo "Flag active. Creating User: $RELEASE_NAME..."
+                echo "[INFO] User creation flag active. Creating User: $RELEASE_NAME..."
                 FAKE_EMAIL="${RELEASE_NAME}@example.com"
 
                 USER_JSON=$(jq -n \
@@ -129,10 +133,21 @@ spec:
                     "credentials": [{"type": "password", "value": $pass, "temporary": false}]
                   }')
 
-                HTTP_CODE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/users" \
+                HTTP_CODE=$(curl -s -o /tmp/user_resp.txt -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/users" \
                   -H "Authorization: Bearer $TOKEN" \
                   -H "Content-Type: application/json" \
                   -d "$USER_JSON")
+
+                USER_BODY=$(cat /tmp/user_resp.txt)
+
+                if [ "$HTTP_CODE" -eq 201 ]; then
+                   echo "[SUCCESS] User created successfully."
+                elif [ "$HTTP_CODE" -eq 409 ]; then
+                   echo "[WARN] User already exists (HTTP 409)."
+                else
+                   echo "[ERROR] Failed to create user. HTTP Code: $HTTP_CODE"
+                   echo "[ERROR] Keycloak Error Response: $USER_BODY"
+                fi
 
                 # Get the user ID
                 USER_ID=$(curl -s -H "Authorization: Bearer $TOKEN" \
@@ -140,14 +155,49 @@ spec:
                   jq -r --arg name "$RELEASE_NAME" '.[] | select(.username == $name) | .id')
 
                 if [ ! -z "$USER_ID" ] && [ ! -z "$GROUP_ID" ]; then
-                  echo "Adding User ($USER_ID) to Group ($GROUP_ID)..."
+                  echo "[INFO] Adding User ($USER_ID) to Group ($GROUP_ID)..."
                   curl -s -X PUT "$KC_URL/admin/realms/$KC_REALM/users/$USER_ID/groups/$GROUP_ID" \
                     -H "Authorization: Bearer $TOKEN" \
                     -H "Content-Type: application/json"
+                  echo "[SUCCESS] User assigned to Group."
                 fi
+
+                # ====================================================
+                # 5. ASSIGN REALM ROLES TO USER
+                # ====================================================
+                if [ ! -z "$USER_ID" ]; then
+                  ROLES_ARRAY="[]"
+                  OLD_IFS="$IFS"
+                  IFS=","
+                  for ROLE_NAME in $REALM_ROLES; do
+                    ROLE_NAME=$(echo "$ROLE_NAME" | tr -d ' ')
+                    echo "[INFO] Fetching Role details for Realm Role '$ROLE_NAME'..."
+                    ROLE_PAYLOAD=$(curl -s -H "Authorization: Bearer $TOKEN" "$KC_URL/admin/realms/$KC_REALM/roles/$ROLE_NAME")
+                    ROLE_ID=$(echo "$ROLE_PAYLOAD" | jq -r '.id')
+
+                    if [ ! -z "$ROLE_ID" ] && [ "$ROLE_ID" != "null" ]; then
+                      ROLES_ARRAY=$(echo "$ROLES_ARRAY" | jq --argjson role "$ROLE_PAYLOAD" '. + [$role]')
+                      echo "[INFO] Role '$ROLE_NAME' (id: $ROLE_ID) queued for assignment."
+                    else
+                      echo "[WARN] Realm Role '$ROLE_NAME' not found in realm '$KC_REALM'. Skipping."
+                    fi
+                  done
+                  IFS="$OLD_IFS"
+                  if [ "$ROLES_ARRAY" != "[]" ]; then
+                    echo "[INFO] Assigning roles to User '$RELEASE_NAME'..."
+                    curl -s -X POST "$KC_URL/admin/realms/$KC_REALM/users/$USER_ID/role-mappings/realm" \
+                      -H "Authorization: Bearer $TOKEN" \
+                      -H "Content-Type: application/json" \
+                      -d "$ROLES_ARRAY"
+                    echo "[SUCCESS] Realm Roles assigned to User."
+                  fi
+                fi
+
               else
-                echo "User creation flag is disabled. Skipping."
+                echo "[INFO] User creation flag is disabled. Skipping."
               fi
+
+              echo "[SUCCESS] Keycloak seeding completed."
 
           volumeMounts:
             - name: payload-volume
@@ -156,4 +206,4 @@ spec:
         - name: payload-volume
           configMap:
             name: {{ .Release.Name }}-seeding-payload
-{{- end }}
+  {{- end }}

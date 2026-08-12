@@ -318,7 +318,7 @@ To streamline the setup process, the chart includes several one-time jobs that r
 - Request Credential (`job-request-credentials.yaml`):
     - Purpose: Initiates the process for the participant to obtain its Verifiable Credential from the dataspace-issuer.
     - Functionality: This job automates a crucial onboarding step by making the participant proactively request its required Verifiable Credential from the dataspace-issuer. This allows the participant to become a trusted and verifiable member of the dataspace shortly after deployment.
-- Create Keycloak User (`job-add-proxy-client.yaml`):
+- Create Keycloak User (`job-add-kc-client.yaml`):
     - Purpose: Ensures that the necessary Keycloak users and clients are created if the participant is using the chart-deployed Keycloak.
     - Functionality: This job interacts with the Keycloak Admin API to create the required client for securing the participant portal and to set up an initial user with appropriate permissions. This step is essential for enabling access to the participant portal immediately after deployment.
 - Participant Redirect Registration (`job-register-participant-redirect.yaml`):

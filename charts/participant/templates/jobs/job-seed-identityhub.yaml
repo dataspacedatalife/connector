@@ -6,33 +6,35 @@ metadata:
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "4"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: 300
   template:
     spec:
       restartPolicy: OnFailure
       initContainers:
         - name: wait-for-identityhub
-          image: curlimages/curl:8.5.0
+          image: badouralix/curl-jq:latest
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:
             - |
-              echo "Waiting for IdentityHub to be ready..."
+              echo "[INFO] Waiting for IdentityHub to be ready..."
               until curl -s --fail "http://{{ .Values.seeding.identityhub.service.observability.name }}:{{ .Values.seeding.identityhub.service.observability.port }}/api/observability/check/health"; do
-                echo "IdentityHub not ready, retrying in 5s..."
+                echo "[WARN] IdentityHub not ready, retrying in 5s..."
                 sleep 5
               done
-              echo "IdentityHub is ready!"
+              echo "[SUCCESS] IdentityHub is ready!"
       containers:
         - name: seed-identityhub
           image: curlimages/curl:8.5.0
           command: ["/bin/sh", "-c"]
           args:
             - |
-              echo "Registering participant in IdentityHub"
-              curl -s --fail --location \
+              echo "[INFO] Registering participant in IdentityHub"
+              
+              RESPONSE=$(curl -s -w "\n%{http_code}" --location \
                 --request POST "http://{{ .Values.seeding.identityhub.service.identity.name }}:{{ .Values.seeding.identityhub.service.identity.port }}/api/identity/v1alpha/participants" \
                 --header "Content-Type: application/json" \
                 --header "x-api-key: {{ .Values.seeding.apiKeys.identityhub }}" \
@@ -63,5 +65,27 @@ spec:
                 }
               }
               EOF
-              echo "\nSuccessfully registered participant."
+              )
+              
+              HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+              BODY=$(echo "$RESPONSE" | head -n -1)
+              
+              if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
+                echo "[SUCCESS] Successfully registered participant in IdentityHub."
+                echo "[DEBUG] Response: $BODY"
+              elif [ "$HTTP_CODE" -eq 409 ]; then
+                echo "[WARN] Participant already registered (HTTP 409). Skipping."
+              elif [ "$HTTP_CODE" -eq 400 ]; then
+                echo "[ERROR] Invalid participant registration request (HTTP 400)."
+                echo "[DEBUG] Response: $BODY"
+                exit 1
+              elif [ "$HTTP_CODE" -eq 401 ] || [ "$HTTP_CODE" -eq 403 ]; then
+                echo "[ERROR] Authentication/Authorization failed (HTTP $HTTP_CODE)."
+                echo "[DEBUG] Response: $BODY"
+                exit 1
+              else
+                echo "[ERROR] Failed to register participant. HTTP Code: $HTTP_CODE"
+                echo "[DEBUG] Response: $BODY"
+                exit 1
+              fi
 {{- end }}

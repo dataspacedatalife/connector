@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-trusted-issuers
+data:
+  trusted_issuers.json: |-
+    {{- toPrettyJson .Values.config.trustedIssuers | nindent 4 }}

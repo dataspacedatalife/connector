@@ -1,10 +1,12 @@
 deployment:
   replicaCount: 1
-  imagePullSecret: harbor-regcred-usuarios
+  imagePullSecrets:
+    - name: harbor-regcred-usuarios
   image:
     repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/participant-portal
-    tag: "0.4.0"
+    tag: "0.7.1"
     pullPolicy: Always
+
 service:
   type: ClusterIP
   ports:
@@ -12,3 +14,150 @@ service:
       protocol: TCP
       port: 80
       targetPort: 80
+
+config:
+  env:
+    NODE_ENV: "production"
+    VITE_ICON_URL: "icons/gradiant.png"
+    VITE_DATASPACE_NAME: "OneHealth Dataspace | CESGA"
+    VITE_ENABLE_AUDIT: "true"
+    VITE_CONNECTOR_CHECK_INTERVAL: "300000"
+    VITE_CONNECTOR_TIMEOUT: "15000"
+    DEV: "true"
+  asset-styles:
+    logoUrl: "/icons/csg-logo-big-negativo.png"
+    logoIconUrl: "/icons/ces-logo-small-negativo.png"
+    backgroundStyle: "solid"
+    assetBaseProperties:
+      - group: "Contact"
+        fields:
+          - key: "Name"
+            required: true
+          - key: "E-mail"
+            required: false
+          - key: "Phone"
+            required: false
+      - group: "Data Quality"
+        fields:
+          - key: "Accuracy"
+            required: false
+          - key: "Completeness"
+            required: false
+          - key: "Consistency"
+            required: false
+          - key: "Timeliness"
+            required: false
+          - key: "Uniqueness"
+            required: false
+          - key: "Validity"
+            required: false
+          - key: "Physiological Coherence"
+            required: false
+          - key: "Clinical Terminology Adherence Rate"
+            required: false
+          - key: "Identity Duplication Rate"
+            required: false
+          - key: "Orphan Records Rate"
+            required: false
+          - key: "Data Lineage Traceability Index"
+            required: false
+          - key: "Singling Out Rate"
+            required: false
+          - key: "Linkability Rate"
+            required: false
+          - key: "Inference Rate"
+            required: false
+    theme:
+      properties:
+        --background: "oklch(98% 0.002 247.839)"
+        --foreground: "oklch(21% 0.034 264.665)"
+        --card: "oklch(98% 0.002 247.839)"
+        --card-foreground: "oklch(21% 0.034 264.665)"
+        --popover: "oklch(98% 0.002 247.839)"
+        --popover-foreground: "oklch(21% 0.034 264.665)"
+        --primary: "oklab(0.63 -0.09 -0.07)"
+        --primary-foreground: "oklch(97% 0.014 308.299)"
+        --secondary: "oklch(96% 0.003 264.542)"
+        --secondary-foreground: "oklch(21% 0.034 264.665)"
+        --muted: "oklch(96% 0.003 264.542)"
+        --muted-foreground: "oklch(48% 0.02 260)"
+        --accent: "oklch(92% 0.006 264.531)"
+        --accent-foreground: "oklch(21% 0.034 264.665)"
+        --destructive: "oklch(57% 0.245 27.325)"
+        --destructive-foreground: "oklch(97% 0.013 17.38)"
+        --border: "oklch(92% 0.006 264.531)"
+        --input: "oklch(92% 0.006 264.531)"
+        --ring: "oklch(63% 0.112 227.4)"
+        --radius: "0.625rem"
+        --sidebar: "oklab(0.63 -0.09 -0.07)"
+        --sidebar-foreground: "oklch(98% 0 0)"
+        --sidebar-primary: "oklch(63% 0.112 227.4)"
+        --sidebar-primary-foreground: "oklch(97% 0.014 308.299)"
+        --sidebar-accent: "oklab(0.53 -0.09 -0.07)"
+        --sidebar-accent-foreground: "oklch(98% 0 0)"
+        --sidebar-border: "oklab(0.53 -0.09 -0.07)"
+        --sidebar-ring: "oklch(63% 0.112 227.4)"
+        --gradient-1: "oklab(0.49 -0.06 -0.08)"
+        --gradient-2: "oklab(0.63 -0.09 -0.07)"
+        --gradient-3: "oklab(0.8  -0.13  0   )"
+        --font-body: "'Barlow', sans-serif"
+        --font-heading: "'Barlow Condensed', sans-serif"
+  tools:
+    items:
+      - id: "Clever"
+        url: "https://clever.srv.cesga.es/"
+        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJyYWluLWljb24gbHVjaWRlLWJyYWluIj48cGF0aCBkPSJNMTIgMThWNSIvPjxwYXRoIGQ9Ik0xNSAxM2E0LjE3IDQuMTcgMCAwIDEtMy00IDQuMTcgNC4xNyAwIDAgMS0zIDQiLz48cGF0aCBkPSJNMTcuNTk4IDYuNUEzIDMgMCAxIDAgMTIgNWEzIDMgMCAxIDAtNS41OTggMS41Ii8+PHBhdGggZD0iTTE3Ljk5NyA1LjEyNWE0IDQgMCAwIDEgMi41MjYgNS43NyIvPjxwYXRoIGQ9Ik0xOCAxOGE0IDQgMCAwIDAgMi03LjQ2NCIvPjxwYXRoIGQ9Ik0xOS45NjcgMTcuNDgzQTQgNCAwIDEgMSAxMiAxOGE0IDQgMCAxIDEtNy45NjctLjUxNyIvPjxwYXRoIGQ9Ik02IDE4YTQgNCAwIDAgMS0yLTcuNDY0Ii8+PHBhdGggZD0iTTYuMDAzIDUuMTI1YTQgNCAwIDAgMC0yLjUyNiA1Ljc3Ii8+PC9zdmc+"
+        name:
+          es: "Clever"
+          en: "Clever"
+          fr: "Clever"
+          de: "Clever"
+
+      - id: "Anonymix"
+        url: "https://anonymix.srv.cesga.es/"
+        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWhhdC1nbGFzc2VzLWljb24gbHVjaWRlLWhhdC1nbGFzc2VzIj48cGF0aCBkPSJNMTQgMThhMiAyIDAgMCAwLTQgMCIvPjxwYXRoIGQ9Im0xOSAxMS0yLjExLTYuNjU3YTIgMiAwIDAgMC0yLjc1Mi0xLjE0OGwtMS4yNzYuNjFBMiAyIDAgMCAxIDEyIDRIOC41YTIgMiAwIDAgMC0xLjkyNSAxLjQ1Nkw1IDExIi8+PHBhdGggZD0iTTIgMTFoMjAiLz48Y2lyY2xlIGN4PSIxNyIgY3k9IjE4IiByPSIzIi8+PGNpcmNsZSBjeD0iNyIgY3k9IjE4IiByPSIzIi8+PC9zdmc+"
+        name:
+          es: "Anonymix"
+          en: "Anonymix"
+          fr: "Anonymix"
+          de: "Anonymix"
+
+      - id: "Storage"
+        url: "https://nextcloud.srv.cesga.es"
+        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRhdGFiYXNlLWljb24gbHVjaWRlLWRhdGFiYXNlIj48ZWxsaXBzZSBjeD0iMTIiIGN5PSI1IiByeD0iOSIgcnk9IjMiLz48cGF0aCBkPSJNMyA1VjE5QTkgMyAwIDAgMCAyMSAxOVY1Ii8+PHBhdGggZD0iTTMgMTJBOSAzIDAgMCAwIDIxIDEyIi8+PC9zdmc+"
+        name:
+          es: "Storage"
+          en: "Storage"
+          fr: "Storage"
+          de: "Storage"
+        external: true
+
+      - id: "Cloud"
+        url: "https://cloud.srv.cesga.es/"
+        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNsb3VkLWljb24gbHVjaWRlLWNsb3VkIj48cGF0aCBkPSJNMTcuNSAxOUg5YTcgNyAwIDEgMSA2LjcxLTloMS43OWE0LjUgNC41IDAgMSAxIDAgOVoiLz48L3N2Zz4="
+        name:
+          es: "Cloud"
+          en: "Cloud"
+          fr: "Cloud"
+          de: "Cloud"
+        external: true
+
+      - id: "HPC"
+        url: "https://ondemand.xdatashare.com:3443/"
+        icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNwdS1pY29uIGx1Y2lkZS1jcHUiPjxwYXRoIGQ9Ik0xMiAyMHYyIi8+PHBhdGggZD0iTTEyIDJ2MiIvPjxwYXRoIGQ9Ik0xNyAyMHYyIi8+PHBhdGggZD0iTTE3IDJ2MiIvPjxwYXRoIGQ9Ik0yIDEyaDIiLz48cGF0aCBkPSJNMiAxN2gyIi8+PHBhdGggZD0iTTIgN2gyIi8+PHBhdGggZD0iTTIwIDEyaDIiLz48cGF0aCBkPSJNMjAgMTdoMiIvPjxwYXRoIGQ9Ik0yMCA3aDIiLz48cGF0aCBkPSJNNyAyMHYyIi8+PHBhdGggZD0iTTcgMnYyIi8+PHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iMiIvPjxyZWN0IHg9IjgiIHk9IjgiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIHJ4PSIxIi8+PC9zdmc+"
+        name:
+          es: "HPC"
+          en: "HPC"
+          fr: "HPC"
+          de: "HPC"
+        external: true
+
+      - id: "Big Data"
+        url: "http://10.38.27.73:9000/login"
+        icon: "/icons/earth.png"
+        name:
+          es: "Big Data"
+          en: "Big Data"
+          fr: "Big Data"
+          de: "Big Data"
+        external: true

@@ -1,0 +1,31 @@
+[
+  {
+    "name": "groups",
+    "description": "OpenID Connect scope for mapping user groups",
+    "protocol": "openid-connect",
+    "attributes": {
+      "include.in.token.scope": "false",
+      "display.on.consent.screen": "true",
+      "gui.order": "",
+      "consent.screen.text": ""
+    },
+    "protocolMappers": [
+      {
+        "name": "group-membership",
+        "protocol": "openid-connect",
+        "protocolMapper": "oidc-group-membership-mapper",
+        "consentRequired": false,
+        "config": {
+          "full.path": "true",
+          "introspection.token.claim": "true",
+          "userinfo.token.claim": "true",
+          "multivalued": "true",
+          "id.token.claim": "true",
+          "lightweight.claim": "false",
+          "access.token.claim": "true",
+          "claim.name": "groups"
+        }
+      }
+    ]
+  }
+]

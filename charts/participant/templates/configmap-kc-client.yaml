@@ -41,7 +41,8 @@ data:
         "post.logout.redirect.uris": "{{ .Values.seeding.client.publicUrl }}/",
         "oauth2.device.authorization.grant.enabled": "false",
         "display.on.consent.screen": "false",
-        "backchannel.logout.revoke.offline.tokens": "false"
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "login_theme": "edc-login"
       },
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": true,
@@ -69,4 +70,4 @@ data:
         "address", "phone", "offline_access", "groups", "microprofile-jwt"
       ]
     }
-{{- end }}
+  {{- end }}

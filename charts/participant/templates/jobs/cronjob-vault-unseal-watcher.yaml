@@ -31,7 +31,7 @@ spec:
 
                   # Check if Vault is online
                   if ! curl -s --connect-timeout 5 $VAULT_URL/v1/sys/health > /dev/null; then
-                    echo "Vault API is unreachable right now. Exiting."
+                    echo "[INFO] Vault API is unreachable right now. Exiting."
                     exit 0
                   fi
 
@@ -39,14 +39,14 @@ spec:
                   SEALED=$(curl -s $VAULT_URL/v1/sys/health | jq -r .sealed)
 
                   if [ "$SEALED" == "true" ]; then
-                    echo "CRITICAL: Vault is SEALED. Initiating emergency recovery..."
+                    echo "[WARNING] Vault is SEALED. Initiating recovery..."
 
                     # Fetch the unseal key from the Kubernetes Secret
                     B64_KEY=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.unseal_key_1}' 2>/dev/null)
                     KEY1=$(echo "$B64_KEY" | base64 -d 2>/dev/null | tr -d '\n\r')
 
                     if [ -z "$KEY1" ]; then
-                      echo "FATAL: Unseal Key not found in secret. Cannot proceed."
+                      echo "[ERROR] Unseal Key not found in secret. Cannot proceed."
                       exit 0
                     fi
 
@@ -57,7 +57,7 @@ spec:
                       --data "$UNSEAL_PAYLOAD" \
                       $VAULT_URL/v1/sys/unseal > /dev/null
 
-                    echo "SUCCESS: Vault successfully unsealed by CronJob!"
+                    echo "[SUCCESS] Vault successfully unsealed by CronJob!"
                   else
-                    echo "Vault is currently unsealed and healthy. No action needed."
+                    echo "[INFO] Vault is currently unsealed and healthy. No action needed."
                   fi

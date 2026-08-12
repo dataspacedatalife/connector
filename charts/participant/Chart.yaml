@@ -16,8 +16,8 @@ dependencies:
     version: 0.1.0
     repository: "file://./charts/participant-portal"
   - name: postgresql
-    version: 0.1.0
-    repository: "file://./charts/postgresql"
+    version: 18.7.0
+    repository: "https://charts.bitnami.com/bitnami"
   - name: vault
     version: "0.30.0"
     repository: "https://helm.releases.hashicorp.com"

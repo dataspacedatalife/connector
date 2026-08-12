@@ -1,10 +1,53 @@
+config:
+  env:
+    WEB_HTTP_CONTROL_PATH: "/api/control"
+    WEB_HTTP_PUBLIC_PATH: "/api/public"
+    EDC_VAULT_HASHICORP_TOKEN_SCHEDULED-RENEW-ENABLED: "false"
+    EDC_SQL_SCHEMA_AUTOCREATE: "true"
+    EDC_IAM_DID_WEB_USE_HTTPS: "true"
+    EDC_WEB_REST_CORS_ENABLED: "true"
+    EDC_WEB_REST_CORS_HEADERS: "origin,content-type,accept,authorization,x-api-key"
+    EDC_WEB_REST_CORS_ORIGIN: "*"
+    EDC_WEB_REST_CORS_METHODS: "GET, POST, DELETE, PUT, OPTIONS"
+    JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:1044"
+    USE_WAIT_FOR_IT: "false"
+
 deployment:
   replicaCount: 1
-  imagePullSecret: harbor-regcred-usuarios
+  imagePullSecrets:
+    - name: harbor-regcred-usuarios
   image:
     repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/dataplane
-    tag: "0.4.0"
+    tag: "0.7.0-link"
     pullPolicy: Always
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "700Mi"
+      cpu: "1000m"
+  startupProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    failureThreshold: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+  livenessProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
 
 service:
   type: ClusterIP
@@ -18,3 +61,12 @@ service:
     - name: observability
       port: 8182
       targetPort: 8182
+
+ingress:
+  className: nginx
+  paths:
+    - path: /dataplane/public(/|$)(.*)
+      pathType: ImplementationSpecific
+      backend:
+        service:
+          port: 8185

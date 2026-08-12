@@ -1,28 +1,51 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-participant-portal
+  name: {{ include "participant-portal.fullname" . }}
+  labels:
+    {{- include "participant-portal.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.deployment.replicaCount | default 1 }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-participant-portal
+      {{- include "participant-portal.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-participant-portal
+        {{- include "participant-portal.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/icons: {{ include (print $.Template.BasePath "/configmap-icons.yaml") . | sha256sum }}
     spec:
+      {{- if .Values.deployment.imagePullSecrets }}
       imagePullSecrets:
-        - name: {{ .Values.deployment.imagePullSecret }}
+        {{- toYaml .Values.deployment.imagePullSecrets | nindent 8 }}
+      {{- end }}
       containers:
-        - name: {{ .Release.Name }}-participant-portal
+        - name: {{ include "participant-portal.fullname" . }}
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
           imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
           ports:
             {{- range .Values.service.ports }}
             - name: {{ .name }}
               containerPort: {{ .port }}
-            {{ end }}
+            {{- end }}
           envFrom:
             - configMapRef:
-                name: {{ .Release.Name }}-participant-portal-config
+                name: {{ include "participant-portal.resourceName" (dict "context" . "suffix" "-config") }}
+          volumeMounts:
+            - name: tools-config
+              mountPath: /app/public/tools.json
+              subPath: tools.json
+              readOnly: true
+            - name: asset-styles-config
+              mountPath: /app/public/config.json
+              subPath: config.json
+              readOnly: true
+      volumes:
+        - name: tools-config
+          configMap:
+            name: {{ include "participant-portal.resourceName" (dict "context" . "suffix" "-icons-config") }}
+        - name: asset-styles-config
+          configMap:
+            name: {{ include "participant-portal.resourceName" (dict "context" . "suffix" "-asset-styles-config") }}

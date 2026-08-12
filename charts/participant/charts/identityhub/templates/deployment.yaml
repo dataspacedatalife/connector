@@ -1,43 +1,46 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-identityhub
+  name: {{ include "identityhub.fullname" . }}
+  labels:
+    {{- include "identityhub.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.deployment.replicaCount | default 1 }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-identityhub
+      {{- include "identityhub.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       name: {{ .Release.Name }}-identityhub
       labels:
-        app: {{ .Release.Name }}-identityhub
+        {{- include "identityhub.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
+      {{- if .Values.deployment.imagePullSecrets }}
       imagePullSecrets:
-        - name: {{ .Values.deployment.imagePullSecret }}
+        {{- toYaml .Values.deployment.imagePullSecrets | nindent 8 }}
+      {{- end }}
       initContainers:
         - name: wait-for-dependencies
           image: busybox:1.35
+          imagePullPolicy: IfNotPresent
           command:
             - sh
             - -c
             - |
               {{- range .Values.deployment.initContainers.dependencies }}
-              echo "Waiting for {{ .name }} ({{ .host }}:{{ .port }})..."
-              until nc -z -v -w30 {{ .host }} {{ .port }}; do
+              echo "Waiting for {{ .name }} ({{ tpl .host $ }}:{{ .port }})..."
+
+              until nc -w 5 {{ tpl .host $ }} {{ .port }} < /dev/null; do
                 echo "{{ .name }} not ready, retrying in 5s..."
                 sleep 5
               done
               {{- end }}
 
-              until wget -q -O - {{ .Values.global.vault.url }}/v1/sys/health?standbyok=true | grep -q '"sealed":false'; do
-                echo "Vault is accessible but SEALED. Waiting for manual unsealing..."
-                sleep 5
-              done
-
               echo "All dependencies are ready. Continuing startup..."
       containers:
-        - name: {{ .Release.Name }}-identityhub
+        - name: {{ include "identityhub.name" . }}
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}"
           imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
           ports:
@@ -48,30 +51,24 @@ spec:
             - name: EDC_VAULT_HASHICORP_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-vault-secret
+                  name: {{ .Values.global.vault.token }}
                   key: root_token
                   optional: false
           envFrom:
             - configMapRef:
-                name: {{ .Release.Name }}-identityhub-config
+                name: {{ include "identityhub.fullname" . }}-config
           resources:
-            requests:
-              memory: "512Mi"
-              cpu: "500m"
-            limits:
-              memory: "1024Mi"
-              cpu: "1000m"
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          {{- if .Values.deployment.startupProbe }}
           startupProbe:
-            httpGet:
-              path: /api/observability/check/health
-              port: 8182
-            failureThreshold: 30
-            periodSeconds: 10
+            {{- toYaml .Values.deployment.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.deployment.readinessProbe }}
           readinessProbe:
-            httpGet:
-              path: /api/observability/check/health
-              port: 8182
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 10
-            failureThreshold: 3
+            {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.deployment.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
+          {{- end }}
+
