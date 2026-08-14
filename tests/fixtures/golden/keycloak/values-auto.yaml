@@ -8,7 +8,6 @@ keycloak:
   image:
     registry: docker.io
     repository: bitnamilegacy/keycloak
-
   extraEnvVars:
     - name: KC_HOSTNAME
       value: "https://kc.example.com"
@@ -26,7 +25,6 @@ keycloak:
       value: "true"
     - name: KC_LOG_LEVEL
       value: "info"
-
   auth:
     adminUser: "admin"
     existingSecret: "keycloak-secrets"
@@ -69,7 +67,7 @@ keycloak:
     extraTls:
       - hosts:
           - kc.example.com
-        secretName: wildcard-tls-cert
+        secretName: keycloak-cert
 
   initContainers:
     - name: fetch-themes
