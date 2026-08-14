@@ -8,15 +8,74 @@ global:
       user: demo
       password: demo
 
+config:
+  env:
+    WEB_HTTP_MANAGEMENT_PATH: "/api/management"
+    WEB_HTTP_MANAGEMENT_AUTH_TYPE: "composite"
+    WEB_HTTP_MANAGEMENT_AUTH_SERVICES: "tokenbased,delegated"
+    WEB_HTTP_PROTOCOL_PATH: "/api/dsp"
+    WEB_HTTP_CONTROL_PATH: "/api/control"
+    WEB_HTTP_CATALOG_PATH: "/api/catalog"
+    WEB_HTTP_CATALOG_AUTH_TYPE: "composite"
+    WEB_HTTP_CATALOG_AUTH_SERVICES: "tokenbased,delegated"
+    WEB_HTTP_VERSION_PATH: "/api/version"
+    WEB_HTTP_PARTICIPANT_AUTH_TYPE: "composite"
+    WEB_HTTP_PARTICIPANT_AUTH_SERVICES: "tokenbased,delegated"
+    EDC_OBSERVABILITY_LOKI_API_KEY: "password"
+    EDC_CATALOG_CACHE_EXECUTION_DELAY_SECONDS: "30"
+    EDC_CATALOG_CACHE_EXECUTION_PERIOD_SECONDS: "60"
+    EDC_PARTICIPANT_HEARTBEAT_MANAGER_EXECUTION_ON_START: "true"
+    EDC_PARTICIPANT_HEARTBEAT_MANAGER_EXECUTION_DELAY_SECONDS: "30"
+    EDC_PARTICIPANT_HEARTBEAT_MANAGER_EXECUTION_PERIOD_SECONDS: "60"
+    EDC_TRUSTED_ISSUERS_FILE: "/app/deployment/assets/issuers/trusted_issuers.json"
+    EDC_IAM_DID_WEB_USE_HTTPS: "true"
+    EDC_MANAGEMENT_CONTEXT_ENABLED: "true"
+    EDC_VAULT_HASHICORP_TOKEN_SCHEDULED-RENEW-ENABLED: "false"
+    EDC_SQL_SCHEMA_AUTOCREATE: "true"
+    EDC_WEB_REST_CORS_ENABLED: "true"
+    EDC_WEB_REST_CORS_HEADERS: "origin,content-type,accept,authorization,x-api-key"
+    EDC_WEB_REST_CORS_ORIGIN: "*"
+    EDC_WEB_REST_CORS_METHODS: "GET, POST, DELETE, PUT, OPTIONS"
+    JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:1044"
+    USE_WAIT_FOR_IT: "false"
+
 deployment:
   replicaCount: 1
-  imagePullSecret: regcred
+  imagePullSecrets:
+    - name: harbor-regcred-usuarios
   image:
-    repository: example/controlplane
-    tag: latest
-    pullPolicy: IfNotPresent
+    repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/controlplane
+    tag: "0.7.0-link"
+    pullPolicy: Always
   initContainers:
     dependencies: []
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  startupProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    failureThreshold: 45
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+  livenessProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    periodSeconds: 10
+    timeoutSeconds: 10
 
 service:
   type: ClusterIP
@@ -24,40 +83,52 @@ service:
     - name: management
       port: 8181
       targetPort: 8181
-
-config:
-  env:
-    EDC_COMPONENT_ID: "controlplane"
-    EDC_HOSTNAME: "cp.example.com"
-    EDC_IAM_ISSUER_ID: "did:web:cp.example.com:identityhub:did"
-    WEB_HTTP_MANAGEMENT_AUTH_DAC_KEY_URL: "https://kc.example.com/certs"
-    WEB_HTTP_MANAGEMENT_AUTH_KEY: "auth"
-    WEB_HTTP_CATALOG_AUTH_DAC_KEY_URL: "https://kc.example.com/certs"
-    WEB_HTTP_CATALOG_AUTH_KEY: "auth"
-    WEB_HTTP_PARTICIPANT_AUTH_DAC_KEY_URL: "https://kc.example.com/certs"
-    WEB_HTTP_PARTICIPANT_AUTH_KEY: "auth"
-    EDC_IAM_STS_PRIVATEKEY_ALIAS: "did:web:cp.example.com:identityhub:did#key-1"
-    EDC_IAM_STS_PUBLICKEY_ID: "did:web:cp.example.com:identityhub:did#key-1"
-    EDC_PARTICIPANT_ID: "did:web:cp.example.com:identityhub:did"
-    EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS: "sts-secret"
-    EDC_IAM_STS_OAUTH_CLIENT_ID: "sts-client"
-    EDC_IAM_AUTHORITY_ID: "did:web:issuer.example.com:did"
-    EDC_DSP_CALLBACK_ADDRESS: "https://cp.example.com/controlplane/dsp/api/dsp"
-    EDC_IAM_STS_OAUTH_TOKEN_URL: "http://identityhub:9292/api/sts/token"
-    EDC_PARIS_PUBLIC_BASE_URL: "https://paris.example.com"
-    EDC_CONTROL_ENDPOINT: "http://controlplane:9191/api/control"
-    EDC_USE_CASE_API_BASE_URL: "https://usecase.example.com"
-    EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://postgres:5432/demo"
-    EDC_DATASOURCE_DEFAULT_USER: "demo"
-    EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
-    EDC_VAULT_HASHICORP_URL: "http://vault:8200"
+    - name: paris
+      port: 8081
+      targetPort: 8081
+    - name: version
+      port: 7171
+      targetPort: 7171
+    - name: control
+      port: 9191
+      targetPort: 9191
+    - name: dsp
+      port: 8282
+      targetPort: 8282
+    - name: catalog
+      port: 17171
+      targetPort: 17171
+    - name: observability
+      port: 8182
+      targetPort: 8182
 
 ingress:
   host: cp.example.com
   tlsSecretName: cp-manual-tls
+  className: nginx
   paths:
-    - path: /controlplane
-      pathType: Prefix
+    - path: /controlplane/management(/|$)(.*)
+      pathType: ImplementationSpecific
       backend:
-        serviceName: demo-controlplane
-        servicePort: 8181
+        service:
+          port: 8181
+    - path: /controlplane/participant(/|$)(.*)
+      pathType: ImplementationSpecific
+      backend:
+        service:
+          port: 8081
+    - path: /controlplane/version(/|$)(.*)
+      pathType: ImplementationSpecific
+      backend:
+        service:
+          port: 7171
+    - path: /controlplane/dsp(/|$)(.*)
+      pathType: ImplementationSpecific
+      backend:
+        service:
+          port: 8282
+    - path: /controlplane/catalog(/|$)(.*)
+      pathType: ImplementationSpecific
+      backend:
+        service:
+          port: 17171

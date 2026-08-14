@@ -8,49 +8,84 @@ global:
       user: demo
       password: demo
 
+config:
+  env:
+    # Base chart variables
+    WEB_HTTP_CONTROL_PATH: "/api/control"
+    WEB_HTTP_PUBLIC_PATH: "/api/public"
+    EDC_VAULT_HASHICORP_TOKEN_SCHEDULED-RENEW-ENABLED: "false"
+    EDC_SQL_SCHEMA_AUTOCREATE: "true"
+    EDC_IAM_DID_WEB_USE_HTTPS: "true"
+    EDC_WEB_REST_CORS_ENABLED: "true"
+    EDC_WEB_REST_CORS_HEADERS: "origin,content-type,accept,authorization,x-api-key"
+    EDC_WEB_REST_CORS_ORIGIN: "*"
+    EDC_WEB_REST_CORS_METHODS: "GET, POST, DELETE, PUT, OPTIONS"
+    JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:1044"
+    USE_WAIT_FOR_IT: "false"
+
 deployment:
   replicaCount: 1
-  imagePullSecret: regcred
+  imagePullSecrets:
+    - name: harbor-regcred-usuarios
   image:
-    repository: example/dataplane
-    tag: latest
-    pullPolicy: IfNotPresent
+    repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/dataplane
+    tag: "0.7.0-link"
+    pullPolicy: Always
   initContainers:
     dependencies: []
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "700Mi"
+      cpu: "1000m"
+  startupProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    failureThreshold: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+  livenessProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
 
 service:
   type: ClusterIP
   ports:
+    - name: control
+      port: 9191
+      targetPort: 9191
     - name: public
       port: 8185
       targetPort: 8185
-
-config:
-  env:
-    EDC_COMPONENT_ID: "dataplane"
-    EDC_HOSTNAME: "dp.example.com"
-    EDC_TRANSFER_PROXY_TOKEN_VERIFIER_PUBLICKEY_ALIAS: "key-1"
-    EDC_TRANSFER_PROXY_TOKEN_SIGNER_PRIVATEKEY_ALIAS: "key-1"
-    EDC_DPF_SELECTOR_URL: "http://controlplane:9191/api/control/v1/dataplanes"
-    EDC_PARTICIPANT_ID: "did:web:dp.example.com:identityhub:did"
-    EDC_IAM_STS_OAUTH_TOKEN_URL: "https://dp.example.com/identityhub/sts/api/sts/token"
-    EDC_IAM_STS_OAUTH_CLIENT_ID: "sts-client"
-    EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS: "sts-secret"
-    EDC_DATAPLANE_API_PUBLIC_BASEURL: "https://dp.example.com/dataplane/public/api/public"
-    EDC_CONTROL_ENDPOINT: "http://dataplane:9191/api/control"
-    EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://postgres:5432/demo"
-    EDC_DATASOURCE_DEFAULT_USER: "demo"
-    EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
-    EDC_VAULT_HASHICORP_URL: "http://vault:8200"
+    - name: observability
+      port: 8182
+      targetPort: 8182
 
 ingress:
   host: dp.example.com
   tlsSecretName: dp-tls
+  className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
   paths:
-    - path: /dataplane/public
-      pathType: Prefix
+    - path: /dataplane/public(/|$)(.*)
+      pathType: ImplementationSpecific
       backend:
-        serviceName: demo-dataplane
-        servicePort: 8185
+        service:
+          port: 8185

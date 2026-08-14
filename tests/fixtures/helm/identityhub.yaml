@@ -8,28 +8,25 @@ global:
       user: demo
       password: demo
 
-deployment:
-  replicaCount: 1
-  imagePullSecret: regcred
-  image:
-    repository: example/identityhub
-    tag: latest
-    pullPolicy: IfNotPresent
-  initContainers:
-    dependencies: []
-
-service:
-  type: ClusterIP
-  ports:
-    - name: identity
-      port: 15151
-      targetPort: 15151
-    - name: did
-      port: 10100
-      targetPort: 10100
-
 config:
   env:
+    # Base chart variables
+    WEB_HTTP_CREDENTIALS_PATH: "/api/credentials"
+    WEB_HTTP_IDENTITY_PATH: "/api/identity"
+    WEB_HTTP_DID_PATH: "/"
+    WEB_HTTP_VERSION_PATH: "/api/version"
+    WEB_HTTP_STS_PATH: "/api/sts"
+    EDC_IAM_DID_WEB_USE_HTTPS: "true"
+    EDC_VAULT_HASHICORP_TOKEN_SCHEDULED-RENEW-ENABLED: "false"
+    EDC_SQL_SCHEMA_AUTOCREATE: "true"
+    EDC_WEB_REST_CORS_ENABLED: "true"
+    EDC_WEB_REST_CORS_HEADERS: "origin,content-type,accept,authorization,x-api-key"
+    EDC_WEB_REST_CORS_ORIGIN: "*"
+    EDC_WEB_REST_CORS_METHODS: "GET, POST, DELETE, PUT, OPTIONS"
+    JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:1044"
+    USE_WAIT_FOR_IT: "false"
+
+    # Test overrides and manual variables
     EDC_COMPONENT_ID: "identityhub"
     EDC_HOSTNAME: "ih.example.com"
     EDC_IAM_STS_PRIVATEKEY_ALIAS: "did:web:ih.example.com:identityhub:did#key-1"
@@ -41,24 +38,90 @@ config:
     EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
     EDC_VAULT_HASHICORP_URL: "http://vault:8200"
 
+deployment:
+  replicaCount: 1
+  imagePullSecrets:
+    - name: harbor-regcred-usuarios
+  image:
+    repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/identity-hub
+    tag: "0.7.0"
+    pullPolicy: Always
+  initContainers:
+    dependencies: []
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "700Mi"
+      cpu: "1000m"
+  startupProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    failureThreshold: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /api/observability/check/health
+      port: 8182
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+
+service:
+  type: ClusterIP
+  ports:
+    - name: version
+      port: 7171
+      targetPort: 7171
+    - name: credentials
+      port: 13131
+      targetPort: 13131
+    - name: identity
+      port: 15151
+      targetPort: 15151
+    - name: did
+      port: 10100
+      targetPort: 10100
+    - name: sts
+      port: 9292
+      targetPort: 9292
+    - name: observability
+      port: 8182
+      targetPort: 8182
+
 ingress:
   host: ih.example.com
   tlsSecretName: ih-tls
+  className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
   paths:
-    - path: /identityhub/identity
-      pathType: Prefix
+    - path: /identityhub/version(/|$)(.*)
+      pathType: ImplementationSpecific
       backend:
-        serviceName: demo-identityhub
-        servicePort: 15151
+        service:
+          port: 7171
+    - path: /identityhub/credentials(/|$)(.*)
+      pathType: ImplementationSpecific
+      backend:
+        service:
+          port: 13131
+    - path: /identityhub/identity(/|$)(.*)
+      pathType: ImplementationSpecific
+      backend:
+        service:
+          port: 15151
 
 ingressDid:
   host: ih.example.com
   tlsSecretName: ih-tls
+  className: nginx
   paths:
-    - path: /identityhub/did
-      pathType: Prefix
+    - path: /identityhub/did(/|$)(.*)
+      pathType: ImplementationSpecific
       backend:
-        serviceName: demo-identityhub
-        servicePort: 10100
+        service:
+          port: 10100
