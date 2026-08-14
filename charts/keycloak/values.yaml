@@ -62,12 +62,11 @@ keycloak:
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-      cert-manager.io/cluster-issuer: letsencrypt
     tls: true
     extraTls:
       - hosts:
           - kc.example.com
-        secretName: keycloak-tls-cert
+        secretName: wildcard-tls-cert
 
   initContainers:
     - name: fetch-themes
