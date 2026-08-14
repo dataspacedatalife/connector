@@ -298,8 +298,8 @@ participant-portal:
       VITE_EDC_CONNECTOR_IDENTITY_URL: "https://${HOST}/identityhub/identity/api/identity"
       VITE_EDC_CONNECTOR_PUBLIC_URL: "https://${HOST}/dataplane/public/api/public"
       VITE_EDC_CONNECTOR_AUTH_URL: "https://${HOST}/"
-      VITE_SEMANTIC_TREEHOUSE_URL: "https://semantictreehouse.srv.cesga.es"
-      VITE_SEMANTIC_TREEHOUSE_API_KEY: "gAhdwvUPJllPZrADUmZPIDhsVCeAOg"
+      VITE_SEMANTIC_TREEHOUSE_URL: "https://vocabularyhub.srv.cesga.es/"
+      VITE_SEMANTIC_TREEHOUSE_API_KEY: "O5SUglV70VXgFeOCxHVXsYTilecD8Ay2"
 
 seeding:
   enabled: true

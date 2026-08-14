@@ -281,8 +281,8 @@ oauth2-proxy:
 participant-portal:
   config:
     env:
-      VITE_ICON_URL: "/icons/datalife_logo.webp"
-      VITE_LOGO_ICON_URL: "/icons/datalife_logo.webp"
+      VITE_ICON_URL: "datalife_logo.webp"
+      VITE_LOGO_ICON_URL: "datalife_logo.webp"
       VITE_DATASPACE_NAME: "Centro Demostrador DATAlife | CESGA"
       VITE_ENABLE_AUDIT: "true"
       VITE_PARIS_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
@@ -298,8 +298,8 @@ participant-portal:
       VITE_EDC_CONNECTOR_IDENTITY_URL: "https://connector3.dataspace.blackmesa.org/identityhub/identity/api/identity"
       VITE_EDC_CONNECTOR_PUBLIC_URL: "https://connector3.dataspace.blackmesa.org/dataplane/public/api/public"
       VITE_EDC_CONNECTOR_AUTH_URL: "https://connector3.dataspace.blackmesa.org/"
-      VITE_SEMANTIC_TREEHOUSE_URL: "https://semantictreehouse.srv.cesga.es"
-      VITE_SEMANTIC_TREEHOUSE_API_KEY: "gAhdwvUPJllPZrADUmZPIDhsVCeAOg"
+      VITE_SEMANTIC_TREEHOUSE_URL: "https://vocabularyhub.srv.cesga.es"
+      VITE_SEMANTIC_TREEHOUSE_API_KEY: "O5SUglV70VXgFeOCxHVXsYTilecD8Ay2"
 
 seeding:
   enabled: true

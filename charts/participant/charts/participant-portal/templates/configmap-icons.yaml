@@ -1,0 +1,16 @@
+{{- $iconUrl := default "" .Values.config.env.VITE_ICON_URL }}
+{{- $isRemoteIcon := or (hasPrefix "http://" $iconUrl) (hasPrefix "https://" $iconUrl) }}
+{{- if and (not $isRemoteIcon) $iconUrl }}
+{{- $iconFile := base $iconUrl -}}
+{{- $iconPath := printf "files/icons/%s" $iconFile -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "participant-portal.resourceName" (dict "context" . "suffix" "-icons-config") }}
+binaryData:
+  {{- if gt (len (.Files.Glob $iconPath)) 0 }}
+  {{ $iconFile }}: {{ .Files.Get $iconPath | b64enc | quote }}
+  {{- else }}
+  {{- fail (printf "participant-portal icon file '%s' not found. Expected '%s'." $iconFile $iconPath) }}
+  {{- end }}
+{{- end }}

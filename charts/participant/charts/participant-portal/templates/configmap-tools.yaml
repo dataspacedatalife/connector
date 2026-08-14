@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "participant-portal.resourceName" (dict "context" . "suffix" "-icons-config") }}
+  name: {{ include "participant-portal.resourceName" (dict "context" . "suffix" "-tools-config") }}
 data:
   tools.json: |
     {{ tpl (toJson (index .Values "config" "tools")) . | nindent 4 }}
