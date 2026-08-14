@@ -53,6 +53,7 @@ teardown() {
 }
 
 @test "generates values file using automatic TLS defaults" {
+  export TEST_MODE=true
   run ./generate_participant.sh demo \
     --host connector.example.com \
     --host-kc kc.example.com \
@@ -73,6 +74,7 @@ teardown() {
 }
 
 @test "generates values file using manual TLS secret and removes cluster issuer" {
+  export TEST_MODE=true
   run ./generate_participant.sh demo \
     --host connector.example.com \
     --host-kc kc.example.com \
@@ -89,6 +91,7 @@ teardown() {
 }
 
 @test "overrides keycloak admin credentials when provided" {
+  export TEST_MODE=true
   run ./generate_participant.sh demo \
     --host connector.example.com \
     --host-kc kc.example.com \

@@ -185,9 +185,14 @@ AUTH_KEY_B64=$(echo -n "$PARTICIPANT-password" | base64 -w0)
 PART1_B64=$(echo -n "super-user" | base64 -w0)
 PART2_B64=$(echo -n "super-$PARTICIPANT-key" | base64 -w0)
 SUPER_USER_KEY_B64="$PART1_B64.$PART2_B64"
-PARTICIPANT_CLIENT_SECRET=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)
 HOST_KC_PROXY=$(echo "$HOST_KC" | sed 's/\//%2F/g')
 FILTER_HOST_KC="${HOST_KC%%/*}"
+
+if [ "${TEST_MODE:-false}" == "true" ]; then
+    PARTICIPANT_CLIENT_SECRET="fixedparticipantclientsecret0001"
+else
+    PARTICIPANT_CLIENT_SECRET=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)
+fi
 
 export PARTICIPANT
 export PARTICIPANT_LOGO
