@@ -16,6 +16,7 @@ SECRET_OUTPUT_FILE="$KEYCLOAK_CHART_DIR/templates/secret.yaml"
 
 # --- 1. Helper Functions ---
 show_help() {
+    local exit_code="${1:-0}"
     echo -e "${YELLOW}Usage:${NC} $0 --host-kc <hostname> [OPTIONS]"
     echo ""
     echo "Generates Kubernetes configuration values for Keycloak."
@@ -35,7 +36,7 @@ show_help() {
     echo ""
     echo "  2. Automatic SSL (Let's Encrypt):"
     echo "     $0 --host-kc keycloak.example.com --password MyStrongPassword123 --use-lets-encrypt"
-    exit 0
+    exit "$exit_code"
 }
 
 # --- 2. Initialize variables ---
@@ -100,7 +101,7 @@ done
 # --- 4. Validation ---
 if [ -z "$HOST_KC" ]; then
     echo -e "${RED}Error: The argument --host-kc is mandatory.${NC}" >&2
-    show_help
+    show_help 1
 fi
 echo "Keycloak Configuration Generation"
 

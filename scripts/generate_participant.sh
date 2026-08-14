@@ -9,6 +9,7 @@ NC='\033[0m'
 
 # --- 1. Helper Functions ---
 show_help() {
+  local exit_code="${1:-0}"
   echo -e "${YELLOW}Usage:${NC} $0 PARTICIPANT --password <PASSWORD> [OPTIONS]"
   echo
   echo "Generates Kubernetes configuration values for a participant."
@@ -32,7 +33,7 @@ show_help() {
   echo "  2. Custom Domain & Realm (With Let's Encrypt):"
   echo "     $0 ext-partner-dns --host my-app.com --host-kc kc.my-app.com --realm-kc custom-realm --password verysecret --use-lets-encrypt"
   echo
-  exit 0
+  exit "$exit_code"
 }
 
 # --- 2. Argument Parsing ---
@@ -128,8 +129,7 @@ done
 # --- 3. Validation ---
 if [ -z "$PARTICIPANT" ]; then
   echo -e "${RED}Error: Participant name is missing.${NC}"
-  show_help
-  exit 1
+  show_help 1
 fi
 
 HAS_HOST_ARGS=false

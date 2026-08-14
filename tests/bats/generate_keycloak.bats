@@ -34,7 +34,7 @@ teardown() {
 }
 
 @test "generates values and secret with automatic TLS defaults" {
-  run ./generate_keycloak.sh --host-kc kc.example.com --password adminpass
+  run ./generate_keycloak.sh --host-kc kc.example.com --password adminpass --use-lets-encrypt
 
   [ "$status" -eq 0 ]
 

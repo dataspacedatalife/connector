@@ -9,6 +9,7 @@ NC='\033[0m'
 
 # --- 1. Helper Functions ---
 show_help() {
+  local exit_code="${1:-0}"
   echo -e "${YELLOW}Usage:${NC} $0 --host-kc <hostname> --user <user> --password <password> [OPTIONS]"
   echo
   echo "Generates Kubernetes Job manifests for Keycloak Realm, Client, and Scopes initialization."
@@ -31,7 +32,7 @@ show_help() {
   echo
   echo "  2. Custom File Paths & Realm:"
   echo "     $0 --host-kc kc.example.com --user admin --password secret --realm custom-realm-name"
-  exit 0
+  exit "$exit_code"
 }
 
 # --- 2. Initialize variables ---
@@ -124,7 +125,7 @@ done
 # --- 4. Validation ---
 if [ -z "$KC_URL" ]; then
     echo -e "${RED}Error: --host-kc is required.${NC}" >&2
-    show_help
+    show_help 1
 fi
 
 if [ ! -f "$CLIENT_FILE" ]; then
