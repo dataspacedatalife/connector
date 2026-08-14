@@ -7,20 +7,20 @@ global:
       password: demo
   vault:
     url: http://demo-vault:8200
+    token: demo-vault-secret
 
 controlplane:
-
   config:
     env:
       EDC_COMPONENT_ID: "demo-controlplane"
       EDC_HOSTNAME: "connector.example.com"
       EDC_IAM_ISSUER_ID: "did:web:connector.example.com:identityhub:did"
       WEB_HTTP_MANAGEMENT_AUTH_DAC_KEY_URL: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
-      WEB_HTTP_MANAGEMENT_AUTH_KEY: "ZGVtby1wYXNzd29yZA=="
+      WEB_HTTP_MANAGEMENT_AUTH_KEY: "password"
       WEB_HTTP_CATALOG_AUTH_DAC_KEY_URL: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
-      WEB_HTTP_CATALOG_AUTH_KEY: "ZGVtby1wYXNzd29yZA=="
+      WEB_HTTP_CATALOG_AUTH_KEY: "password"
       WEB_HTTP_PARTICIPANT_AUTH_DAC_KEY_URL: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
-      WEB_HTTP_PARTICIPANT_AUTH_KEY: "ZGVtby1wYXNzd29yZA=="
+      WEB_HTTP_PARTICIPANT_AUTH_KEY: "password"
       EDC_IAM_STS_PRIVATEKEY_ALIAS: "did:web:connector.example.com:identityhub:did#key-1"
       EDC_IAM_STS_PUBLICKEY_ID: "did:web:connector.example.com:identityhub:did#key-1"
       EDC_PARTICIPANT_ID: "did:web:connector.example.com:identityhub:did"
@@ -29,13 +29,19 @@ controlplane:
       EDC_IAM_AUTHORITY_ID: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
       EDC_DSP_CALLBACK_ADDRESS: "https://connector.example.com/controlplane/dsp/api/dsp"
       EDC_IAM_STS_OAUTH_TOKEN_URL: "http://demo-identityhub:9292/api/sts/token"
-      EDC_PARIS_PUBLIC_BASE_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service/participant-public/api/participant-public"
+      EDC_PARIS-PUBLIC_BASE_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service/participant-public/api/participant-public"
       EDC_CONTROL_ENDPOINT: "http://demo-controlplane:9191/api/control"
-      EDC_USE_CASE_API_BASE_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service/use-case/api/use-case"
+      EDC_USE-CASE_API_BASE_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service/use-case/api/use-case"
       EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://demo-postgresql:5432/demo"
       EDC_DATASOURCE_DEFAULT_USER: "demo"
       EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
       EDC_VAULT_HASHICORP_URL: "http://demo-vault:8200"
+      EDC_OBSERVABILITY_LOKI_URL: "https://xdatashare.srv.cesga.es/audit"
+      EDC_OBSERVABILITY_LOKI_API_KEY: "fixedlokiapikey"
+    trustedIssuers:
+      - id: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
+        types:
+          - "*"
 
   deployment:
     initContainers:
@@ -49,41 +55,14 @@ controlplane:
 
   ingress:
     host: connector.example.com
-    tlsSecretName: demo-tls-cert
+    tlsSecretName: wildcard-cert
     annotations:
       kubernetes.io/ingress.class: nginx
       cert-manager.io/cluster-issuer: "letsencrypt"
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$2
-    paths:
-      - path: /controlplane/management(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-controlplane
-          servicePort: 8181
-      - path: /controlplane/participant(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-controlplane
-          servicePort: 8081
-      - path: /controlplane/version(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-controlplane
-          servicePort: 7171
-      - path: /controlplane/dsp(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-controlplane
-          servicePort: 8282
-      - path: /controlplane/catalog(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-controlplane
-          servicePort: 17171
 
 dataplane:
-
   config:
     env:
       EDC_COMPONENT_ID: "demo-dataplane"
@@ -114,21 +93,14 @@ dataplane:
 
   ingress:
     host: connector.example.com
-    tlsSecretName: demo-tls-cert
+    tlsSecretName: wildcard-cert
     annotations:
       kubernetes.io/ingress.class: nginx
       cert-manager.io/cluster-issuer: "letsencrypt"
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$2
-    paths:
-      - path: /dataplane/public(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-dataplane
-          servicePort: 8185
 
 identityhub:
-
   config:
     env:
       EDC_COMPONENT_ID: "demo-identityhub"
@@ -136,7 +108,7 @@ identityhub:
       EDC_IAM_STS_PRIVATEKEY_ALIAS: "did:web:connector.example.com:identityhub:did#key-1"
       EDC_IAM_STS_PUBLICKEY_ID: "did:web:connector.example.com:identityhub:did#key-1"
       EDC_IH_IAM_ID: "did:web:connector.example.com:identityhub:did"
-      EDC_IH_API_SUPERUSER_KEY: "c3VwZXItdXNlcg==.c3VwZXItZGVtby1rZXk="
+      EDC_IH_API_SUPERUSER_KEY: "passwordihsuperuser"
       EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://demo-postgresql:5432/demo"
       EDC_DATASOURCE_DEFAULT_USER: "demo"
       EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
@@ -151,38 +123,18 @@ identityhub:
 
   ingress:
     host: connector.example.com
-    tlsSecretName: demo-tls-cert
+    tlsSecretName: wildcard-cert
     annotations:
       kubernetes.io/ingress.class: nginx
       cert-manager.io/cluster-issuer: "letsencrypt"
       nginx.ingress.kubernetes.io/use-regex: "true"
       nginx.ingress.kubernetes.io/rewrite-target: /$2
-    paths:
-      - path: /identityhub/version(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-identityhub
-          servicePort: 7171
-      - path: /identityhub/credentials(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-identityhub
-          servicePort: 13131
-      - path: /identityhub/identity(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-identityhub
-          servicePort: 15151
 
   ingressDid:
     host: connector.example.com
-    tlsSecretName: demo-tls-cert
-    paths:
-      - path: /identityhub/did(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          serviceName: demo-identityhub
-          servicePort: 10100
+    tlsSecretName: wildcard-cert
+    annotations:
+      kubernetes.io/ingress.class: nginx
 
 postgresql:
   image:
@@ -312,29 +264,28 @@ oauth2-proxy:
       nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
       nginx.ingress.kubernetes.io/large-client-header-buffers: "4 16k"
       nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-      cert-manager.io/cluster-issuer: "letsencrypt"
     className: "nginx"
     path: /
     pathType: Prefix
     hosts:
       - "connector.example.com"
     tls:
-      - secretName: demo-tls-cert
+      - secretName: wildcard-cert
         hosts:
           - "connector.example.com"
 
 participant-portal:
   config:
     env:
-      NODE_ENV: "production"
       VITE_ICON_URL: "/icons/datalife_logo.webp"
       VITE_LOGO_ICON_URL: "/icons/datalife_logo.webp"
-      VITE_DATASPACE_NAME: "Centro Demostrador DATAlife | CESGA"
+      VITE_DATASPACE_NAME: ""
       VITE_ENABLE_AUDIT: "true"
       VITE_PARIS_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
       VITE_KEYCLOAK_URL: "https://kc.example.com"
       VITE_KEYCLOAK_REALM: "dataspace"
       VITE_KEYCLOAK_AUTH_CLIENT_ID: "edc-frontend"
+      VITE_EDC_CONNECTOR_ID: "did:web:pharmacy1-dev.srv.cesga.es:identityhub:did"
       VITE_EDC_CONNECTOR_NAME: "demo"
       VITE_EDC_CONNECTOR_BASE_URL: "https://connector.example.com/"
       VITE_EDC_CONNECTOR_CATALOG_URL: "/api/catalog"
@@ -343,10 +294,8 @@ participant-portal:
       VITE_EDC_CONNECTOR_IDENTITY_URL: "https://connector.example.com/identityhub/identity/api/identity"
       VITE_EDC_CONNECTOR_PUBLIC_URL: "https://connector.example.com/dataplane/public/api/public"
       VITE_EDC_CONNECTOR_AUTH_URL: "https://connector.example.com/"
-      VITE_EDC_CONNECTOR_ID: "did:web:connector.example.com:identityhub:did"
-      VITE_CONNECTOR_CHECK_INTERVAL: "300000"
-      VITE_CONNECTOR_TIMEOUT: "15000"
-      DEV: "true"
+      VITE_SEMANTIC_TREEHOUSE_URL: "https://vocabularyhub.srv.cesga.es/"
+      VITE_SEMANTIC_TREEHOUSE_API_KEY: "fixedsemantictreehouseapikey"
 
 seeding:
   enabled: true
@@ -420,3 +369,4 @@ seeding:
   defaultUser:
     create: true
     password: "super-secret"
+    role: "edc-admin"
