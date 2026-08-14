@@ -45,7 +45,7 @@ teardown() {
 
   assert_file_contains "$values_file" "hostname: kc.example.com"
   assert_file_contains "$values_file" "cert-manager.io/cluster-issuer: letsencrypt"
-  assert_file_contains "$values_file" "secretName: keycloak-tls-cert"
+  assert_file_contains "$values_file" "secretName: keycloak-cert"
   assert_file_contains "$secret_file" 'admin-password: "adminpass"'
   assert_file_contains "$secret_file" 'postgres-password: "admin_keycloak"'
 }
@@ -62,7 +62,7 @@ teardown() {
 }
 
 @test "manual TLS mode sets provided secret and removes cluster issuer annotation" {
-  run ./generate_keycloak.sh --host-kc kc.example.com --password adminpass --tls-secret wildcard-tls-cert
+  run ./generate_keycloak.sh --host-kc kc.example.com --password adminpass --tls-secret wildcard-cert
 
   [ "$status" -eq 0 ]
 

@@ -10,7 +10,6 @@ global:
     token: ${PARTICIPANT}-vault-secret
 
 controlplane:
-
   config:
     env:
       EDC_COMPONENT_ID: "${PARTICIPANT}-controlplane"
@@ -64,7 +63,6 @@ controlplane:
       nginx.ingress.kubernetes.io/rewrite-target: /$2
 
 dataplane:
-
   config:
     env:
       EDC_COMPONENT_ID: "${PARTICIPANT}-dataplane"
