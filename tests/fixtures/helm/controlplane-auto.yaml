@@ -25,26 +25,32 @@ service:
       port: 8181
       targetPort: 8181
 
-configMap:
-  hostname: cp.example.com
-  iamIssuerId: did:web:cp.example.com:identityhub:did
-  managementAuthKey: auth
-  managementAuthDacKeyUrl: https://kc.example.com/certs
-  catalogAuthKey: auth
-  catalogAuthDacKeyUrl: https://kc.example.com/certs
-  participantAuthKey: auth
-  participantAuthDacKeyUrl: https://kc.example.com/certs
-  iamStsPrivateKeyAlias: did:web:cp.example.com:identityhub:did#key-1
-  iamStsPublicKeyId: did:web:cp.example.com:identityhub:did#key-1
-  dspCallbackAddress: https://cp.example.com/controlplane/dsp/api/dsp
-  participantId: did:web:cp.example.com:identityhub:did
-  iamStsOauthClientSecretAlias: sts-secret
-  iamStsOauthClientId: sts-client
-  iamStsOauthTokenUrl: http://identityhub:9292/api/sts/token
-  edcParisPublicBaseurl: https://paris.example.com
-  iamAuthorityId: did:web:issuer.example.com:did
-  edcControlEndpoint: http://controlplane:9191/api/control
-  edcUseCaseApiUrl: https://usecase.example.com
+config:
+  env:
+    EDC_COMPONENT_ID: "controlplane"
+    EDC_HOSTNAME: "cp.example.com"
+    EDC_IAM_ISSUER_ID: "did:web:cp.example.com:identityhub:did"
+    WEB_HTTP_MANAGEMENT_AUTH_DAC_KEY_URL: "https://kc.example.com/certs"
+    WEB_HTTP_MANAGEMENT_AUTH_KEY: "auth"
+    WEB_HTTP_CATALOG_AUTH_DAC_KEY_URL: "https://kc.example.com/certs"
+    WEB_HTTP_CATALOG_AUTH_KEY: "auth"
+    WEB_HTTP_PARTICIPANT_AUTH_DAC_KEY_URL: "https://kc.example.com/certs"
+    WEB_HTTP_PARTICIPANT_AUTH_KEY: "auth"
+    EDC_IAM_STS_PRIVATEKEY_ALIAS: "did:web:cp.example.com:identityhub:did#key-1"
+    EDC_IAM_STS_PUBLICKEY_ID: "did:web:cp.example.com:identityhub:did#key-1"
+    EDC_PARTICIPANT_ID: "did:web:cp.example.com:identityhub:did"
+    EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS: "sts-secret"
+    EDC_IAM_STS_OAUTH_CLIENT_ID: "sts-client"
+    EDC_IAM_AUTHORITY_ID: "did:web:issuer.example.com:did"
+    EDC_DSP_CALLBACK_ADDRESS: "https://cp.example.com/controlplane/dsp/api/dsp"
+    EDC_IAM_STS_OAUTH_TOKEN_URL: "http://identityhub:9292/api/sts/token"
+    EDC_PARIS_PUBLIC_BASE_URL: "https://paris.example.com"
+    EDC_CONTROL_ENDPOINT: "http://controlplane:9191/api/control"
+    EDC_USE_CASE_API_BASE_URL: "https://usecase.example.com"
+    EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://postgres:5432/demo"
+    EDC_DATASOURCE_DEFAULT_USER: "demo"
+    EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
+    EDC_VAULT_HASHICORP_URL: "http://vault:8200"
 
 ingress:
   host: cp.example.com

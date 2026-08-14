@@ -9,27 +9,32 @@ global:
     url: http://demo-vault:8200
 
 controlplane:
-
-  configMap:
-    hostname: "connector.example.com"
-    iamIssuerId: "did:web:connector.example.com:identityhub:did"
-    managementAuthDacKeyUrl: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
-    managementAuthKey: "ZGVtby1wYXNzd29yZA=="
-    catalogAuthDacKeyUrl: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
-    catalogAuthKey: "ZGVtby1wYXNzd29yZA=="
-    participantAuthDacKeyUrl: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
-    participantAuthKey: "ZGVtby1wYXNzd29yZA=="
-    iamStsPrivateKeyAlias: "did:web:connector.example.com:identityhub:did#key-1"
-    iamStsPublicKeyId: "did:web:connector.example.com:identityhub:did#key-1"
-    participantId: "did:web:connector.example.com:identityhub:did"
-    iamStsOauthClientSecretAlias: "did:web:connector.example.com:identityhub:did-sts-client-secret"
-    iamStsOauthClientId: "did:web:connector.example.com:identityhub:did"
-    iamAuthorityId: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
-    dspCallbackAddress: "https://connector.example.com/controlplane/dsp/api/dsp"
-    iamStsOauthTokenUrl: "http://demo-identityhub:9292/api/sts/token"
-    edcParisPublicBaseurl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/participant-public/api/participant-public"
-    edcControlEndpoint: "http://demo-controlplane:9191/api/control"
-    edcUseCaseApiUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service/use-case/api/use-case"
+  config:
+    env:
+      EDC_COMPONENT_ID: "demo-controlplane"
+      EDC_HOSTNAME: "connector.example.com"
+      EDC_IAM_ISSUER_ID: "did:web:connector.example.com:identityhub:did"
+      WEB_HTTP_MANAGEMENT_AUTH_DAC_KEY_URL: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
+      WEB_HTTP_MANAGEMENT_AUTH_KEY: "ZGVtby1wYXNzd29yZA=="
+      WEB_HTTP_CATALOG_AUTH_DAC_KEY_URL: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
+      WEB_HTTP_CATALOG_AUTH_KEY: "ZGVtby1wYXNzd29yZA=="
+      WEB_HTTP_PARTICIPANT_AUTH_DAC_KEY_URL: "https://kc.example.com/realms/dataspace/protocol/openid-connect/certs"
+      WEB_HTTP_PARTICIPANT_AUTH_KEY: "ZGVtby1wYXNzd29yZA=="
+      EDC_IAM_STS_PRIVATEKEY_ALIAS: "did:web:connector.example.com:identityhub:did#key-1"
+      EDC_IAM_STS_PUBLICKEY_ID: "did:web:connector.example.com:identityhub:did#key-1"
+      EDC_PARTICIPANT_ID: "did:web:connector.example.com:identityhub:did"
+      EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS: "did:web:connector.example.com:identityhub:did-sts-client-secret"
+      EDC_IAM_STS_OAUTH_CLIENT_ID: "did:web:connector.example.com:identityhub:did"
+      EDC_IAM_AUTHORITY_ID: "did:web:demostrador-datalife.srv.cesga.es:dataspace-issuer:did-publisher"
+      EDC_DSP_CALLBACK_ADDRESS: "https://connector.example.com/controlplane/dsp/api/dsp"
+      EDC_IAM_STS_OAUTH_TOKEN_URL: "http://demo-identityhub:9292/api/sts/token"
+      EDC_PARIS_PUBLIC_BASE_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service/participant-public/api/participant-public"
+      EDC_CONTROL_ENDPOINT: "http://demo-controlplane:9191/api/control"
+      EDC_USE_CASE_API_BASE_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service/use-case/api/use-case"
+      EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://demo-postgresql:5432/demo"
+      EDC_DATASOURCE_DEFAULT_USER: "demo"
+      EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
+      EDC_VAULT_HASHICORP_URL: "http://demo-vault:8200"
 
   deployment:
     initContainers:
@@ -76,18 +81,23 @@ controlplane:
           servicePort: 17171
 
 dataplane:
-
-  configMap:
-    hostname: "connector.example.com"
-    transferProxyTokenVerifierPublicKeyAlias: "did:web:connector.example.com:identityhub:did#key-1"
-    transferProxyTokenSignerPrivateKeyAlias: "did:web:connector.example.com:identityhub:did#key-1"
-    dpfSelectorUrl: "http://demo-controlplane:9191/api/control/v1/dataplanes"
-    participantId: "did:web:connector.example.com:identityhub:did"
-    iamStsOauthClientSecretAlias: "did:web:connector.example.com:identityhub:did-sts-client-secret"
-    iamStsOauthClientId: "did:web:connector.example.com:identityhub:did"
-    iamStsOauthTokenUrl: "https://connector.example.com/identityhub/sts/api/sts/token"
-    edcDataplaneApiPublicBaseurl: "https://connector.example.com/dataplane/public/api/public"
-    edcControlEndpoint: "http://demo-dataplane:9191/api/control"
+  config:
+    env:
+      EDC_COMPONENT_ID: "demo-dataplane"
+      EDC_HOSTNAME: "connector.example.com"
+      EDC_TRANSFER_PROXY_TOKEN_VERIFIER_PUBLICKEY_ALIAS: "did:web:connector.example.com:identityhub:did#key-1"
+      EDC_TRANSFER_PROXY_TOKEN_SIGNER_PRIVATEKEY_ALIAS: "did:web:connector.example.com:identityhub:did#key-1"
+      EDC_DPF_SELECTOR_URL: "http://demo-controlplane:9191/api/control/v1/dataplanes"
+      EDC_PARTICIPANT_ID: "did:web:connector.example.com:identityhub:did"
+      EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS: "did:web:connector.example.com:identityhub:did-sts-client-secret"
+      EDC_IAM_STS_OAUTH_CLIENT_ID: "did:web:connector.example.com:identityhub:did"
+      EDC_IAM_STS_OAUTH_TOKEN_URL: "https://connector.example.com/identityhub/sts/api/sts/token"
+      EDC_DATAPLANE_API_PUBLIC_BASEURL: "https://connector.example.com/dataplane/public/api/public"
+      EDC_CONTROL_ENDPOINT: "http://demo-dataplane:9191/api/control"
+      EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://demo-postgresql:5432/demo"
+      EDC_DATASOURCE_DEFAULT_USER: "demo"
+      EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
+      EDC_VAULT_HASHICORP_URL: "http://demo-vault:8200"
 
   deployment:
     initContainers:
@@ -114,12 +124,18 @@ dataplane:
           servicePort: 8185
 
 identityhub:
-  configMap:
-    hostname: "connector.example.com"
-    iamStsPrivateKeyAlias: "did:web:connector.example.com:identityhub:did#key-1"
-    iamStsPublicKeyId: "did:web:connector.example.com:identityhub:did#key-1"
-    ihIamId: "did:web:connector.example.com:identityhub:did"
-    ihApiSuperuserKey: "c3VwZXItdXNlcg==.c3VwZXItZGVtby1rZXk="
+  config:
+    env:
+      EDC_COMPONENT_ID: "demo-identityhub"
+      EDC_HOSTNAME: "connector.example.com"
+      EDC_IAM_STS_PRIVATEKEY_ALIAS: "did:web:connector.example.com:identityhub:did#key-1"
+      EDC_IAM_STS_PUBLICKEY_ID: "did:web:connector.example.com:identityhub:did#key-1"
+      EDC_IH_IAM_ID: "did:web:connector.example.com:identityhub:did"
+      EDC_IH_API_SUPERUSER_KEY: "c3VwZXItdXNlcg==.c3VwZXItZGVtby1rZXk="
+      EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://demo-postgresql:5432/demo"
+      EDC_DATASOURCE_DEFAULT_USER: "demo"
+      EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
+      EDC_VAULT_HASHICORP_URL: "http://demo-vault:8200"
 
   deployment:
     initContainers:
@@ -161,6 +177,33 @@ identityhub:
         backend:
           serviceName: demo-identityhub
           servicePort: 10100
+
+postgresql:
+  image:
+    pullPolicy: IfNotPresent
+  auth:
+    postgresPassword: "demo"
+    username: "demo"
+    password: "demo"
+    database: "demo"
+  primary:
+    replicaCount: 1
+    service:
+      ports:
+        postgresql: 5432
+    resources:
+      requests:
+        memory: '128Mi'
+        cpu: '125m'
+      limits:
+        memory: '256Mi'
+        cpu: '250m'
+    persistence:
+      enabled: true
+      size: "1Gi"
+      storageClass: "openebs-hostpath"
+      accessModes:
+        - ReadWriteOnce
 
 vault:
   injector:
@@ -274,27 +317,25 @@ oauth2-proxy:
           - "connector.example.com"
 
 participant-portal:
-  configMap:
-    nodeEnv: "production"
-    viteIconUrl: "/icons/datalife_logo.webp"
-    viteDataspaceName: "Centro Demostrador DATAlife | CESGA"
-    viteEnableAudit: "true"
-    viteParisUrl: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
-    viteKeycloakUrl: "https://kc.example.com"
-    viteKeycloakRealm: "dataspace"
-    viteKeycloakAuthClientId: "edc-frontend"
-    viteEdcConnectorName: "demo"
-    viteEdcConnectorBaseUrl: "https://connector.example.com/"
-    viteEdcConnectorCatalogUrl: "/api/catalog"
-    viteEdcConnectorManagementUrl: "/api/management"
-    viteEdcConnectorParticipantUrl: "/api/participant"
-    viteEdcConnectorIdentityUrl: "https://connector.example.com/identityhub/identity/api/identity"
-    viteEdcConnectorPublicUrl: "https://connector.example.com/dataplane/public/api/public"
-    viteEdcConnectorAuthUrl: "https://connector.example.com/"
-    viteEdcConnectorId: "did:web:connector.example.com:identityhub:did"
-    viteConnectorCheckInterval: "300000"
-    viteConnectorTimeout: "15000"
-    dev: "true"
+  config:
+    env:
+      VITE_ICON_URL: "/icons/datalife_logo.webp"
+      VITE_LOGO_ICON_URL: "/icons/datalife_logo.webp"
+      VITE_DATASPACE_NAME: "OneHealth Dataspace"
+      VITE_ENABLE_AUDIT: "true"
+      VITE_PARIS_URL: "https://demostrador-datalife.srv.cesga.es/participant-information-service"
+      VITE_KEYCLOAK_URL: "https://kc.example.com"
+      VITE_KEYCLOAK_REALM: "dataspace"
+      VITE_KEYCLOAK_AUTH_CLIENT_ID: "edc-frontend"
+      VITE_EDC_CONNECTOR_NAME: "demo"
+      VITE_EDC_CONNECTOR_BASE_URL: "https://connector.example.com/"
+      VITE_EDC_CONNECTOR_CATALOG_URL: "/api/catalog"
+      VITE_EDC_CONNECTOR_MANAGEMENT_URL: "/api/management"
+      VITE_EDC_CONNECTOR_PARTICIPANT_URL: "/api/participant"
+      VITE_EDC_CONNECTOR_IDENTITY_URL: "https://connector.example.com/identityhub/identity/api/identity"
+      VITE_EDC_CONNECTOR_PUBLIC_URL: "https://connector.example.com/dataplane/public/api/public"
+      VITE_EDC_CONNECTOR_AUTH_URL: "https://connector.example.com/"
+      VITE_EDC_CONNECTOR_ID: "did:web:connector.example.com:identityhub:did"
 
 seeding:
   enabled: true

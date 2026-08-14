@@ -1,5 +1,7 @@
 keycloak:
   global:
+    imagePullSecrets:
+      - name: harbor-regcred-usuarios
     security:
       allowInsecureImages: true
   replicaCount: 1

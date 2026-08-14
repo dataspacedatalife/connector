@@ -25,17 +25,23 @@ service:
       port: 8185
       targetPort: 8185
 
-configMap:
-  hostname: dp.example.com
-  transferProxyTokenVerifierPublicKeyAlias: key-1
-  transferProxyTokenSignerPrivateKeyAlias: key-1
-  dpfSelectorUrl: http://controlplane:9191/api/control/v1/dataplanes
-  participantId: did:web:dp.example.com:identityhub:did
-  iamStsOauthTokenUrl: https://dp.example.com/identityhub/sts/api/sts/token
-  iamStsOauthClientId: sts-client
-  iamStsOauthClientSecretAlias: sts-secret
-  edcDataplaneApiPublicBaseurl: https://dp.example.com/dataplane/public/api/public
-  edcControlEndpoint: http://dataplane:9191/api/control
+config:
+  env:
+    EDC_COMPONENT_ID: "dataplane"
+    EDC_HOSTNAME: "dp.example.com"
+    EDC_TRANSFER_PROXY_TOKEN_VERIFIER_PUBLICKEY_ALIAS: "key-1"
+    EDC_TRANSFER_PROXY_TOKEN_SIGNER_PRIVATEKEY_ALIAS: "key-1"
+    EDC_DPF_SELECTOR_URL: "http://controlplane:9191/api/control/v1/dataplanes"
+    EDC_PARTICIPANT_ID: "did:web:dp.example.com:identityhub:did"
+    EDC_IAM_STS_OAUTH_TOKEN_URL: "https://dp.example.com/identityhub/sts/api/sts/token"
+    EDC_IAM_STS_OAUTH_CLIENT_ID: "sts-client"
+    EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS: "sts-secret"
+    EDC_DATAPLANE_API_PUBLIC_BASEURL: "https://dp.example.com/dataplane/public/api/public"
+    EDC_CONTROL_ENDPOINT: "http://dataplane:9191/api/control"
+    EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://postgres:5432/demo"
+    EDC_DATASOURCE_DEFAULT_USER: "demo"
+    EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
+    EDC_VAULT_HASHICORP_URL: "http://vault:8200"
 
 ingress:
   host: dp.example.com

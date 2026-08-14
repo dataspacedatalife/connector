@@ -28,12 +28,18 @@ service:
       port: 10100
       targetPort: 10100
 
-configMap:
-  hostname: ih.example.com
-  iamStsPrivateKeyAlias: did:web:ih.example.com:identityhub:did#key-1
-  iamStsPublicKeyId: did:web:ih.example.com:identityhub:did#key-1
-  ihIamId: did:web:ih.example.com:identityhub:did
-  ihApiSuperuserKey: super-key
+config:
+  env:
+    EDC_COMPONENT_ID: "identityhub"
+    EDC_HOSTNAME: "ih.example.com"
+    EDC_IAM_STS_PRIVATEKEY_ALIAS: "did:web:ih.example.com:identityhub:did#key-1"
+    EDC_IAM_STS_PUBLICKEY_ID: "did:web:ih.example.com:identityhub:did#key-1"
+    EDC_IH_IAM_ID: "did:web:ih.example.com:identityhub:did"
+    EDC_IH_API_SUPERUSER_KEY: "super-key"
+    EDC_DATASOURCE_DEFAULT_URL: "jdbc:postgresql://postgres:5432/demo"
+    EDC_DATASOURCE_DEFAULT_USER: "demo"
+    EDC_DATASOURCE_DEFAULT_PASSWORD: "demo"
+    EDC_VAULT_HASHICORP_URL: "http://vault:8200"
 
 ingress:
   host: ih.example.com
