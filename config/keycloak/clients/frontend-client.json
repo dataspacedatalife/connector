@@ -23,6 +23,7 @@
   "protocol": "openid-connect",
   "attributes": {
     "realm_client": "false",
+    "login_theme": "",
     "oidc.ciba.grant.enabled": "false",
     "client.secret.creation.time": "1757938875",
     "backchannel.logout.session.required": "true",

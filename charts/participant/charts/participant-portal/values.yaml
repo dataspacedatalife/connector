@@ -4,7 +4,7 @@ deployment:
     - name: harbor-regcred-usuarios
   image:
     repository: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/participant-portal
-    tag: "0.7.1"
+    tag: "0.7.2"
     pullPolicy: Always
 
 service:

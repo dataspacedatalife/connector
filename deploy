@@ -218,6 +218,9 @@ else
   sudo kubectl create secret tls "$CONNECTOR_SECRET_NAME" --cert="$CONNECTOR_TLS_CRT" --key="$CONNECTOR_TLS_KEY" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
 fi
 
+echo "Creating docker registry secret for pulling harbor images"
+sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-server="$REGISTRY_SERVER" --docker-username="$REGISTRY_USERNAME" --docker-password="$REGISTRY_PASSWORD" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
+
 echo "Generating keycloak config"
 if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
   ./scripts/generate_keycloak.sh --host-kc "$KEYCLOAK_ADDRESS" --password "$KEYCLOAK_ADMIN_PASSWORD"
@@ -270,8 +273,6 @@ else
   ./scripts/generate_participant.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$CONNECTOR_LOGO"
 fi
 
-echo "Creating docker registry secret for pulling harbor images"
-sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-server="$REGISTRY_SERVER" --docker-username="$REGISTRY_USERNAME" --docker-password="$REGISTRY_PASSWORD" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
 
 sudo helm repo add bitnami https://charts.bitnami.com/bitnami
 sudo helm repo add vault https://helm.releases.hashicorp.com

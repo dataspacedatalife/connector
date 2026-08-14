@@ -1,0 +1,327 @@
+@font-face {
+    font-family: 'Barlow';
+    src: url('../fonts/barlow/Barlow-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Barlow';
+    src: url('../fonts/barlow/Barlow-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Barlow';
+    src: url('../fonts/barlow/Barlow-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    src: url('../fonts/barlow-condensed/BarlowCondensed-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    src: url('../fonts/barlow-condensed/BarlowCondensed-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Barlow Condensed';
+    src: url('../fonts/barlow-condensed/BarlowCondensed-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+body {
+    font-family: 'Barlow', sans-serif;
+    position: relative;
+    overflow: hidden;
+    min-height: 100vh;
+    background-color: #f9fafb;
+}
+
+#kc-content-wrapper {
+    min-height: 98vh;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+
+}
+
+.share-logo {
+    display: block;
+    max-width: 160px;
+    margin: 0 auto 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.sign-in {
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: rgb(142, 142, 142)
+}
+
+.login-wrapper {
+    color: #020817;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    border-radius: 2rem;
+    border: 2px solid #e5e7eb;
+    padding-bottom: 1.5rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    overflow: hidden;
+    width: 50%;
+    max-width: 400px;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    margin: auto;
+    position: relative;
+    z-index: 1;
+
+}
+
+
+#kc-form {
+    width: 100%;
+    max-width: 80%;
+}
+
+#kc-form-login .label-form {
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+#kc-form-login .input-form {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid #333;
+    border-radius: 0;
+    padding: 10px 0;
+    color: #333;
+    font-size: 16px;
+    width: 100%;
+    box-shadow: none;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#kc-form-login .input-form:focus {
+    border-bottom: 2px solid oklab(0.63 -0.09 -0.07);
+}
+
+
+
+
+.floating-group {
+    position: relative;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.floating-group .input-form {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: transparent;
+    padding: 10px 0;
+    font-size: 16px;
+    color: white;
+    outline: none;
+    box-shadow: none;
+}
+
+.floating-group .label-form {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    font-size: 16px;
+    color: #666;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.floating-group .input-form:focus+.label-form,
+.floating-group .input-form:not(:placeholder-shown)+.label-form {
+    top: -15px;
+    font-size: 12px;
+    color: oklab(0.63 -0.09 -0.07);
+    font-weight: bold;
+}
+
+.floating-group .input-form:focus {
+    border-bottom: 2px solid oklab(0.63 -0.09 -0.07);
+}
+
+
+#kc-form-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+#kc-login {
+    font-size: 1.2rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    cursor: pointer;
+    border: none;
+    border-radius: 1rem;
+    background: oklab(0.63 -0.09 -0.07);
+    width: 100%;
+    padding: 10px;
+    color: white
+}
+
+
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+    box-shadow: 0 0 0 1000px #ffffff inset;
+
+    -webkit-text-fill-color: #000000;
+
+    background-color: transparent;
+    background-clip: content-box;
+
+    transition: background-color 9999s ease-in-out 0s;
+
+}
+
+
+
+/* logout confirm*/
+#kc-logout-confirm {
+  width: 100%;
+  height: auto;
+
+}
+
+.logout-container {
+  font-family: 'Barlow', sans-serif;
+  width: 100%;
+  margin: auto;
+  text-align: center;
+  box-sizing: border-box;
+  height: 95dvh;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+
+}
+
+.form-container {
+  color: #858585;
+  display: flex;
+  flex-direction: column;
+  border-radius: 2rem;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  width: 50%;
+  max-width: 300px;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  padding: 1rem;
+}
+
+.header-message {
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  line-height: 1.2em;
+  white-space: normal;
+
+}
+
+header {
+  display: none;
+}
+
+body:has(.logout-container) #kc-header {
+  display: none;
+}
+
+.logout-container h1 {
+  margin-bottom: 16px;
+}
+
+.instruction {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 24px;
+}
+
+#kc-form-buttons {
+  width: 100%;
+}
+
+.form {
+  width: 100%;
+}
+
+#kc-logout {
+  font-size: 1.2rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  cursor: pointer;
+  border: none;
+  border-radius: 1rem;
+  background: oklab(0.63 -0.09 -0.07);
+  width: 100%;
+  padding: 5px;
+  color: white;
+}
+
+
+#kc-info-message {
+  margin-top: 20px;
+}
+
+#kc-info-message a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+#kc-info-message a:hover {
+  text-decoration: underline;
+}
+/* end of logout confirm */

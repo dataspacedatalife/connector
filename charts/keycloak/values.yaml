@@ -73,6 +73,31 @@ keycloak:
           - connector3-kc.dataspace.gradiant.org
         secretName: keycloak-tls-cert
 
+  initContainers:
+    - name: fetch-themes
+      image: harbor.gradiant.org/si-xdatashare-usuarios-pr-01616/keycloak-themes:latest
+      imagePullPolicy: IfNotPresent
+      command:
+        - sh
+        - -c
+        - |
+          set -e
+          echo "[INFO] Copying themes into shared volume..."
+          cp -r /themes/cesga /themes-volume/cesga
+          echo "[SUCCESS] Themes copied."
+      volumeMounts:
+        - name: themes-volume
+          mountPath: /themes-volume
+
+  extraVolumeMounts:
+    - name: themes-volume
+      mountPath: /opt/bitnami/keycloak/themes/cesga
+      subPath: cesga
+
+  extraVolumes:
+    - name: themes-volume
+      emptyDir: {}
+
   postgresql:
     enabled: true
     image:

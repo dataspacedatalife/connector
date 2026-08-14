@@ -15,7 +15,8 @@ spec:
         {{- include "participant-portal.selectorLabels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        checksum/icons: {{ include (print $.Template.BasePath "/configmap-icons.yaml") . | sha256sum }}
+        checksum/tools: {{ include (print $.Template.BasePath "/configmap-tools.yaml") . | sha256sum }}
+        checksum/styles: {{ include (print $.Template.BasePath "/configmap-styles.yaml") . | sha256sum }}
     spec:
       {{- if .Values.deployment.imagePullSecrets }}
       imagePullSecrets:
@@ -39,7 +40,7 @@ spec:
               subPath: tools.json
               readOnly: true
             - name: asset-styles-config
-              mountPath: /app/public/config.json
+              mountPath: /app/public/config/config.json
               subPath: config.json
               readOnly: true
       volumes:
