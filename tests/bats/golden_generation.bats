@@ -26,7 +26,7 @@ teardown() {
   (
     cd "$TEST_TMPDIR"
     PARTICIPANT_CLIENT_SECRET=fixedparticipantclientsecret0001 \
-      ./generate_participant.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret >/dev/null
+      ./generate_participant.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret --use-lets-encrypt>/dev/null
   )
 
   assert_files_equal \
@@ -43,7 +43,7 @@ teardown() {
   (
     cd "$TEST_TMPDIR"
     PARTICIPANT_CLIENT_SECRET=fixedparticipantclientsecret0001 \
-      ./generate_participant.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret --tls-secret wildcard-cert >/dev/null
+      ./generate_participant.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret --tls-secret wildcard-tls-cert >/dev/null
   )
 
   assert_files_equal \
@@ -60,7 +60,7 @@ teardown() {
 
   (
     cd "$TEST_TMPDIR"
-    ./generate_keycloak.sh --host-kc kc.example.com --password adminpass --password-db dbpass >/dev/null
+    ./generate_keycloak.sh --host-kc kc.example.com --password adminpass --password-db dbpass --use-lets-encrypt>/dev/null
   )
 
   assert_files_equal \
