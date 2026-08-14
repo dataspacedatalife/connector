@@ -24,6 +24,7 @@ teardown() {
   cp "$REPO_ROOT/config/templates/participant/values-template.yaml" "$TEST_TMPDIR/config/templates/participant/values-template.yaml"
 
   (
+    export TEST_MODE=true
     cd "$TEST_TMPDIR"
     PARTICIPANT_CLIENT_SECRET=fixedparticipantclientsecret0001 \
       ./generate_participant.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret --use-lets-encrypt>/dev/null
@@ -41,6 +42,7 @@ teardown() {
   cp "$REPO_ROOT/config/templates/participant/values-template.yaml" "$TEST_TMPDIR/config/templates/participant/values-template.yaml"
 
   (
+    export TEST_MODE=true
     cd "$TEST_TMPDIR"
     PARTICIPANT_CLIENT_SECRET=fixedparticipantclientsecret0001 \
       ./generate_participant.sh demo --host connector.example.com --host-kc kc.example.com --password super-secret --tls-secret wildcard-tls-cert >/dev/null
