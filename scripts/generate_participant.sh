@@ -132,11 +132,15 @@ if [ -z "$PARTICIPANT" ]; then
   show_help 1
 fi
 
-HAS_HOST_ARGS=false
-if [ -n "$HOST" ] && [ -n "$HOST_KC" ]; then
-  HAS_HOST_ARGS=true
-elif { [ -n "$HOST" ] && [ -z "$HOST_KC" ]; } || { [ -z "$HOST" ] && [ -n "$HOST_KC" ]; }; then
-  echo -e "${RED}Error: --host and --host-kc must be provided together.${NC}" >&2
+# Se nenhum dos dois for fornecido (caso o teste espere que sejam obrigatórios por defeito)
+if [ -z "$HOST" ] && [ -z "$HOST_KC" ]; then
+  echo -e "${RED}Error: --host and --host-kc flags are mandatory.${NC}" >&2
+  exit 1
+fi
+
+# Se apenas um deles for fornecido
+if { [ -n "$HOST" ] && [ -z "$HOST_KC" ]; } || { [ -z "$HOST" ] && [ -n "$HOST_KC" ]; }; then
+  echo -e "${RED}Error: --host and --host-kc must be used together.${NC}" >&2
   exit 1
 fi
 
@@ -170,16 +174,6 @@ VALUES_OUT="$PARTICIPANT_CHART_DIR/values.yaml"
 # --- 6. Generate Participant values.yaml ---
 echo -e "Processing participant: ${GREEN}$PARTICIPANT${NC}"
 echo "Generating Kubernetes config file for participant..."
-
-if [ "$HAS_HOST_ARGS" = true ]; then
-  # MODE A: Custom Host
-  echo "Mode: Custom Host ($HOST)"
-else
-  # MODE B: DataLife Default
-  echo "Mode: DataLife Default (dl-$PARTICIPANT.srv.cesga.es)"
-  HOST="dl-$PARTICIPANT.srv.cesga.es"
-  HOST_KC="xdatashare.srv.cesga.es/auth"
-fi
 
 echo "--> Main Host: $HOST"
 echo "--> KC Host:   $HOST_KC"

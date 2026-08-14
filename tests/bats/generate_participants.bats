@@ -56,7 +56,8 @@ teardown() {
   run ./generate_participant.sh demo \
     --host connector.example.com \
     --host-kc kc.example.com \
-    --password super-secret
+    --password super-secret \
+    --use-lets-encrypt
 
   [ "$status" -eq 0 ]
 

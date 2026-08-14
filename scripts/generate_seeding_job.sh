@@ -129,7 +129,7 @@ if [ -z "$KC_URL" ]; then
 fi
 
 if [ ! -f "$CLIENT_FILE" ]; then
-    echo -e "${RED}Error: Client file '$CLIENT_FILE' not found.${NC}" >&2
+    echo -e "${RED}File '$CLIENT_FILE' not found.${NC}" >&2
     exit 1
 fi
 

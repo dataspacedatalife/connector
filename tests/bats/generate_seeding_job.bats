@@ -9,9 +9,10 @@ setup() {
   cp "$BATS_TEST_DIRNAME/../../scripts/generate_seeding_job.sh" "$TEST_TMPDIR/generate_seeding_job.sh"
   chmod +x "$TEST_TMPDIR/generate_seeding_job.sh"
 
-  mkdir -p "$TEST_TMPDIR/config/keycloak/clients" "$TEST_TMPDIR/config/keycloak/realms"
+  mkdir -p "$TEST_TMPDIR/config/keycloak/clients" "$TEST_TMPDIR/config/keycloak/realms" "$TEST_TMPDIR/config/keycloak/scopes"
   cp "$BATS_TEST_DIRNAME/../../config/keycloak/clients/frontend-client.json" "$TEST_TMPDIR/config/keycloak/clients/frontend-client.json"
   cp "$BATS_TEST_DIRNAME/../../config/keycloak/realms/realm.json" "$TEST_TMPDIR/config/keycloak/realms/realm.json"
+  cp "$BATS_TEST_DIRNAME/../../config/keycloak/realms/realm.json" "$TEST_TMPDIR/config/keycloak/scopes/groups.json"
 
   cd "$TEST_TMPDIR"
 }
@@ -41,9 +42,11 @@ teardown() {
 
   local client_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-add-default-client.yaml"
   local realm_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-import-realm.yaml"
+  local scopes_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-add-client-scopes.yaml
 
   assert_file_exists "$client_job"
   assert_file_exists "$realm_job"
+  assert_file_exists "$scopes_job"
   assert_file_contains "$client_job" 'KC_URL: "https://kc.example.com"'
   assert_file_contains "$client_job" 'KC_ADMIN_USER: "admin"'
   assert_file_contains "$client_job" 'KC_ADMIN_PASSWORD: "admin"'
