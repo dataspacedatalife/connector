@@ -6,12 +6,11 @@ keycloak:
       allowInsecureImages: true
   replicaCount: 1
   image:
-    registry: public.ecr.aws
-    repository: bitnami/keycloak
-
+    registry: docker.io
+    repository: bitnamilegacy/keycloak
   extraEnvVars:
     - name: KC_HOSTNAME
-      value: "https://connector3-kc.dataspace.gradiant.org"
+      value: "https://kc.example.com"
     - name: KC_PROXY_HEADERS
       value: "xforwarded"
     - name: KC_HOSTNAME_STRICT
@@ -26,11 +25,6 @@ keycloak:
       value: "true"
     - name: KC_LOG_LEVEL
       value: "info"
-    - name: KC_DB_PASSWORD
-      value: "keycloak"
-    - name: KC_DB_USERNAME
-      value: "keycloak"
-
   auth:
     adminUser: "admin"
     existingSecret: "keycloak-secrets"
@@ -64,7 +58,7 @@ keycloak:
 
   ingress:
     enabled: true
-    hostname: connector3-kc.dataspace.gradiant.org
+    hostname: kc.example.com
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
@@ -72,7 +66,7 @@ keycloak:
     tls: true
     extraTls:
       - hosts:
-          - connector3-kc.dataspace.gradiant.org
+          - kc.example.com
         secretName: keycloak-tls-cert
 
   initContainers:
@@ -103,8 +97,8 @@ keycloak:
   postgresql:
     enabled: true
     image:
-      registry: public.ecr.aws
-      repository: bitnami/postgresql
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
     auth:
       database: "keycloak"
       username: "keycloak"

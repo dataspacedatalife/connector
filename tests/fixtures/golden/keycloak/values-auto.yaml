@@ -67,7 +67,7 @@ keycloak:
     extraTls:
       - hosts:
           - kc.example.com
-        secretName: keycloak-cert
+        secretName: keycloak-tls-cert
 
   initContainers:
     - name: fetch-themes
