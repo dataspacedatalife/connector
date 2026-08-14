@@ -62,12 +62,12 @@ teardown() {
 }
 
 @test "manual TLS mode sets provided secret and removes cluster issuer annotation" {
-  run ./generate_keycloak.sh --host-kc kc.example.com --password adminpass --tls-secret wildcard-cert
+  run ./generate_keycloak.sh --host-kc kc.example.com --password adminpass --tls-secret wildcard-tls-cert
 
   [ "$status" -eq 0 ]
 
   local values_file="$TEST_TMPDIR/charts/keycloak/values.yaml"
   assert_file_exists "$values_file"
-  assert_file_contains "$values_file" "secretName: wildcard-cert"
+  assert_file_contains "$values_file" "secretName: wildcard-tls-cert"
   assert_file_not_contains "$values_file" "cert-manager.io/cluster-issuer"
 }

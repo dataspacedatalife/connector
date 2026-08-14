@@ -42,7 +42,7 @@ teardown() {
 
   local client_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-add-default-client.yaml"
   local realm_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-import-realm.yaml"
-  local scopes_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-add-client-scopes.yaml
+  local scopes_job="$TEST_TMPDIR/config/generated/keycloak/jobs/job-add-client-scopes.yaml"
 
   assert_file_exists "$client_job"
   assert_file_exists "$realm_job"

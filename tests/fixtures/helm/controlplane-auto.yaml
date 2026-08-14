@@ -104,7 +104,7 @@ service:
 
 ingress:
   host: cp.example.com
-  tlsSecretName: cp-manual-tls
+  tlsSecretName: cp-tls
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
   className: nginx
