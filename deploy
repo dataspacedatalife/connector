@@ -194,6 +194,9 @@ sudo kind create cluster --config config/kind-cluster-config.yaml
 echo "Creating namespace '$NAMESPACE'"
 sudo kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
 
+echo "Creating docker registry secret for pulling harbor images"
+sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-server="$REGISTRY_SERVER" --docker-username="$REGISTRY_USERNAME" --docker-password="$REGISTRY_PASSWORD" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
+
 echo "Installing ingress-nginx"
 sudo kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 sudo kubectl rollout status deployment/ingress-nginx-controller --namespace ingress-nginx --timeout=300s
@@ -269,9 +272,6 @@ if [[ "$USE_LETS_ENCRYPT" == "true" ]]; then
 else
   ./scripts/generate_participant.sh "$CONNECTOR_NAME" --host "$CONNECTOR_ADDRESS" --host-kc "$KEYCLOAK_ADDRESS" --password "$CONNECTOR_PASSWORD" --password-kc "$KEYCLOAK_ADMIN_PASSWORD" --tls-secret "$CONNECTOR_SECRET_NAME" --logo "$CONNECTOR_LOGO"
 fi
-
-echo "Creating docker registry secret for pulling harbor images"
-sudo kubectl create secret docker-registry harbor-regcred-usuarios --docker-server="$REGISTRY_SERVER" --docker-username="$REGISTRY_USERNAME" --docker-password="$REGISTRY_PASSWORD" -n "$NAMESPACE" --dry-run=client -o yaml | sudo kubectl apply -f -
 
 sudo helm repo add vault https://helm.releases.hashicorp.com
 sudo helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
